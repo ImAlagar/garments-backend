@@ -65,7 +65,7 @@ export const emailTemplates = {
     <div class="container">
         <div class="header">
             <h1>📩 New Contact Form Submission</h1>
-            <p>Shri Velan Organic Foods Website</p>
+            <p>Hanger Garments Website</p>
         </div>
         
         <div class="content">
@@ -115,7 +115,7 @@ export const emailTemplates = {
         </div>
         
         <div class="footer">
-            <p>This is an automated notification from Shri Velan Organic Foods Contact System</p>
+            <p>This is an automated notification from Hanger Garments Contact System</p>
             <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
         </div>
     </div>
@@ -123,7 +123,7 @@ export const emailTemplates = {
 </html>
       `,
       text: `
-NEW CONTACT FORM SUBMISSION - Shri Velan Organic Foods
+NEW CONTACT FORM SUBMISSION - Hanger Garments
 
 A new contact form submission has been received:
 
@@ -140,13 +140,13 @@ ${contactData.message || 'No message provided'}
 
 Please respond to this inquiry promptly.
 
-This is an automated notification from Shri Velan Organic Foods.
+This is an automated notification from Hanger Garments.
       `.trim()
     };
   },
 
   contactAutoReply: (contactData) => ({
-    subject: 'Thank You for Contacting Shri Velan Organic Foods',
+    subject: 'Thank You for Contacting Hanger Garments',
     html: `
 <!DOCTYPE html>
 <html>
@@ -165,16 +165,16 @@ This is an automated notification from Shri Velan Organic Foods.
         </div>
         <div class="content">
             <p>Dear ${contactData.name || 'Valued Customer'},</p>
-            <p>Thank you for reaching out to Shri Velan Organic Foods. We have received your message and our team will get back to you within 24-48 hours.</p>
+            <p>Thank you for reaching out to Hanger Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
             <p>For urgent inquiries, please call us at [Your Phone Number].</p>
-            <p>Best regards,<br>Shri Velan Organic Foods Team</p>
+            <p>Best regards,<br>Hanger Garments Team</p>
         </div>
     </div>
 </body>
 </html>
     `,
     text: `
-Thank you for contacting Shri Velan Organic Foods!
+Thank you for contacting Hanger Garments!
 
 Dear ${contactData.name || 'Valued Customer'},
 
@@ -183,18 +183,18 @@ Thank you for reaching out to us. We have received your message and our team wil
 For urgent inquiries, please call us at [Your Phone Number].
 
 Best regards,
-Shri Velan Organic Foods Team
+Hanger Garments Team
     `.trim()
   }),
 
     welcomeEmail: (userData) => {
     const currentYear = new Date().getFullYear();
-    const domain = process.env.DOMAIN_NAME || 'shrivelenorganicfoods.com';
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
     const frontendUrl = process.env.FRONTEND_URL || `https://${domain}`;
     
     return {
         // ✅ Fixed subject line - remove excessive emojis
-        subject: `Welcome to Shri Velan Organic Foods - Get Started with Organic Living`,
+        subject: `Welcome to Hanger Garments - Get Started with Organic Living`,
         
         html: `
     <!DOCTYPE html>
@@ -202,7 +202,7 @@ Shri Velan Organic Foods Team
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Shri Velan Organic Foods</title>
+        <title>Welcome to Hanger Garments</title>
         <style>
             /* Reset and basic styles */
             body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f6f6f6; }
@@ -230,7 +230,7 @@ Shri Velan Organic Foods Team
         <div class="container">
             <!-- Header -->
             <div class="header">
-                <h1>Welcome to Shri Velan Organic Foods</h1>
+                <h1>Welcome to Hanger Garments</h1>
                 <p>Your Journey to Healthier Living Begins</p>
             </div>
             
@@ -238,7 +238,7 @@ Shri Velan Organic Foods Team
             <div class="content">
                 <div class="welcome-text">
                     <p>Hello <strong>${userData.name}</strong>,</p>
-                    <p>Thank you for joining Shri Velan Organic Foods! We're excited to have you as part of our community dedicated to healthy, organic living.</p>
+                    <p>Thank you for joining Hanger Garments! We're excited to have you as part of our community dedicated to healthy, organic living.</p>
                 </div>
                 
                 <div class="features">
@@ -274,7 +274,7 @@ Shri Velan Organic Foods Team
             
             <!-- Footer -->
             <div class="footer">
-                <p><strong>Shri Velan Organic Foods</strong></p>
+                <p><strong>Hanger Garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
                 <p>Email: support@${domain} | Phone: +91 98765 43210</p>
                 <p>
@@ -282,7 +282,7 @@ Shri Velan Organic Foods Team
                     <a href="${frontendUrl}/unsubscribe" style="color: #666666; text-decoration: none;">Unsubscribe</a>
                 </p>
                 <p style="margin-top: 15px; font-size: 11px; color: #999999;">
-                    &copy; ${currentYear} Shri Velan Organic Foods. All rights reserved.<br>
+                    &copy; ${currentYear} Hanger Garments. All rights reserved.<br>
                     This email was sent to ${userData.email} because you registered on our website.
                 </p>
             </div>
@@ -293,11 +293,11 @@ Shri Velan Organic Foods Team
         
         // ✅ Proper text version is crucial for spam filters
         text: `
-    Welcome to Shri Velan Organic Foods
+    Welcome to Hanger Garments
 
     Hello ${userData.name},
 
-    Thank you for joining Shri Velan Organic Foods! We're excited to have you as part of our community dedicated to healthy, organic living.
+    Thank you for joining Hanger Garments! We're excited to have you as part of our community dedicated to healthy, organic living.
 
     WHAT YOU CAN EXPECT:
     • Fresh Organic Produce: 100% certified organic fruits and vegetables
@@ -321,29 +321,29 @@ Shri Velan Organic Foods Team
     Update your preferences: ${frontendUrl}/preferences
     Unsubscribe: ${frontendUrl}/unsubscribe
 
-    Shri Velan Organic Foods
+    Hanger Garments
     Nourishing Lives Naturally
 
-    © ${currentYear} Shri Velan Organic Foods. All rights reserved.
+    © ${currentYear} Hanger Garments. All rights reserved.
     This email was sent to ${userData.email} because you registered on our website.
         `.trim()
     };
     },
 
    passwordReset: (userData, resetUrl) => {
-    const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
     const expiryTime = '1 hour';
     
     return {
-      subject: 'Reset Your Password - Shri Velan Organic Foods',
+      subject: 'Reset Your Password - Hanger Garments',
       html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset - Shri Velan Organic Foods</title>
+    <title>Password Reset - Hanger Garments</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -367,7 +367,7 @@ Shri Velan Organic Foods Team
     <div class="container">
         <div class="header">
             <h1>🔒 Password Reset Request</h1>
-            <p>Shri Velan Organic Foods Account Security</p>
+            <p>Hanger Garments Account Security</p>
         </div>
         
         <div class="content">
@@ -377,7 +377,7 @@ Shri Velan Organic Foods Team
             
             <p>Hello <strong>${userData.name}</strong>,</p>
             
-            <p>We received a request to reset your password for your Shri Velan Organic Foods account. If you didn't make this request, please ignore this email.</p>
+            <p>We received a request to reset your password for your Hanger Garments account. If you didn't make this request, please ignore this email.</p>
             
             <div class="reset-section">
                 <p>To reset your password, click the button below:</p>
@@ -409,9 +409,9 @@ Shri Velan Organic Foods Team
         </div>
         
         <div class="footer">
-            <p>This is an automated security email from Shri Velan Organic Foods</p>
+            <p>This is an automated security email from Hanger Garments</p>
             <p style="margin-top: 8px;">
-                <strong>Shri Velan Organic Foods</strong><br>
+                <strong>Hanger Garments</strong><br>
                 Nourishing Lives Naturally
             </p>
         </div>
@@ -420,11 +420,11 @@ Shri Velan Organic Foods Team
 </html>
       `,
       text: `
-PASSWORD RESET REQUEST - Shri Velan Organic Foods
+PASSWORD RESET REQUEST - Hanger Garments
 
 Hello ${userData.name},
 
-We received a request to reset your password for your Shri Velan Organic Foods account.
+We received a request to reset your password for your Hanger Garments account.
 
 To reset your password, visit this link:
 ${resetUrl}
@@ -438,16 +438,16 @@ If you didn't request this reset, please ignore this email. Your account remains
 
 Need help? Contact our support team: ${supportEmail}
 
-This is an automated security email from Shri Velan Organic Foods.
+This is an automated security email from Hanger Garments.
 
-Shri Velan Organic Foods
+Hanger Garments
 Nourishing Lives Naturally
       `.trim()
     };
   },
 
   passwordChangedConfirmation: (userData) => {
-    const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
     const timestamp = new Date().toLocaleString('en-US', {
       year: 'numeric',
@@ -459,14 +459,14 @@ Nourishing Lives Naturally
     });
     
     return {
-      subject: 'Password Changed Successfully - Shri Velan Organic Foods',
+      subject: 'Password Changed Successfully - Hanger Garments',
       html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Changed - Shri Velan Organic Foods</title>
+    <title>Password Changed - Hanger Garments</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -487,7 +487,7 @@ Nourishing Lives Naturally
     <div class="container">
         <div class="header">
             <h1>✅ Password Changed Successfully</h1>
-            <p>Shri Velan Organic Foods Account Security</p>
+            <p>Hanger Garments Account Security</p>
         </div>
         
         <div class="content">
@@ -497,7 +497,7 @@ Nourishing Lives Naturally
             
             <p>Hello <strong>${userData.name}</strong>,</p>
             
-            <p>This email confirms that your Shri Velan Organic Foods account password was changed on <strong>${timestamp}</strong>.</p>
+            <p>This email confirms that your Hanger Garments account password was changed on <strong>${timestamp}</strong>.</p>
             
             <div class="security-info">
                 <h3 style="color: #495057; margin-bottom: 15px;">🔒 Security Information</h3>
@@ -520,9 +520,9 @@ Nourishing Lives Naturally
         </div>
         
         <div class="footer">
-            <p>This is an automated security notification from Shri Velan Organic Foods</p>
+            <p>This is an automated security notification from Hanger Garments</p>
             <p style="margin-top: 8px;">
-                <strong>Shri Velan Organic Foods</strong><br>
+                <strong>Hanger Garments</strong><br>
                 Nourishing Lives Naturally
             </p>
         </div>
@@ -531,11 +531,11 @@ Nourishing Lives Naturally
 </html>
       `,
       text: `
-PASSWORD CHANGED SUCCESSFULLY - Shri Velan Organic Foods
+PASSWORD CHANGED SUCCESSFULLY - Hanger Garments
 
 Hello ${userData.name},
 
-This email confirms that your Shri Velan Organic Foods account password was changed on ${timestamp}.
+This email confirms that your Hanger Garments account password was changed on ${timestamp}.
 
 SECURITY INFORMATION:
 - Your new password is now active
@@ -547,16 +547,16 @@ If you didn't change your password, please contact our support team immediately 
 
 Thank you for helping us keep your account secure.
 
-This is an automated security notification from Shri Velan Organic Foods.
+This is an automated security notification from Hanger Garments.
 
-Shri Velan Organic Foods
+Hanger Garments
 Nourishing Lives Naturally
       `.trim()
     };
   },
 
    orderConfirmationCustomer: (orderData) => {
-    const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
     const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
       year: 'numeric',
@@ -567,14 +567,14 @@ Nourishing Lives Naturally
     });
 
     return {
-      subject: `Order Confirmed - #${orderData.orderNumber} - Shri Velan Organic Foods`,
+      subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
       html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation - Shri Velan Organic Foods</title>
+    <title>Order Confirmation - Hanger Garments</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -615,7 +615,7 @@ Nourishing Lives Naturally
             </div>
             
             <p>Hello <strong>${orderData.name}</strong>,</p>
-            <p>Thank you for choosing Shri Velan Organic Foods! We're preparing your order and will notify you once it's shipped.</p>
+            <p>Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.</p>
             
             <div class="order-summary">
                 <h3 style="color: #2d5e2d; margin-bottom: 15px;">📦 Order Summary</h3>
@@ -686,7 +686,7 @@ Nourishing Lives Naturally
         </div>
         
         <div class="footer">
-            <p><strong>Shri Velan Organic Foods</strong></p>
+            <p><strong>Hanger Garments</strong></p>
             <p>Nourishing Lives Naturally</p>
             <p style="margin-top: 15px; font-size: 11px; color: #999;">
                 This is an automated order confirmation email. Please do not reply to this message.
@@ -697,7 +697,7 @@ Nourishing Lives Naturally
 </html>
       `,
       text: `
-ORDER CONFIRMED - Shri Velan Organic Foods
+ORDER CONFIRMED - Hanger Garments
 
 Hello ${orderData.name},
 
@@ -739,233 +739,597 @@ Email: ${supportEmail}
 Phone: +91 98765 43210
 
 
-Thank you for choosing Shri Velan Organic Foods!
+Thank you for choosing Hanger Garments!
 
 --
-Shri Velan Organic Foods
+Hanger Garments
 Nourishing Lives Naturally
       `.trim()
     };
   },
 
-orderConfirmationAdmin: (orderData) => {
-  const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+    orderConfirmationAdmin: (orderData) => {
+    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 
-  const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
-  const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
+    const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
+    const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
 
-  return {
-    // ✅ Fixed subject - removed emoji and excessive symbols
-    subject: `New Order Notification - Order ${orderData.orderNumber} - ${orderData.totalAmount.toFixed(2)} INR`,
-    
-    html: `
+    return {
+        // ✅ Fixed subject - removed emoji and excessive symbols
+        subject: `New Order Notification - Order ${orderData.orderNumber} - ${orderData.totalAmount.toFixed(2)} INR`,
+        
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Order Notification - Hanger Garments</title>
+        <style>
+            /* Reset and basic styles */
+            body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f6f6f6; }
+            .container { max-width: 700px; margin: 0 auto; background: #ffffff; }
+            .header { background: #2d5e2d; padding: 25px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 22px; margin: 0 0 10px 0; font-weight: bold; }
+            .content { padding: 25px; }
+            .footer { background: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666666; }
+            
+            /* Content styles */
+            .alert-section { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+            .order-overview { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+            .overview-item { background: white; padding: 12px; border-radius: 4px; border-left: 4px solid #2d5e2d; }
+            .order-items { margin: 20px 0; }
+            .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+            .amount-summary { background: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
+            .summary-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 16px; }
+            .customer-info { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .action-buttons { margin-top: 25px; text-align: center; }
+            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; }
+            
+            /* Mobile responsive */
+            @media only screen and (max-width: 600px) {
+                .container { width: 100% !important; }
+                .content { padding: 20px !important; }
+                .overview-grid { grid-template-columns: 1fr; }
+                .btn { display: block; margin: 10px 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>New Order Received</h1>
+                <p>Order ${orderData.orderNumber} - Requires Processing</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="alert-section">
+                    <strong>New Order Alert:</strong> A new order has been placed and requires processing.
+                </div>
+
+                <div class="order-overview">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Overview</h3>
+                    <div class="overview-grid">
+                        <div class="overview-item">
+                            <strong>Order Number</strong><br>
+                            ${orderData.orderNumber}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Order Date</strong><br>
+                            ${orderDate}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Total Amount</strong><br>
+                            ₹${orderData.totalAmount.toFixed(2)}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Payment Method</strong><br>
+                            ${orderData.paymentMethod}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="customer-info">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Customer Information</h3>
+                    <p><strong>Name:</strong> ${orderData.name}</p>
+                    <p><strong>Email:</strong> <a href="mailto:${orderData.email}">${orderData.email}</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:${orderData.phone}">${orderData.phone}</a></p>
+                    <p><strong>Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
+                </div>
+
+                <div class="order-items">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Items</h3>
+                    ${orderData.orderItems.map(item => `
+                    <div class="order-item">
+                        <div style="flex: 2;">
+                            <strong>${item.product.name}</strong>
+                            <br>
+                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                            ₹${(item.quantity * item.price).toFixed(2)}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                <div class="amount-summary">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Summary</h3>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>₹${orderData.subtotal.toFixed(2)}</span>
+                    </div>
+                    ${orderData.discount > 0 ? `
+                    <div class="summary-row">
+                        <span>Discount:</span>
+                        <span style="color: #28a745;">-₹${orderData.discount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    <div class="summary-row">
+                        <span>Shipping:</span>
+                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Grand Total:</span>
+                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="${adminUrl}/orders/${orderData.id}" class="btn">
+                        View Order in Admin Panel
+                    </a>
+                    <a href="mailto:${orderData.email}?subject=Regarding Order ${orderData.orderNumber}" class="btn" style="background: #6c757d;">
+                        Contact Customer
+                    </a>
+                </div>
+
+                <div style="margin-top: 25px; padding: 15px; background: #e9ecef; border-radius: 4px;">
+                    <h4 style="margin: 0 0 10px 0; color: #495057;">Next Steps:</h4>
+                    <ol style="margin: 0; padding-left: 20px;">
+                        <li>Review order details</li>
+                        <li>Prepare items for shipping</li>
+                        <li>Update order status when shipped</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p><strong>Hanger Garments - Order Management System</strong></p>
+                <p>This is an automated notification. Please process this order promptly.</p>
+                <p style="margin-top: 10px; font-size: 11px; color: #999;">
+                    If you believe you received this email in error, please contact system administration.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        
+        // ✅ Proper text version
+        text: `
+    NEW ORDER NOTIFICATION - Hanger Garments
+
+    A new order has been placed and requires processing.
+
+    ORDER OVERVIEW:
+    ---------------
+    Order Number: ${orderData.orderNumber}
+    Order Date: ${orderDate}
+    Total Amount: ₹${orderData.totalAmount.toFixed(2)}
+    Payment Method: ${orderData.paymentMethod}
+    Payment Status: ${orderData.paymentStatus}
+
+    CUSTOMER INFORMATION:
+    --------------------
+    Name: ${orderData.name}
+    Email: ${orderData.email}
+    Phone: ${orderData.phone}
+    Address: ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}
+
+    ORDER ITEMS:
+    -----------
+    ${orderData.orderItems.map(item => 
+    `• ${item.product.name}
+    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
+    ).join('\n')}
+
+    ORDER SUMMARY:
+    --------------
+    Subtotal: ₹${orderData.subtotal.toFixed(2)}
+    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
+    Grand Total: ₹${orderData.totalAmount.toFixed(2)}
+
+    NEXT STEPS:
+    -----------
+    1. Review order details
+    2. Prepare items for shipping
+    3. Update order status when shipped
+
+    View order in admin panel: ${adminUrl}/orders/${orderData.id}
+
+    This is an automated order notification from Hanger Garments.
+
+    --
+    Hanger Garments
+    Order Management System
+        `.trim()
+    };
+    },
+  
+
+ wholesalerApprovalNotification: (wholesalerData) => {
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    const currentDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+
+    return {
+      subject: `New Wholesaler Application - ${wholesalerData.businessName || 'Unknown Business'}`,
+      html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Order Notification - Shri Velan Organic Foods</title>
+    <title>New Wholesaler Application</title>
     <style>
-        /* Reset and basic styles */
-        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f6f6f6; }
-        .container { max-width: 700px; margin: 0 auto; background: #ffffff; }
-        .header { background: #2d5e2d; padding: 25px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 22px; margin: 0 0 10px 0; font-weight: bold; }
-        .content { padding: 25px; }
-        .footer { background: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666666; }
-        
-        /* Content styles */
-        .alert-section { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .order-overview { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
-        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-        .overview-item { background: white; padding: 12px; border-radius: 4px; border-left: 4px solid #2d5e2d; }
-        .order-items { margin: 20px 0; }
-        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
-        .amount-summary { background: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 4px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
-        .summary-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 16px; }
-        .customer-info { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
-        .action-buttons { margin-top: 25px; text-align: center; }
-        .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; }
-        
-        /* Mobile responsive */
-        @media only screen and (max-width: 600px) {
-            .container { width: 100% !important; }
-            .content { padding: 20px !important; }
-            .overview-grid { grid-template-columns: 1fr; }
-            .btn { display: block; margin: 10px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear(135deg, #2c5aa0 0%, #3a7bd5 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .content { padding: 30px; }
+        .alert-badge { background: #e3f2fd; color: #1565c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #1565c0; }
+        .business-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+        .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .info-label { font-weight: 600; color: #495057; min-width: 150px; }
+        .info-value { color: #212529; flex: 1; }
+        .requirements-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+        .action-buttons { margin-top: 24px; text-align: center; }
+        .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2c5aa0; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .btn-outline { background: transparent; border: 1px solid #2c5aa0; color: #2c5aa0; }
+        @media (max-width: 600px) {
+            .container { border-radius: 0; }
+            .content { padding: 20px; }
+            .info-item { flex-direction: column; }
+            .info-label { margin-bottom: 4px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <h1>New Order Received</h1>
-            <p>Order ${orderData.orderNumber} - Requires Processing</p>
+            <h1>🏢 New Wholesaler Application</h1>
+            <p>Hanger Garments Wholesaler Program</p>
         </div>
         
-        <!-- Content -->
         <div class="content">
-            <div class="alert-section">
-                <strong>New Order Alert:</strong> A new order has been placed and requires processing.
+            <div class="alert-badge">
+                <strong>Action Required:</strong> A new wholesaler application has been submitted and requires review.
             </div>
-
-            <div class="order-overview">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Overview</h3>
-                <div class="overview-grid">
-                    <div class="overview-item">
-                        <strong>Order Number</strong><br>
-                        ${orderData.orderNumber}
-                    </div>
-                    <div class="overview-item">
-                        <strong>Order Date</strong><br>
-                        ${orderDate}
-                    </div>
-                    <div class="overview-item">
-                        <strong>Total Amount</strong><br>
-                        ₹${orderData.totalAmount.toFixed(2)}
-                    </div>
-                    <div class="overview-item">
-                        <strong>Payment Method</strong><br>
-                        ${orderData.paymentMethod}
-                    </div>
+            
+            <div class="business-info">
+                <h3 style="color: #2c5aa0; margin-bottom: 16px;">🏢 Business Details</h3>
+                
+                <div class="info-item">
+                    <span class="info-label">Business Name:</span>
+                    <span class="info-value">${escapeHtml(wholesalerData.businessName) || 'Not provided'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Contact Person:</span>
+                    <span class="info-value">${escapeHtml(wholesalerData.contactPerson) || 'Not provided'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Email Address:</span>
+                    <span class="info-value">
+                        <a href="mailto:${wholesalerData.email}" style="color: #2c5aa0; text-decoration: none;">
+                            ${wholesalerData.email}
+                        </a>
+                    </span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Phone Number:</span>
+                    <span class="info-value">${wholesalerData.phone ? escapeHtml(wholesalerData.phone) : 'Not provided'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Business Type:</span>
+                    <span class="info-value">${wholesalerData.businessType || 'Not specified'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">GST Number:</span>
+                    <span class="info-value">${wholesalerData.gstNumber ? escapeHtml(wholesalerData.gstNumber) : 'Not provided'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Business Address:</span>
+                    <span class="info-value">${wholesalerData.address ? escapeHtml(wholesalerData.address) : 'Not provided'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Expected Order Volume:</span>
+                    <span class="info-value">${wholesalerData.expectedVolume || 'Not specified'}</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Submission Time:</span>
+                    <span class="info-value">${currentDate}</span>
                 </div>
             </div>
-
-            <div class="customer-info">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">Customer Information</h3>
-                <p><strong>Name:</strong> ${orderData.name}</p>
-                <p><strong>Email:</strong> <a href="mailto:${orderData.email}">${orderData.email}</a></p>
-                <p><strong>Phone:</strong> <a href="tel:${orderData.phone}">${orderData.phone}</a></p>
-                <p><strong>Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
-            </div>
-
-            <div class="order-items">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Items</h3>
-                ${orderData.orderItems.map(item => `
-                <div class="order-item">
-                    <div style="flex: 2;">
-                        <strong>${item.product.name}</strong>
-                        <br>
-                        <small>Quantity: ${item.quantity} × ₹${item.price}</small>
-                    </div>
-                    <div style="flex: 1; text-align: right;">
-                        ₹${(item.quantity * item.price).toFixed(2)}
-                    </div>
-                </div>
-                `).join('')}
-            </div>
-
-            <div class="amount-summary">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Summary</h3>
-                <div class="summary-row">
-                    <span>Subtotal:</span>
-                    <span>₹${orderData.subtotal.toFixed(2)}</span>
-                </div>
-                ${orderData.discount > 0 ? `
-                <div class="summary-row">
-                    <span>Discount:</span>
-                    <span style="color: #28a745;">-₹${orderData.discount.toFixed(2)}</span>
-                </div>
-                ` : ''}
-                <div class="summary-row">
-                    <span>Shipping:</span>
-                    <span>₹${orderData.shippingCost.toFixed(2)}</span>
-                </div>
-                <div class="summary-row summary-total">
-                    <span>Grand Total:</span>
-                    <span>₹${orderData.totalAmount.toFixed(2)}</span>
+            
+            ${wholesalerData.additionalInfo ? `
+            <div class="requirements-section">
+                <div class="message-label">📝 Additional Information:</div>
+                <div style="color: #856404; line-height: 1.5;">
+                    ${escapeHtml(wholesalerData.additionalInfo).replace(/\n/g, '<br>')}
                 </div>
             </div>
-
-            <div class="action-buttons">
-                <a href="${adminUrl}/orders/${orderData.id}" class="btn">
-                    View Order in Admin Panel
-                </a>
-                <a href="mailto:${orderData.email}?subject=Regarding Order ${orderData.orderNumber}" class="btn" style="background: #6c757d;">
-                    Contact Customer
-                </a>
-            </div>
-
-            <div style="margin-top: 25px; padding: 15px; background: #e9ecef; border-radius: 4px;">
-                <h4 style="margin: 0 0 10px 0; color: #495057;">Next Steps:</h4>
-                <ol style="margin: 0; padding-left: 20px;">
-                    <li>Review order details</li>
-                    <li>Prepare items for shipping</li>
-                    <li>Update order status when shipped</li>
+            ` : ''}
+            
+            <div class="requirements-section">
+                <h4 style="color: #856404; margin-bottom: 10px;">📋 Next Steps Required:</h4>
+                <ol style="color: #856404; margin-left: 20px;">
+                    <li>Verify business credentials and GST information</li>
+                    <li>Review expected order volume and requirements</li>
+                    <li>Contact applicant for additional information if needed</li>
+                    <li>Approve or reject the application in the admin panel</li>
+                    <li>Send confirmation email to the applicant</li>
                 </ol>
             </div>
+            
+            <div class="action-buttons">
+                <a href="mailto:${wholesalerData.email}" class="btn">✉️ Contact ${wholesalerData.contactPerson?.split(' ')[0] || 'Applicant'}</a>
+                <a href="tel:${wholesalerData.phone}" class="btn btn-outline" style="${!wholesalerData.phone ? 'display: none;' : ''}">📞 Call Business</a>
+            </div>
         </div>
         
-        <!-- Footer -->
         <div class="footer">
-            <p><strong>Shri Velan Organic Foods - Order Management System</strong></p>
-            <p>This is an automated notification. Please process this order promptly.</p>
-            <p style="margin-top: 10px; font-size: 11px; color: #999;">
-                If you believe you received this email in error, please contact system administration.
-            </p>
+            <p>This is an automated notification from Hanger Garments Wholesaler Management System</p>
+            <p style="margin-top: 8px;">Please review this application within 48 hours.</p>
+        </div>
+    </div>
+</body>
+</html>
+      `,
+      text: `
+NEW WHOLESALER APPLICATION - Hanger Garments
+
+A new wholesaler application has been submitted and requires review.
+
+BUSINESS DETAILS:
+-----------------
+Business Name: ${wholesalerData.businessName || 'Not provided'}
+Contact Person: ${wholesalerData.contactPerson || 'Not provided'}
+Email: ${wholesalerData.email}
+Phone: ${wholesalerData.phone || 'Not provided'}
+Business Type: ${wholesalerData.businessType || 'Not specified'}
+GST Number: ${wholesalerData.gstNumber || 'Not provided'}
+Business Address: ${wholesalerData.address || 'Not provided'}
+Expected Order Volume: ${wholesalerData.expectedVolume || 'Not specified'}
+Submission Time: ${currentDate}
+
+${wholesalerData.additionalInfo ? `
+ADDITIONAL INFORMATION:
+-----------------------
+${wholesalerData.additionalInfo}
+` : ''}
+
+NEXT STEPS REQUIRED:
+-------------------
+1. Verify business credentials and GST information
+2. Review expected order volume and requirements
+3. Contact applicant for additional information if needed
+4. Approve or reject the application
+5. Send confirmation email to the applicant
+
+Please review this application within 48 hours.
+
+This is an automated notification from Hanger Garments.
+      `.trim()
+    };
+  },
+
+  wholesalerAutoReply: (wholesalerData) => ({
+    subject: 'Wholesaler Application Received - Hanger Garments',
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; color: #2c5aa0; }
+        .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .timeline { margin: 20px 0; }
+        .timeline-item { margin-bottom: 15px; padding-left: 20px; border-left: 3px solid #2c5aa0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Wholesaler Application Received</h1>
+        </div>
+        <div class="content">
+            <p>Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},</p>
+            
+            <p>Thank you for your interest in becoming a wholesale partner with Hanger Garments!</p>
+            
+            <p>We have received your application and our team is currently reviewing it. Here's what you can expect next:</p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>Application Review</strong><br>
+                    Our team will review your business details within 2-3 business days
+                </div>
+                <div class="timeline-item">
+                    <strong>Verification Call</strong><br>
+                    We may contact you for additional information or clarification
+                </div>
+                <div class="timeline-item">
+                    <strong>Approval Decision</strong><br>
+                    You will receive notification of our decision via email
+                </div>
+                <div class="timeline-item">
+                    <strong>Onboarding</strong><br>
+                    If approved, we'll guide you through the onboarding process
+                </div>
+            </div>
+            
+            <p><strong>Business Name:</strong> ${wholesalerData.businessName}</p>
+            <p><strong>Application Date:</strong> ${new Date().toLocaleDateString()}</p>
+            
+            <p>If you have any questions, please don't hesitate to contact our wholesale team.</p>
+            
+            <p>Best regards,<br>
+            <strong>Wholesale Partnership Team</strong><br>
+            Hanger Garments</p>
         </div>
     </div>
 </body>
 </html>
     `,
-    
-    // ✅ Proper text version
     text: `
-NEW ORDER NOTIFICATION - Shri Velan Organic Foods
+Wholesaler Application Received - Hanger Garments
 
-A new order has been placed and requires processing.
+Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},
 
-ORDER OVERVIEW:
----------------
-Order Number: ${orderData.orderNumber}
-Order Date: ${orderDate}
-Total Amount: ₹${orderData.totalAmount.toFixed(2)}
-Payment Method: ${orderData.paymentMethod}
-Payment Status: ${orderData.paymentStatus}
+Thank you for your interest in becoming a wholesale partner with Hanger Garments!
 
-CUSTOMER INFORMATION:
---------------------
-Name: ${orderData.name}
-Email: ${orderData.email}
-Phone: ${orderData.phone}
-Address: ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}
+We have received your application and our team is currently reviewing it. Here's what you can expect next:
 
-ORDER ITEMS:
------------
-${orderData.orderItems.map(item => 
-  `• ${item.product.name}
-   Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-).join('\n')}
+APPLICATION PROCESS:
+-------------------
+• Application Review: Our team will review your business details within 2-3 business days
+• Verification Call: We may contact you for additional information or clarification
+• Approval Decision: You will receive notification of our decision via email
+• Onboarding: If approved, we'll guide you through the onboarding process
 
-ORDER SUMMARY:
---------------
-Subtotal: ₹${orderData.subtotal.toFixed(2)}
-${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
-Grand Total: ₹${orderData.totalAmount.toFixed(2)}
+APPLICATION DETAILS:
+-------------------
+Business Name: ${wholesalerData.businessName}
+Application Date: ${new Date().toLocaleDateString()}
 
-NEXT STEPS:
------------
-1. Review order details
-2. Prepare items for shipping
-3. Update order status when shipped
+If you have any questions, please don't hesitate to contact our wholesale team.
 
-View order in admin panel: ${adminUrl}/orders/${orderData.id}
-
-This is an automated order notification from Shri Velan Organic Foods.
-
---
-Shri Velan Organic Foods
-Order Management System
+Best regards,
+Wholesale Partnership Team
+Hanger Garments
     `.trim()
-  };
-},
-  
+  }),
+
+  wholesalerApprovalConfirmation: (wholesalerData) => ({
+    subject: 'Wholesaler Application Approved - Welcome to Hanger Garments!',
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; color: #28a745; }
+        .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .next-steps { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Welcome to Our Wholesale Family!</h1>
+        </div>
+        <div class="content">
+            <p>Dear ${wholesalerData.contactPerson},</p>
+            
+            <p>We are delighted to inform you that your wholesaler application for <strong>${wholesalerData.businessName}</strong> has been approved!</p>
+            
+            <div class="next-steps">
+                <h3>Next Steps to Get Started:</h3>
+                <ul>
+                    <li>Access our wholesale portal using your registered email</li>
+                    <li>Explore our complete product catalog with wholesale pricing</li>
+                    <li>Review our minimum order quantities and shipping policies</li>
+                    <li>Place your first order and experience our quality products</li>
+                </ul>
+            </div>
+            
+            <p><strong>Your Wholesale Account Details:</strong></p>
+            <p>Business: ${wholesalerData.businessName}<br>
+            Contact: ${wholesalerData.contactPerson}<br>
+            Email: ${wholesalerData.email}<br>
+            Account Type: Wholesale Partner</p>
+            
+            <p>Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.</p>
+            
+            <p>Welcome to the Hanger Garments family!</p>
+            
+            <p>Best regards,<br>
+            <strong>Wholesale Partnership Team</strong><br>
+            Hanger Garments</p>
+        </div>
+    </div>
+</body>
+</html>
+    `,
+    text: `
+Wholesaler Application Approved - Welcome to Hanger Garments!
+
+Dear ${wholesalerData.contactPerson},
+
+We are delighted to inform you that your wholesaler application for ${wholesalerData.businessName} has been approved!
+
+NEXT STEPS TO GET STARTED:
+-------------------------
+• Access our wholesale portal using your registered email
+• Explore our complete product catalog with wholesale pricing
+• Review our minimum order quantities and shipping policies
+• Place your first order and experience our quality products
+
+YOUR WHOLESALE ACCOUNT DETAILS:
+------------------------------
+Business: ${wholesalerData.businessName}
+Contact: ${wholesalerData.contactPerson}
+Email: ${wholesalerData.email}
+Account Type: Wholesale Partner
+
+Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.
+
+Welcome to the Hanger Garments family!
+
+Best regards,
+Wholesale Partnership Team
+Hanger Garments
+    `.trim()
+  }),
 };

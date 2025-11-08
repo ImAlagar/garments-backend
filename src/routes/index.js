@@ -3,9 +3,11 @@ const router = express.Router();
 
 
 import authRoutes from './authRoutes.js';
+import userRoutes from './userRoutes.js';
 
 
 
 router.use('/auth', authRoutes);
+router.use('/auth', userRoutes); // Add user routes
 
 export default router

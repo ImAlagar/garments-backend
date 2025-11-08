@@ -22,7 +22,7 @@
     "url": "https://github.com/ImAlagar/garments-backend/issues"
   },
   "homepage": "https://github.com/ImAlagar/garments-backend#readme",
-    "dependencies": {
+  "dependencies": {
     "@aws-sdk/client-s3": "^3.919.0",
     "@aws-sdk/s3-request-presigner": "^3.919.0",
     "@prisma/client": "^6.17.1",
@@ -42,6 +42,7 @@
     "prisma": "^6.17.1",
     "razorpay": "^2.9.6",
     "resend": "^6.2.0",
+    "twilio": "^5.10.4",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0"
   },

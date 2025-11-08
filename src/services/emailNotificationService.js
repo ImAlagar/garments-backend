@@ -30,7 +30,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Shri Velan Organic Foods Contact" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"Hanger Garments Contact" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -50,6 +50,97 @@ class EmailNotificationService {
     }
   }
 
+  // NEW METHOD: Send wholesaler approval notification
+  async sendWholesalerApprovalNotification(wholesalerData) {
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+      
+      // Enhanced validation
+      if (!adminEmail || !this.isValidEmail(adminEmail)) {
+        throw new Error(`Invalid admin email address: ${adminEmail}`);
+      }
+
+      if (!wholesalerData || !wholesalerData.email || !this.isValidEmail(wholesalerData.email)) {
+        throw new Error(`Invalid wholesaler email: ${wholesalerData?.email}`);
+      }
+
+      const template = emailTemplates.wholesalerApprovalNotification(wholesalerData);
+            
+      const result = await emailService.sendEmail({
+        to: adminEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        from: `"Hanger Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Wholesaler Approval Notification Failed:', {
+        error: error.message,
+        wholesalerData: {
+          businessName: wholesalerData?.businessName,
+          email: wholesalerData?.email,
+          contactPerson: wholesalerData?.contactPerson,
+          phone: wholesalerData?.phone
+        },
+        timestamp: new Date().toISOString()
+      });
+      throw error;
+    }
+  }
+
+  // Optional: Send auto-reply to the wholesaler
+  async sendWholesalerAutoReply(wholesalerData) {
+    try {
+      if (!wholesalerData?.email || !this.isValidEmail(wholesalerData.email)) {
+        return;
+      }
+
+      const template = emailTemplates.wholesalerAutoReply(wholesalerData);
+      
+      const result = await emailService.sendEmail({
+        to: wholesalerData.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        from: `"Hanger Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Wholesaler auto-reply failed:', error.message);
+      // Don't throw error for auto-reply failure
+    }
+  }
+
+  // Optional: Send approval confirmation to wholesaler
+  async sendWholesalerApprovalConfirmation(wholesalerData) {
+    try {
+      if (!wholesalerData?.email || !this.isValidEmail(wholesalerData.email)) {
+        return;
+      }
+
+      const template = emailTemplates.wholesalerApprovalConfirmation(wholesalerData);
+      
+      const result = await emailService.sendEmail({
+        to: wholesalerData.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        from: `"Hanger Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Wholesaler approval confirmation failed:', error.message);
+      // Don't throw error for confirmation email failure
+    }
+  }
+
   // Optional: Send auto-reply to the person who contacted
   async sendContactAutoReply(contactData) {
     try {
@@ -64,7 +155,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Shri Velan Organic Foods" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"Hanger Garments" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -154,7 +245,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Shri Velan Organic Foods Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"Hanger Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -181,7 +272,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Shri Velan Organic Foods Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"Hanger Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;

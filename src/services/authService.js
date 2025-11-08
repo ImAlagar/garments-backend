@@ -1,88 +1,174 @@
 // services/authService.js
+import twilio from 'twilio';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto'; // ADD THIS IMPORT
+import crypto from 'crypto';
 import prisma from '../config/database.js';
 import { JWT_SECRET } from '../config/index.js';
 import emailNotificationService from './emailNotificationService.js';
+import s3UploadService from './s3UploadService.js';
 import logger from '../utils/logger.js';
 
-class AuthService {
-  async register(userData) {
-    const { email, password, name } = userData;
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-    // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
+class AuthService {
+
+async register(userData, files = []) {
+  const { email, password, name, role, phone, businessType, ...wholesalerData } = userData;
+
+  console.log('Registration data:', { email, role, phone, businessType, wholesalerData });
+
+  // Check if user exists
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email },
+        ...(phone ? [{ phone }] : [])
+      ]
+    }
+  });
+
+  if (existingUser) {
+    throw new Error('User with this email or phone already exists');
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  let user;
+  let profileData;
+
+  // Create user with transaction
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          role: role || 'CUSTOMER',
+          phone: role === 'WHOLESALER' ? phone : null,
+          isApproved: role === 'WHOLESALER' ? false : true
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          phone: true,
+          isApproved: true,
+          createdAt: true
+        }
+      });
+
+      // Create wholesaler profile if applicable
+      if (role === 'WHOLESALER') {
+        console.log('Creating wholesaler profile with businessType:', businessType);
+        
+        let shopPhotoUrls = [];
+
+        // Upload shop photos to S3 if files are provided
+        if (files && files.length > 0) {
+          try {
+            const uploadResults = await s3UploadService.uploadWholesalerShopPhotos(
+              files, 
+              user.id, 
+              businessType
+            );
+            shopPhotoUrls = uploadResults.map(result => result.url);
+            logger.info('Shop photos uploaded during registration', {
+              userId: user.id,
+              count: shopPhotoUrls.length
+            });
+          } catch (uploadError) {
+            logger.error('Failed to upload shop photos during registration', {
+              userId: user.id,
+              error: uploadError.message
+            });
+            // Don't throw error - continue without photos
+          }
+        }
+
+        // Prepare wholesaler profile data
+        profileData = {
+          userId: user.id,
+          businessType: businessType,
+          companyName: wholesalerData.companyName || null,
+          gstNumber: wholesalerData.gstNumber || null,
+          websiteUrl: wholesalerData.websiteUrl || null,
+          instagramUrl: wholesalerData.instagramUrl || null,
+          shopPhotos: shopPhotoUrls,
+          city: wholesalerData.city || null,
+          state: wholesalerData.state || null,
+        };
+
+        console.log('Wholesaler profile data:', profileData);
+
+        await tx.wholesalerProfile.create({
+          data: profileData
+        });
+      }
+
+      return user;
     });
 
-    if (existingUser) {
-      throw new Error('User already exists');
+    user = result;
+  } catch (transactionError) {
+    logger.error('Transaction failed during registration', {
+      email,
+      error: transactionError.message
+    });
+    throw new Error(`Registration failed: ${transactionError.message}`);
+  }
+
+  // Send admin notification AFTER transaction is committed
+  if (role === 'WHOLESALER' && user) {
+    try {
+      await this.notifyAdminForApproval(user, profileData);
+    } catch (notificationError) {
+      logger.error('Admin notification failed after registration', {
+        userId: user.id,
+        error: notificationError.message
+      });
+      // Don't throw error - notification failure shouldn't break registration
     }
+  }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+  // Generate tokens
+  let tokens = {};
+  try {
+    if (user.role !== 'WHOLESALER' || user.isApproved) {
+      tokens = this.generateTokens(user);
+    }
+  } catch (tokenError) {
+    logger.error('Token generation failed', {
+      userId: user.id,
+      error: tokenError.message
+    });
+    // Don't throw error - token generation failure shouldn't break registration
+    // Return user without tokens
+  }
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
+  return { user, ...tokens };
+}
+
+  async login(credentials) {
+    const { email, password, phone, otp } = credentials;
+
+    // Find user with wholesaler profile
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(email ? [{ email }] : []),
+          ...(phone ? [{ phone }] : [])
+        ]
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true
+      include: {
+        wholesalerProfile: true
       }
     });
 
-    // ✅ Send welcome email (don't await - make it non-blocking)
-    this.sendWelcomeEmail(user).catch(error => {
-      console.error('❌ Welcome email failed to send:', error.message);
-      // Don't throw error - registration should succeed even if email fails
-    });
-
-    // Generate tokens
-    const tokens = this.generateTokens(user);
-
-    return { user, ...tokens };
-  }
-
-  async sendWelcomeEmail(user) {
-    try {
-      
-      await emailNotificationService.sendWelcomeEmail({
-        name: user.name,
-        email: user.email,
-        joinDate: new Date().toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      });
-      
-    } catch (error) {
-      console.error('❌ Welcome email sending failed:', {
-        email: user.email,
-        error: error.message
-      });
-      // Don't throw - email failure shouldn't break registration
-    }
-  }
-
-  async login(credentials) {
-    const { email, password } = credentials;
-
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
       throw new Error('Invalid credentials');
     }
 
@@ -90,33 +176,305 @@ class AuthService {
       throw new Error('Account is deactivated');
     }
 
+    // Check admin approval for wholesalers
+    if (user.role === 'WHOLESALER' && !user.isApproved) {
+      throw new Error('Your account is pending admin approval. Please wait for verification.');
+    }
+
+    // Handle authentication based on user role
+    if (user.role === 'WHOLESALER' && phone) {
+      return await this.handleWholesalerLogin(user, phone, otp);
+    } else {
+      return await this.handleRegularLogin(user, password);
+    }
+  }
+
+  async handleWholesalerLogin(user, phone, otp) {
+    // If no OTP provided, send OTP
+    if (!otp) {
+      await this.sendOTP(phone);
+      return { 
+        requiresOTP: true, 
+        message: 'OTP sent to your registered phone number' 
+      };
+    }
+
+    // Verify OTP
+    await this.verifyOTP(phone, otp);
+
+    // Generate tokens after successful OTP verification
+    const tokens = this.generateTokens(user);
+    const { password: _, otpSecret: __, ...userWithoutSensitiveData } = user;
+
+    return { 
+      user: userWithoutSensitiveData, 
+      ...tokens 
+    };
+  }
+
+  async handleRegularLogin(user, password) {
+    // Verify password for customers/admins
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new Error('Invalid credentials');
+    }
+
     // Generate tokens
     const tokens = this.generateTokens(user);
-
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
-    return { user: userWithoutPassword, ...tokens };
+    return { 
+      user: userWithoutPassword, 
+      ...tokens 
+    };
+  }
+
+  async sendOTP(phoneNumber) {
+    try {
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      // Hash OTP before storing (security best practice) 
+      const otpSecret = await bcrypt.hash(otp, 10);
+
+      // Store OTP in database
+      await prisma.user.updateMany({
+        where: { phone: phoneNumber },
+        data: {
+          otpSecret,
+          otpExpiry
+        }
+      });
+
+      // Send OTP via Twilio 
+      await twilioClient.messages.create({
+        body: `Your Hanger Garments verification code is: ${otp}. Valid for 10 minutes.`,
+        to: phoneNumber,
+        from: process.env.TWILIO_PHONE_NUMBER
+      });
+
+      logger.log(`OTP sent to ${phoneNumber}`);
+      return { success: true, message: 'OTP sent successfully' };
+    } catch (error) {
+      logger.error('OTP sending failed:', error);
+      throw new Error('Failed to send OTP. Please try again.');
+    }
+  }
+
+  async verifyOTP(phoneNumber, otp) {
+    try {
+      const user = await prisma.user.findFirst({
+        where: { 
+          phone: phoneNumber,
+          otpExpiry: { gt: new Date() } // Check if OTP not expired
+        }
+      });
+
+      if (!user || !user.otpSecret) {
+        throw new Error('Invalid or expired OTP');
+      }
+
+      // Verify OTP 
+      const isValidOTP = await bcrypt.compare(otp, user.otpSecret);
+      if (!isValidOTP) {
+        throw new Error('Invalid OTP');
+      }
+
+      // Clear OTP data after successful verification
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isPhoneVerified: true,
+          otpSecret: null,
+          otpExpiry: null
+        }
+      });
+
+      return { success: true, message: 'OTP verified successfully' };
+    } catch (error) {
+      logger.error('OTP verification failed:', error);
+      throw new Error('OTP verification failed');
+    }
+  }
+
+  async notifyAdminForApproval(wholesalerUser, profileData = {}) {
+    try {
+      // Validate required fields
+      if (!wholesalerUser || !wholesalerUser.email) {
+        logger.error('Invalid wholesaler user data for admin notification', {
+          wholesalerUser,
+          profileData
+        });
+        throw new Error('Invalid wholesaler user data: email is required');
+      }
+
+      // Prepare wholesaler data with ALL required fields
+      const wholesalerInfo = {
+        businessName: profileData.companyName || wholesalerUser.name || 'Unknown Business',
+        email: wholesalerUser.email,
+        contactPerson: wholesalerUser.name || 'Unknown',
+        phone: wholesalerUser.phone || 'Not provided',
+        businessType: profileData.businessType || 'Unknown',
+        city: profileData.city || 'Not specified',
+        state: profileData.state || 'Not specified',
+        registrationDate: wholesalerUser.createdAt || new Date(),
+        // Add fields that the email template expects
+        gstNumber: profileData.gstNumber || 'Not provided',
+        address: `${profileData.city || ''} ${profileData.state || ''}`.trim() || 'Not provided',
+        expectedVolume: 'To be determined', // Default value
+        additionalInfo: `Business registered as ${profileData.businessType} in ${profileData.city}, ${profileData.state}`
+      };
+
+      console.log('Sending admin notification for wholesaler:', wholesalerInfo);
+
+      // Find admin users
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { email: true, name: true, id: true }
+      });
+
+      if (admins.length === 0) {
+        logger.warn('No admin users found for notification');
+        return;
+      }
+
+      // Send email notification to admins
+      for (const admin of admins) {
+        try {
+          // FIX: Make sure we're passing the complete wholesalerInfo object
+          await emailNotificationService.sendWholesalerApprovalNotification({
+            adminName: admin.name,
+            adminEmail: admin.email,
+            // Pass the complete wholesalerInfo object that has all required fields
+            ...wholesalerInfo
+          });
+
+          logger.info('Admin notification sent successfully', {
+            adminEmail: admin.email,
+            wholesalerEmail: wholesalerInfo.email,
+            wholesalerId: wholesalerUser.id
+          });
+        } catch (notificationError) {
+          logger.error('Failed to send notification to specific admin', {
+            adminEmail: admin.email,
+            wholesalerEmail: wholesalerInfo.email,
+            error: notificationError.message,
+            // Log the data that was sent for debugging
+            sentData: {
+              email: wholesalerInfo.email,
+              businessName: wholesalerInfo.businessName,
+              contactPerson: wholesalerInfo.contactPerson
+            }
+          });
+          // Continue with other admins even if one fails
+        }
+      }
+
+    } catch (error) {
+      logger.error('Wholesaler approval notification failed', {
+        wholesalerId: wholesalerUser?.id,
+        wholesalerEmail: wholesalerUser?.email,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      // Don't throw error - admin notification failure shouldn't break registration
+    }
+  }
+
+  // Admin method to approve wholesalers
+  async approveWholesaler(wholesalerId, adminId) {
+    const user = await prisma.user.findUnique({
+      where: { id: wholesalerId },
+      include: { wholesalerProfile: true }
+    });
+
+    if (!user || user.role !== 'WHOLESALER') {
+      throw new Error('Wholesaler not found');
+    }
+
+    if (user.isApproved) {
+      throw new Error('Wholesaler is already approved');
+    }
+
+    const approvedUser = await prisma.user.update({
+      where: { id: wholesalerId },
+      data: {
+        isApproved: true,
+        approvedAt: new Date(),
+        approvedBy: adminId
+      },
+      include: {
+        wholesalerProfile: true
+      }
+    });
+
+    // Send approval notification to wholesaler
+    await this.sendApprovalNotification(approvedUser);
+
+    return approvedUser;
+  }
+
+  async sendApprovalNotification(wholesalerUser) {
+    try {
+      if (!wholesalerUser || !wholesalerUser.email) {
+        logger.error('Invalid wholesaler data for approval notification', {
+          wholesalerUser
+        });
+        return;
+      }
+
+      // If you have email service implemented
+      await emailNotificationService.sendWholesalerApprovalConfirmation({
+        name: wholesalerUser.name || 'Valued Customer',
+        email: wholesalerUser.email,
+        phone: wholesalerUser.phone || 'Not provided',
+        approvalDate: wholesalerUser.approvedAt || new Date()
+      });
+
+      logger.info('Wholesaler approval notification sent', {
+        wholesalerId: wholesalerUser.id,
+        wholesalerEmail: wholesalerUser.email
+      });
+    } catch (error) {
+      logger.error('Failed to send approval notification', {
+        wholesalerId: wholesalerUser?.id,
+        error: error.message
+      });
+    }
   }
 
   generateTokens(user) {
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      isApproved: user.isApproved
+    };
 
-    const refreshToken = jwt.sign(
-      { userId: user.id },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
 
     return { accessToken, refreshToken };
   }
 
+  // Get pending wholesalers for admin
+  async getPendingWholesalers() {
+    return await prisma.user.findMany({
+      where: {
+        role: 'WHOLESALER',
+        isApproved: false
+      },
+      include: {
+        wholesalerProfile: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  }
+
+  // Existing methods
   async logout(userId) {
-    // Implement token blacklisting if needed
     return true;
   }
 
@@ -127,7 +485,6 @@ class AuthService {
       });
 
       if (!user) {
-        // Security: Don't reveal if user exists
         logger.log(`Password reset requested for: ${email} (user not found)`);
         return { 
           success: true, 
@@ -163,7 +520,6 @@ class AuthService {
         email: user.email
       }, resetUrl);
 
-      
       return {
         success: true,
         message: 'If an account with that email exists, a reset link has been sent.'
@@ -177,7 +533,6 @@ class AuthService {
 
   async resetPassword(token, userId, newPassword) {
     try {
-      // Validate inputs
       if (!token || !userId || !newPassword) {
         throw new Error('Token, user ID, and new password are required');
       }
@@ -198,7 +553,7 @@ class AuthService {
           id: userId,
           resetToken: resetTokenHash,
           resetTokenExpiry: {
-            gt: new Date() // Token not expired
+            gt: new Date()
           }
         }
       });
@@ -227,7 +582,6 @@ class AuthService {
         email: user.email
       });
 
-      
       return {
         success: true,
         message: 'Password has been reset successfully. You can now login with your new password.'
@@ -236,52 +590,6 @@ class AuthService {
     } catch (error) {
       console.error('❌ Reset password error:', error);
       throw error;
-    }
-  }
-
-  async validateResetToken(token, userId) {
-    try {
-      if (!token || !userId) {
-        return { valid: false, message: 'Token and user ID are required' };
-      }
-
-      const resetTokenHash = crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
-
-      const user = await prisma.user.findFirst({
-        where: {
-          id: userId,
-          resetToken: resetTokenHash,
-          resetTokenExpiry: {
-            gt: new Date()
-          }
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true
-        }
-      });
-
-      if (!user) {
-        return { valid: false, message: 'Invalid or expired reset token' };
-      }
-
-      return { 
-        valid: true, 
-        message: 'Token is valid',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name
-        }
-      };
-
-    } catch (error) {
-      console.error('❌ Token validation error:', error);
-      return { valid: false, message: 'Error validating token' };
     }
   }
 
@@ -294,9 +602,12 @@ class AuthService {
         name: true,
         role: true,
         avatar: true,
+        phone: true,
         isActive: true,
+        isApproved: true,
         createdAt: true,
-        addresses: true
+        addresses: true,
+        wholesalerProfile: true
       }
     });
   }
