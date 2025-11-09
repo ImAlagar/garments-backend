@@ -5,54 +5,47 @@ import logger from '../utils/logger.js';
 
 class CategoryService {
   // Get all categories with pagination and filtering
-  async getAllCategories({ page, limit, isActive, includeSubcategories }) {
-    const skip = (page - 1) * limit;
-    
-    const where = {};
-    
-    if (isActive !== undefined) {
-      where.isActive = isActive;
-    }
-    
-    const include = {};
-    if (includeSubcategories) {
-      include.subcategories = {
-        where: { isActive: true },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          image: true,
-          isActive: true,
-          createdAt: true
-        }
-      };
-    }
-    
-    const [categories, total] = await Promise.all([
-      prisma.category.findMany({
-        where,
-        skip,
-        take: limit,
-        include,
-        orderBy: {
-          createdAt: 'desc'
-        }
-      }),
-      prisma.category.count({ where })
-    ]);
-    
-    return {
-      categories,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+async getAllCategories({ page, limit, isActive, includeSubcategories }) {
+  const skip = (page - 1) * limit;
+  
+  const where = {};
+  
+  // Only apply filter if isActive is explicitly provided
+  if (isActive !== undefined) {
+    where.isActive = isActive;
+  }
+  
+  const include = {};
+  if (includeSubcategories) {
+    include.subcategories = {
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        image: true,
+        isActive: true,
+        createdAt: true
       }
     };
   }
   
+  const [categories, total] = await Promise.all([
+    prisma.category.findMany({
+      where,
+      skip,
+      take: limit,
+      include,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    }),
+    prisma.category.count({ where })
+  ]);
+  
+  return categories;
+}
+
   // Get category by ID
   async getCategoryById(categoryId, includeSubcategories = false) {
     const include = {};

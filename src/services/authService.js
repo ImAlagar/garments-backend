@@ -153,9 +153,14 @@ async register(userData, files = []) {
 }
 
   async login(credentials) {
-    const { email, password, phone, otp } = credentials;
+    const { email, phone, password, otp } = credentials;
 
-    // Find user with wholesaler profile
+    // Validate input
+    if (!email && !phone) {
+      throw new Error('Email or phone number is required');
+    }
+
+    // Find user
     const user = await prisma.user.findFirst({
       where: {
         OR: [
@@ -176,21 +181,26 @@ async register(userData, files = []) {
       throw new Error('Account is deactivated');
     }
 
-    // Check admin approval for wholesalers
-    if (user.role === 'WHOLESALER' && !user.isApproved) {
-      throw new Error('Your account is pending admin approval. Please wait for verification.');
-    }
-
-    // Handle authentication based on user role
-    if (user.role === 'WHOLESALER' && phone) {
-      return await this.handleWholesalerLogin(user, phone, otp);
-    } else {
-      return await this.handleRegularLogin(user, password);
+    // Handle different user types
+    switch (user.role) {
+      case 'WHOLESALER':
+        return await this.handleWholesalerLogin(user, phone, otp);
+      
+      case 'CUSTOMER':
+      case 'ADMIN':
+        return await this.handlePasswordLogin(user, password);
+      
+      default:
+        throw new Error('Invalid user role');
     }
   }
 
   async handleWholesalerLogin(user, phone, otp) {
-    // If no OTP provided, send OTP
+    if (!user.isApproved) {
+      throw new Error('Your account is pending admin approval. Please wait for verification.');
+    }
+
+    // If OTP not provided, send OTP
     if (!otp) {
       await this.sendOTP(phone);
       return { 
@@ -199,17 +209,87 @@ async register(userData, files = []) {
       };
     }
 
-    // Verify OTP
+    // Verify OTP and login
     await this.verifyOTP(phone, otp);
-
-    // Generate tokens after successful OTP verification
     const tokens = this.generateTokens(user);
-    const { password: _, otpSecret: __, ...userWithoutSensitiveData } = user;
+    const { password: _, otpSecret: __, ...userData } = user;
 
     return { 
-      user: userWithoutSensitiveData, 
+      user: userData, 
       ...tokens 
     };
+  }
+
+  async handlePasswordLogin(user, password) {
+    if (!password) {
+      throw new Error('Password is required');
+    }
+
+    // Verify password
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new Error('Invalid credentials');
+    }
+
+    // Generate tokens
+    const tokens = this.generateTokens(user);
+    const { password: _, ...userData } = user;
+
+    return { 
+      user: userData, 
+      ...tokens 
+    };
+  }
+
+  async sendOTP(phoneNumber) {
+    // Your existing OTP sending logic
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    const otpSecret = await bcrypt.hash(otp, 10);
+
+    // Update user
+    await prisma.user.updateMany({
+      where: { phone: phoneNumber },
+      data: { otpSecret, otpExpiry }
+    });
+
+    // Send via Twilio
+    await twilioClient.messages.create({
+      body: `Your verification code is: ${otp}. Valid for 10 minutes.`,
+      to: phoneNumber,
+      from: process.env.TWILIO_PHONE_NUMBER
+    });
+
+    return { success: true, message: 'OTP sent successfully' };
+  }
+
+  async verifyOTP(phoneNumber, otp) {
+    const user = await prisma.user.findFirst({
+      where: { 
+        phone: phoneNumber,
+        otpExpiry: { gt: new Date() }
+      }
+    });
+
+    if (!user || !user.otpSecret) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    const isValidOTP = await bcrypt.compare(otp, user.otpSecret);
+    if (!isValidOTP) {
+      throw new Error('Invalid OTP');
+    }
+
+    // Clear OTP and mark phone as verified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isPhoneVerified: true,
+        otpSecret: null,
+        otpExpiry: null
+      }
+    });
+
+    return { success: true, message: 'OTP verified successfully' };
   }
 
   async handleRegularLogin(user, password) {
@@ -228,74 +308,6 @@ async register(userData, files = []) {
     };
   }
 
-  async sendOTP(phoneNumber) {
-    try {
-      // Generate 6-digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-      
-      // Hash OTP before storing (security best practice) 
-      const otpSecret = await bcrypt.hash(otp, 10);
-
-      // Store OTP in database
-      await prisma.user.updateMany({
-        where: { phone: phoneNumber },
-        data: {
-          otpSecret,
-          otpExpiry
-        }
-      });
-
-      // Send OTP via Twilio 
-      await twilioClient.messages.create({
-        body: `Your Hanger Garments verification code is: ${otp}. Valid for 10 minutes.`,
-        to: phoneNumber,
-        from: process.env.TWILIO_PHONE_NUMBER
-      });
-
-      logger.log(`OTP sent to ${phoneNumber}`);
-      return { success: true, message: 'OTP sent successfully' };
-    } catch (error) {
-      logger.error('OTP sending failed:', error);
-      throw new Error('Failed to send OTP. Please try again.');
-    }
-  }
-
-  async verifyOTP(phoneNumber, otp) {
-    try {
-      const user = await prisma.user.findFirst({
-        where: { 
-          phone: phoneNumber,
-          otpExpiry: { gt: new Date() } // Check if OTP not expired
-        }
-      });
-
-      if (!user || !user.otpSecret) {
-        throw new Error('Invalid or expired OTP');
-      }
-
-      // Verify OTP 
-      const isValidOTP = await bcrypt.compare(otp, user.otpSecret);
-      if (!isValidOTP) {
-        throw new Error('Invalid OTP');
-      }
-
-      // Clear OTP data after successful verification
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          isPhoneVerified: true,
-          otpSecret: null,
-          otpExpiry: null
-        }
-      });
-
-      return { success: true, message: 'OTP verified successfully' };
-    } catch (error) {
-      logger.error('OTP verification failed:', error);
-      throw new Error('OTP verification failed');
-    }
-  }
 
   async notifyAdminForApproval(wholesalerUser, profileData = {}) {
     try {

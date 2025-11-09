@@ -26,7 +26,6 @@ export const register = asyncHandler(async (req, res) => {
     businessType = businessType.toUpperCase();
   }
 
-  console.log('Received registration data:', { role, phone, businessType, userData });
 
   // Validate required fields
   if (!userData || !userData.email || !userData.password || !userData.name) {
@@ -154,6 +153,7 @@ export const register = asyncHandler(async (req, res) => {
 export const login = asyncHandler(async (req, res) => {
   const result = await authService.login(req.body);
   
+  // If OTP required, return that response
   if (result.requiresOTP) {
     return res.status(200).json({
       success: true,
@@ -162,6 +162,7 @@ export const login = asyncHandler(async (req, res) => {
     });
   }
   
+  // If login successful, return user data and tokens
   res.status(200).json({
     success: true,
     message: 'Login successful',
@@ -169,7 +170,7 @@ export const login = asyncHandler(async (req, res) => {
   });
 });
 
-export const verifyLoginOTP = asyncHandler(async (req, res) => {
+export const verifyOTP = asyncHandler(async (req, res) => {
   const { phone, otp } = req.body;
 
   if (!phone || !otp) {
@@ -179,37 +180,37 @@ export const verifyLoginOTP = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify user exists and is approved wholesaler
-  const user = await prisma.user.findFirst({
-    where: { 
-      phone,
-      role: 'WHOLESALER',
-      isApproved: true
-    },
-    include: {
-      wholesalerProfile: true
-    }
-  });
-
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid phone number or account not approved'
-    });
-  }
-
+  // Verify OTP
   const result = await authService.verifyOTP(phone, otp);
   
   if (result.success) {
-    // Generate tokens after OTP verification
+    // After OTP verification, find user and generate tokens
+    const user = await prisma.user.findFirst({
+      where: { 
+        phone,
+        role: 'WHOLESALER',
+        isApproved: true
+      },
+      include: {
+        wholesalerProfile: true
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User not found or not approved'
+      });
+    }
+
     const tokens = authService.generateTokens(user);
-    const { password: _, otpSecret: __, ...userWithoutSensitiveData } = user;
+    const { password: _, otpSecret: __, ...userData } = user;
     
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
-        user: userWithoutSensitiveData,
+        user: userData,
         ...tokens
       }
     });

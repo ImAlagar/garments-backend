@@ -1,4 +1,3 @@
-// controllers/productController.js
 import { productService } from '../services/index.js';
 import { asyncHandler } from '../utils/helpers.js';
 import logger from '../utils/logger.js';
@@ -70,29 +69,23 @@ export const getProductByCode = asyncHandler(async (req, res) => {
 // Create product (Admin only)
 export const createProduct = asyncHandler(async (req, res) => {
   const productData = req.body;
-  const files = req.files || [];
+  const files = req.files ? Object.values(req.files).flat() : [];
   
   // Parse JSON fields
-  if (productData.details) {
-    try {
-      productData.details = JSON.parse(productData.details);
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid details JSON format'
-      });
+  try {
+    if (productData.productDetails && typeof productData.productDetails === 'string') {
+      productData.productDetails = JSON.parse(productData.productDetails);
     }
-  }
-  
-  if (productData.variants) {
-    try {
+    
+    if (productData.variants && typeof productData.variants === 'string') {
       productData.variants = JSON.parse(productData.variants);
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid variants JSON format'
-      });
     }
+  } catch (error) {
+    logger.error('JSON parsing error:', error);
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid JSON format in productDetails or variants field'
+    });
   }
   
   const product = await productService.createProduct(productData, files);
@@ -111,15 +104,16 @@ export const updateProduct = asyncHandler(async (req, res) => {
   const files = req.files || [];
   
   // Parse JSON fields
-  if (updateData.details) {
-    try {
-      updateData.details = JSON.parse(updateData.details);
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid details JSON format'
-      });
+  try {
+    if (updateData.productDetails && typeof updateData.productDetails === 'string') {
+      updateData.productDetails = JSON.parse(updateData.productDetails);
     }
+  } catch (error) {
+    logger.error('JSON parsing error:', error);
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid JSON format in productDetails field'
+    });
   }
   
   const updatedProduct = await productService.updateProduct(
@@ -147,10 +141,68 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   });
 });
 
+// Add product details (Admin only)
+export const addProductDetails = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { details } = req.body;
+  
+  if (!details || !Array.isArray(details)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Details array is required'
+    });
+  }
+  
+  const productDetails = await productService.addProductDetails(productId, details);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Product details added successfully',
+    data: productDetails
+  });
+});
+
+// Update product detail (Admin only)
+export const updateProductDetail = asyncHandler(async (req, res) => {
+  const { productId, detailId } = req.params;
+  const updateData = req.body;
+  
+  const updatedDetail = await productService.updateProductDetail(
+    productId,
+    detailId, 
+    updateData
+  );
+  
+  res.status(200).json({
+    success: true,
+    message: 'Product detail updated successfully',
+    data: updatedDetail
+  });
+});
+
+// Remove product detail (Admin only)
+export const removeProductDetail = asyncHandler(async (req, res) => {
+  const { productId, detailId } = req.params;
+  
+  await productService.removeProductDetail(productId, detailId);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Product detail removed successfully'
+  });
+});
+
 // Toggle product status (Admin only)
 export const toggleProductStatus = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { status } = req.body;
+  
+  if (!status) {
+    return res.status(400).json({
+      success: false,
+      message: 'Status is required'
+    });
+  }
   
   const updatedProduct = await productService.toggleProductStatus(
     productId, 
@@ -333,6 +385,13 @@ export const updateVariantStock = asyncHandler(async (req, res) => {
   const { productId, variantId } = req.params;
   const { stock } = req.body;
   
+  if (stock === undefined || stock === null) {
+    return res.status(400).json({
+      success: false,
+      message: 'Stock is required'
+    });
+  }
+  
   const updatedVariant = await productService.updateVariantStock(
     productId,
     variantId, 
@@ -385,5 +444,125 @@ export const searchProducts = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: result
+  });
+});
+
+
+// Toggle best seller status (Admin only)
+export const toggleBestSeller = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { isBestSeller } = req.body;
+  
+  if (isBestSeller === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'isBestSeller field is required'
+    });
+  }
+  
+  const updatedProduct = await productService.toggleBestSeller(
+    productId, 
+    isBestSeller
+  );
+  
+  res.status(200).json({
+    success: true,
+    message: `Product ${isBestSeller ? 'marked as' : 'removed from'} best seller`,
+    data: updatedProduct
+  });
+});
+
+// Toggle new arrival status (Admin only)
+export const toggleNewArrival = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { isNewArrival } = req.body;
+  
+  if (isNewArrival === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'isNewArrival field is required'
+    });
+  }
+  
+  const updatedProduct = await productService.toggleNewArrival(
+    productId, 
+    isNewArrival
+  );
+  
+  res.status(200).json({
+    success: true,
+    message: `Product ${isNewArrival ? 'marked as' : 'removed from'} new arrival`,
+    data: updatedProduct
+  });
+});
+
+// Toggle featured status (Admin only)
+export const toggleFeatured = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { featured } = req.body;
+  
+  if (featured === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'featured field is required'
+    });
+  }
+  
+  const updatedProduct = await productService.toggleFeatured(
+    productId, 
+    featured
+  );
+  
+  res.status(200).json({
+    success: true,
+    message: `Product ${featured ? 'marked as' : 'removed from'} featured`,
+    data: updatedProduct
+  });
+});
+
+// Get best seller products
+export const getBestSellers = asyncHandler(async (req, res) => {
+  const { limit = 8 } = req.query;
+  
+  const products = await productService.getBestSellerProducts(parseInt(limit));
+  
+  res.status(200).json({
+    success: true,
+    data: products
+  });
+});
+
+// Get new arrivals
+export const getNewArrivals = asyncHandler(async (req, res) => {
+  const { limit = 8 } = req.query;
+  
+  const products = await productService.getNewArrivals(parseInt(limit));
+  
+  res.status(200).json({
+    success: true,
+    data: products
+  });
+});
+
+// Get featured products
+export const getFeaturedProducts = asyncHandler(async (req, res) => {
+  const { limit = 8 } = req.query;
+  
+  const products = await productService.getFeaturedProducts(parseInt(limit));
+  
+  res.status(200).json({
+    success: true,
+    data: products
+  });
+});
+
+// Auto update merchandising flags (Admin only - can be called via cron job)
+export const autoUpdateMerchandising = asyncHandler(async (req, res) => {
+  await productService.autoMarkNewArrivals();
+  await productService.autoUpdateBestSellers();
+  
+  res.status(200).json({
+    success: true,
+    message: 'Merchandising flags updated automatically'
   });
 });

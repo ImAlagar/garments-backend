@@ -10,7 +10,7 @@ export const getAllCategories = asyncHandler(async (req, res) => {
   const result = await categoryService.getAllCategories({
     page: parseInt(page),
     limit: parseInt(limit),
-    isActive: isActive === 'true',
+    isActive: isActive !== undefined ? isActive === 'true' : undefined, // Fix here
     includeSubcategories: includeSubcategories === 'true'
   });
   

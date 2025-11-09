@@ -12,6 +12,6 @@ router.use('/auth', authRoutes);
 router.use('/auth', userRoutes);
 router.use('/category', categoryRoutes);
 router.use('/subcategory', subcategoryRoutes);
-router.use('/product', productRoutes);
+router.use('/products', productRoutes);
 
 export default router;

@@ -5,58 +5,68 @@ import logger from '../utils/logger.js';
 
 class SubcategoryService {
   // Get all subcategories with pagination and filtering
-  async getAllSubcategories({ page, limit, categoryId, isActive }) {
-    const skip = (page - 1) * limit;
-    
-    const where = {};
-    
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
-    
-    if (isActive !== undefined) {
-      where.isActive = isActive;
-    }
-    
-    const [subcategories, total] = await Promise.all([
-      prisma.subcategory.findMany({
-        where,
-        skip,
-        take: limit,
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              image: true
-            }
-          },
-          products: {
-            where: { status: 'ACTIVE' },
-            select: {
-              id: true,
-              name: true,
-              productCode: true
-            }
+async getAllSubcategories({ page, limit, categoryId, isActive }) {
+  const skip = (page - 1) * limit;
+  
+  console.log('Subcategory Query parameters:', { page, limit, categoryId, isActive });
+  
+  const where = {};
+  
+  if (categoryId) {
+    where.categoryId = categoryId;
+    console.log('Applied categoryId filter:', categoryId);
+  }
+  
+  if (isActive !== undefined) {
+    where.isActive = isActive;
+    console.log('Applied isActive filter:', isActive);
+  }
+  
+  console.log('Final WHERE clause:', where);
+  
+  const [subcategories, total] = await Promise.all([
+    prisma.subcategory.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            image: true
           }
         },
-        orderBy: {
-          createdAt: 'desc'
+        products: {
+          where: { status: 'ACTIVE' },
+          select: {
+            id: true,
+            name: true,
+            productCode: true
+          }
         }
-      }),
-      prisma.subcategory.count({ where })
-    ]);
-    
-    return {
-      subcategories,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
-    };
-  }
+    }),
+    prisma.subcategory.count({ where })
+  ]);
+  
+  console.log('Found subcategories:', subcategories.length);
+  console.log('Total count:', total);
+  console.log('Subcategories:', subcategories);
+  
+  return {
+    subcategories,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  };
+}
   
   // Get subcategory by ID
   async getSubcategoryById(subcategoryId) {
