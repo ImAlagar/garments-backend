@@ -107,6 +107,49 @@ class UserService {
     
     return user;
   }
+
+  // In userService.js - createUser method
+  async createUser(userData) {
+    const { name, email, password, phone, role } = userData; // Make sure this matches
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingEmail) {
+      throw new Error('Email already exists');
+    }
+
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.default.hash(password, 12);
+
+    // Create user with correct field names
+    const newUser = await prisma.user.create({
+      data: {
+        name,        // This should match Prisma schema
+        email,
+        password: hashedPassword,
+        phone,
+        role,
+        isActive: true,
+        isApproved: role !== 'WHOLESALER'
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        phone: true,
+        isActive: true,
+        isApproved: true,
+        createdAt: true
+      }
+    });
+
+    return newUser;
+  }
   
   // Update user profile
   async updateProfile(userId, updateData) {
@@ -241,7 +284,6 @@ class UserService {
         // Delete wholesaler shop photos from S3
         try {
           const deleteResult = await s3UploadService.deleteAllWholesalerShopPhotos(userId);
-          console.log(`Deleted wholesaler shop photos: ${userId}`, deleteResult);
         } catch (error) {
           console.error('Failed to delete wholesaler shop photos:', error);
           // Continue with user deletion even if photo deletion fails
@@ -264,7 +306,6 @@ class UserService {
           const key = this.extractS3KeyFromUrl(avatarUrl);
           if (key) {
             await s3UploadService.deleteImage(key);
-            console.log(`Deleted user avatar: ${userId}`);
           }
         } catch (error) {
           console.error('Failed to delete user avatar:', error);
@@ -278,7 +319,6 @@ class UserService {
       });
     });
     
-    console.log(`User deleted successfully: ${userId}`);
   }
 
   // Helper method to delete user related data
@@ -317,7 +357,6 @@ class UserService {
         });
       }
 
-      console.log(`Deleted related data for user: ${userId}`);
     } catch (error) {
       console.error('Failed to delete user related data:', error);
       throw new Error('Failed to delete user related data');
@@ -368,7 +407,6 @@ class UserService {
       }
     });
     
-    console.log(`User status updated: ${userId} -> ${activeStatus ? 'active' : 'inactive'}`);
     return updatedUser;
   }  
   

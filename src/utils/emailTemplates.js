@@ -1332,4 +1332,928 @@ Wholesale Partnership Team
 Hanger Garments
     `.trim()
   }),
+
+
+    // Add to your existing emailTemplates object
+    contactNotification: (contactData) => {
+    const escapeHtml = (text) => {
+        if (!text) return '';
+        return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    const formatMessage = (message) => {
+        if (!message) return 'No message provided';
+        return escapeHtml(message).replace(/\n/g, '<br>');
+    };
+
+    const currentDate = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    });
+
+    return {
+        subject: `New Contact Form Submission - ${contactData.name || 'Unknown User'}`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Contact Form Submission</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .header p { font-size: 14px; opacity: 0.9; }
+            .content { padding: 30px; }
+            .alert-badge { background: #e8f5e8; color: #2d5e2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #2d5e2d; }
+            .contact-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+            .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+            .info-label { font-weight: 600; color: #495057; min-width: 120px; }
+            .info-value { color: #212529; flex: 1; }
+            .message-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
+            .message-label { font-weight: 600; color: #856404; margin-bottom: 8px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .action-buttons { margin-top: 24px; text-align: center; }
+            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+            .btn-outline { background: transparent; border: 1px solid #2d5e2d; color: #2d5e2d; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+                .info-item { flex-direction: column; }
+                .info-label { margin-bottom: 4px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📩 New Contact Form Submission</h1>
+                <p>Hanger Garments Website</p>
+            </div>
+            
+            <div class="content">
+                <div class="alert-badge">
+                    <strong>Action Required:</strong> A new contact form submission has been received and requires your attention.
+                </div>
+                
+                <div class="contact-info">
+                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">👤 Contact Details</h3>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Full Name:</span>
+                        <span class="info-value">${escapeHtml(contactData.name) || 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">
+                            <a href="mailto:${contactData.email}" style="color: #2d5e2d; text-decoration: none;">
+                                ${contactData.email}
+                            </a>
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Phone Number:</span>
+                        <span class="info-value">${contactData.phone ? escapeHtml(contactData.phone) : 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">User Account:</span>
+                        <span class="info-value">${contactData.userId ? 'Registered User' : 'Guest'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Submission Time:</span>
+                        <span class="info-value">${currentDate}</span>
+                    </div>
+                </div>
+                
+                <div class="message-section">
+                    <div class="message-label">📝 Message Content:</div>
+                    <div style="color: #856404; line-height: 1.5;">
+                        ${formatMessage(contactData.message)}
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="mailto:${contactData.email}" class="btn">✉️ Reply to ${contactData.name?.split(' ')[0] || 'Customer'}</a>
+                    <a href="tel:${contactData.phone}" class="btn btn-outline" style="${!contactData.phone ? 'display: none;' : ''}">📞 Call Customer</a>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated notification from Hanger Garments Contact System</p>
+                <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    NEW CONTACT FORM SUBMISSION - Hanger Garments
+
+    A new contact form submission has been received:
+
+    CONTACT DETAILS:
+    ---------------
+    Name: ${contactData.name || 'Not provided'}
+    Email: ${contactData.email}
+    Phone: ${contactData.phone || 'Not provided'}
+    User Type: ${contactData.userId ? 'Registered User' : 'Guest'}
+    Time: ${currentDate}
+
+    MESSAGE:
+    --------
+    ${contactData.message || 'No message provided'}
+
+    Please respond to this inquiry promptly.
+
+    This is an automated notification from Hanger Garments.
+        `.trim()
+    };
+    },
+
+    contactAutoReply: (contactData) => ({
+    subject: 'Thank You for Contacting Hanger Garments',
+    html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; color: #2d5e2d; }
+            .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+            .timeline { margin: 20px 0; }
+            .timeline-item { margin-bottom: 15px; padding-left: 20px; border-left: 3px solid #2d5e2d; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Thank You for Contacting Us!</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${contactData.name || 'Valued Customer'},</p>
+                
+                <p>Thank you for reaching out to Hanger Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <strong>Message Received</strong><br>
+                        We've received your inquiry and it's in our queue
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Team Review</strong><br>
+                        Our team will review your message and assign it to the right person
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Response</strong><br>
+                        You'll receive a personalized response from our team
+                    </div>
+                </div>
+                
+                <p><strong>Your Inquiry Details:</strong></p>
+                <p>Reference ID: ${contactData.id}<br>
+                Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}</p>
+                
+                <p>For urgent inquiries, please call us at +91 98765 43210.</p>
+                
+                <p>Best regards,<br>
+                <strong>Customer Support Team</strong><br>
+                Hanger Garments</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `,
+    text: `
+    Thank You for Contacting Hanger Garments
+
+    Dear ${contactData.name || 'Valued Customer'},
+
+    Thank you for reaching out to Hanger Garments. We have received your message and our team will get back to you within 24-48 hours.
+
+    WHAT TO EXPECT:
+    --------------
+    • Message Received: We've received your inquiry and it's in our queue
+    • Team Review: Our team will review your message and assign it to the right person
+    • Response: You'll receive a personalized response from our team
+
+    YOUR INQUIRY DETAILS:
+    --------------------
+    Reference ID: ${contactData.id}
+    Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}
+
+    For urgent inquiries, please call us at +91 98765 43210.
+
+    Best regards,
+    Customer Support Team
+    Hanger Garments
+    `.trim()
+    }),
+
+
+    // Add these order email templates to your existing emailTemplates object
+
+    orderConfirmationCustomer: (orderData) => {
+    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+    const trackingUrl = orderData.trackingUrl || '#';
+
+    return {
+        subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order Confirmation - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .success-badge { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #28a745; }
+            .order-summary { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .order-items { margin: 20px 0; }
+            .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+            .order-item:last-child { border-bottom: none; }
+            .item-details { flex: 2; }
+            .item-price { flex: 1; text-align: right; }
+            .amount-breakdown { background: #e8f5e8; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .breakdown-row { display: flex; justify-content: space-between; padding: 8px 0; }
+            .breakdown-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 18px; }
+            .shipping-info, .payment-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .status-badge { display: inline-block; padding: 4px 12px; background: #28a745; color: white; border-radius: 20px; font-size: 12px; font-weight: bold; }
+            .tracking-info { background: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+                .order-item { flex-direction: column; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎉 Order Confirmed!</h1>
+                <p>Thank you for your purchase</p>
+            </div>
+            
+            <div class="content">
+                <div class="success-badge">
+                    <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed.
+                </div>
+                
+                <p>Hello <strong>${orderData.name}</strong>,</p>
+                <p>Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.</p>
+                
+                <div class="order-summary">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">📦 Order Summary</h3>
+                    <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+                    <p><strong>Order Date:</strong> ${orderDate}</p>
+                    <p><strong>Status:</strong> <span class="status-badge">${orderData.status}</span></p>
+                </div>
+
+                <div class="order-items">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">🛒 Order Items</h3>
+                    ${orderData.orderItems.map(item => `
+                    <div class="order-item">
+                        <div class="item-details">
+                            <strong>${item.product.name}</strong>
+                            ${item.productVariant ? `<br><small>Variant: ${item.productVariant.color} - ${item.productVariant.size}</small>` : ''}
+                            <br>
+                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
+                        </div>
+                        <div class="item-price">
+                            ₹${(item.quantity * item.price).toFixed(2)}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                <div class="amount-breakdown">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">💰 Amount Breakdown</h3>
+                    <div class="breakdown-row">
+                        <span>Subtotal:</span>
+                        <span>₹${orderData.subtotal.toFixed(2)}</span>
+                    </div>
+                    ${orderData.discount > 0 ? `
+                    <div class="breakdown-row" style="color: #28a745;">
+                        <span>Discount:</span>
+                        <span>-₹${orderData.discount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    ${orderData.coupon ? `
+                    <div class="breakdown-row">
+                        <span>Coupon Applied:</span>
+                        <span>${orderData.coupon.code}</span>
+                    </div>
+                    ` : ''}
+                    <div class="breakdown-row">
+                        <span>Shipping:</span>
+                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div class="breakdown-row breakdown-total">
+                        <span>Total Amount:</span>
+                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                ${orderData.trackingNumber ? `
+                <div class="tracking-info">
+                    <h3 style="color: #1565c0; margin-bottom: 15px;">🚚 Tracking Information</h3>
+                    <p><strong>Tracking Number:</strong> ${orderData.trackingNumber}</p>
+                    <p><strong>Carrier:</strong> ${orderData.carrier}</p>
+                    ${orderData.trackingUrl ? `<p><strong>Track Your Order:</strong> <a href="${trackingUrl}" style="color: #1565c0;">Click here to track</a></p>` : ''}
+                    ${orderData.estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString()}</p>` : ''}
+                </div>
+                ` : ''}
+
+                <div class="shipping-info">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">🏠 Shipping Address</h3>
+                    <p>${orderData.name}<br>
+                    ${orderData.address}<br>
+                    ${orderData.city}, ${orderData.state} - ${orderData.pincode}<br>
+                    📞 ${orderData.phone}<br>
+                    ✉️ ${orderData.email}</p>
+                </div>
+
+                <div class="payment-info">
+                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">💳 Payment Information</h3>
+                    <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
+                    <p><strong>Payment Status:</strong> <span class="status-badge">${orderData.paymentStatus}</span></p>
+                    <p><strong>Payment ID:</strong> ${orderData.razorpayPaymentId}</p>
+                </div>
+
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #1565c0; margin-bottom: 10px;">📞 Need Help?</h4>
+                    <p style="margin: 0;">If you have any questions about your order, contact our support team:</p>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${supportEmail}" style="color: #1565c0;">${supportEmail}</a></p>
+                    <p style="margin: 0;"><strong>Phone:</strong> +91 98765 43210</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Hanger Garments</strong></p>
+                <p>Nourishing Lives Naturally</p>
+                <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                    This is an automated order confirmation email. Please do not reply to this message.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    ORDER CONFIRMED - Hanger Garments
+
+    Hello ${orderData.name},
+
+    Thank you for your order! We're excited to let you know that we've received your order #${orderData.orderNumber} and it is now being processed.
+
+    ORDER SUMMARY:
+    --------------
+    Order Number: ${orderData.orderNumber}
+    Order Date: ${orderDate}
+    Status: ${orderData.status}
+
+    ORDER ITEMS:
+    ------------
+    ${orderData.orderItems.map(item => 
+    `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''} - ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
+    ).join('\n')}
+
+    AMOUNT BREAKDOWN:
+    -----------------
+    Subtotal: ₹${orderData.subtotal.toFixed(2)}
+    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
+    Total: ₹${orderData.totalAmount.toFixed(2)}
+
+    ${orderData.trackingNumber ? `
+    TRACKING INFORMATION:
+    ---------------------
+    Tracking Number: ${orderData.trackingNumber}
+    Carrier: ${orderData.carrier}
+    ${orderData.trackingUrl ? `Track Your Order: ${trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
+    ` : ''}
+
+    SHIPPING ADDRESS:
+    -----------------
+    ${orderData.name}
+    ${orderData.address}
+    ${orderData.city}, ${orderData.state} - ${orderData.pincode}
+    Phone: ${orderData.phone}
+    Email: ${orderData.email}
+
+    PAYMENT INFORMATION:
+    -------------------
+    Payment Method: ${orderData.paymentMethod}
+    Payment Status: ${orderData.paymentStatus}
+    Payment ID: ${orderData.razorpayPaymentId}
+
+    Need help? Contact our support team:
+    Email: ${supportEmail}
+    Phone: +91 98765 43210
+
+    Thank you for choosing Hanger Garments!
+
+    --
+    Hanger Garments
+    Nourishing Lives Naturally
+        `.trim()
+    };
+    },
+
+    orderConfirmationAdmin: (orderData) => {
+    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
+
+    return {
+        subject: `New Order Received - #${orderData.orderNumber} - ₹${orderData.totalAmount.toFixed(2)}`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Order Notification - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #dc3545 0%, #c82333 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .alert-badge { background: #ffe6e6; color: #dc3545; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #dc3545; }
+            .order-overview { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+            .overview-item { background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #dc3545; }
+            .order-items { margin: 20px 0; }
+            .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+            .amount-summary { background: #e8f5e8; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
+            .summary-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 18px; }
+            .customer-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .action-buttons { margin-top: 24px; text-align: center; }
+            .btn { display: inline-block; padding: 12px 24px; margin: 0 8px; background: #dc3545; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600; }
+            .btn-outline { background: transparent; border: 2px solid #dc3545; color: #dc3545; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+                .overview-grid { grid-template-columns: 1fr; }
+                .order-item { flex-direction: column; }
+                .btn { display: block; margin: 10px 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🛒 New Order Received</h1>
+                <p>Order #${orderData.orderNumber} - Requires Processing</p>
+            </div>
+            
+            <div class="content">
+                <div class="alert-badge">
+                    <strong>New Order Alert:</strong> A new order has been placed and requires processing.
+                </div>
+                
+                <div class="order-overview">
+                    <h3 style="color: #dc3545; margin-bottom: 16px;">📊 Order Overview</h3>
+                    <div class="overview-grid">
+                        <div class="overview-item">
+                            <strong>Order Number</strong><br>
+                            ${orderData.orderNumber}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Order Date</strong><br>
+                            ${orderDate}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Total Amount</strong><br>
+                            ₹${orderData.totalAmount.toFixed(2)}
+                        </div>
+                        <div class="overview-item">
+                            <strong>Payment Method</strong><br>
+                            ${orderData.paymentMethod}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="customer-info">
+                    <h3 style="color: #dc3545; margin-bottom: 16px;">👤 Customer Information</h3>
+                    <p><strong>Name:</strong> ${orderData.name}</p>
+                    <p><strong>Email:</strong> <a href="mailto:${orderData.email}" style="color: #dc3545;">${orderData.email}</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:${orderData.phone}" style="color: #dc3545;">${orderData.phone}</a></p>
+                    <p><strong>Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
+                    ${orderData.user ? `<p><strong>Customer ID:</strong> ${orderData.user.id}</p>` : ''}
+                </div>
+
+                <div class="order-items">
+                    <h3 style="color: #dc3545; margin-bottom: 16px;">📦 Order Items</h3>
+                    ${orderData.orderItems.map(item => `
+                    <div class="order-item">
+                        <div style="flex: 2;">
+                            <strong>${item.product.name}</strong>
+                            ${item.productVariant ? `<br><small>Variant: ${item.productVariant.color} - ${item.productVariant.size}</small>` : ''}
+                            <br>
+                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                            ₹${(item.quantity * item.price).toFixed(2)}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                <div class="amount-summary">
+                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">💰 Order Summary</h3>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>₹${orderData.subtotal.toFixed(2)}</span>
+                    </div>
+                    ${orderData.discount > 0 ? `
+                    <div class="summary-row" style="color: #28a745;">
+                        <span>Discount:</span>
+                        <span>-₹${orderData.discount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    ${orderData.coupon ? `
+                    <div class="summary-row">
+                        <span>Coupon Code:</span>
+                        <span>${orderData.coupon.code}</span>
+                    </div>
+                    ` : ''}
+                    <div class="summary-row">
+                        <span>Shipping:</span>
+                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Grand Total:</span>
+                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="${adminUrl}/orders/${orderData.id}" class="btn">📋 View Order in Admin Panel</a>
+                    <a href="mailto:${orderData.email}?subject=Regarding Order ${orderData.orderNumber}" class="btn btn-outline">✉️ Contact Customer</a>
+                </div>
+
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                    <h4 style="color: #856404; margin-bottom: 12px;">🚀 Next Steps:</h4>
+                    <ol style="color: #856404; margin-left: 20px;">
+                        <li>Review order details and verify payment</li>
+                        <li>Prepare items for shipping</li>
+                        <li>Update order status when shipped</li>
+                        <li>Add tracking information</li>
+                        <li>Notify customer when delivered</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Hanger Garments - Order Management System</strong></p>
+                <p>This is an automated notification. Please process this order promptly.</p>
+                <p style="margin-top: 8px; font-size: 11px; color: #999;">
+                    If you believe you received this email in error, please contact system administration.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    NEW ORDER NOTIFICATION - Hanger Garments
+
+    A new order has been placed and requires processing.
+
+    ORDER OVERVIEW:
+    ---------------
+    Order Number: ${orderData.orderNumber}
+    Order Date: ${orderDate}
+    Total Amount: ₹${orderData.totalAmount.toFixed(2)}
+    Payment Method: ${orderData.paymentMethod}
+    Payment Status: ${orderData.paymentStatus}
+
+    CUSTOMER INFORMATION:
+    --------------------
+    Name: ${orderData.name}
+    Email: ${orderData.email}
+    Phone: ${orderData.phone}
+    Address: ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}
+    ${orderData.user ? `Customer ID: ${orderData.user.id}\n` : ''}
+
+    ORDER ITEMS:
+    -----------
+    ${orderData.orderItems.map(item => 
+    `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}
+    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
+    ).join('\n')}
+
+    ORDER SUMMARY:
+    -------------
+    Subtotal: ₹${orderData.subtotal.toFixed(2)}
+    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Code: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
+    Grand Total: ₹${orderData.totalAmount.toFixed(2)}
+
+    NEXT STEPS:
+    ----------
+    1. Review order details and verify payment
+    2. Prepare items for shipping
+    3. Update order status when shipped
+    4. Add tracking information
+    5. Notify customer when delivered
+
+    View order in admin panel: ${adminUrl}/orders/${orderData.id}
+
+    This is an automated order notification from Hanger Garments.
+
+    --
+    Hanger Garments
+    Order Management System
+        `.trim()
+    };
+    },
+
+    orderStatusUpdate: (orderData, oldStatus, newStatus) => {
+    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    return {
+        subject: `Order ${newStatus} - #${orderData.orderNumber} - Hanger Garments`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order Status Update - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #2c5aa0 0%, #3a7bd5 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .status-badge { display: inline-block; padding: 8px 16px; background: #28a745; color: white; border-radius: 20px; font-size: 14px; font-weight: bold; margin: 10px 0; }
+            .order-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .tracking-info { background: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📦 Order Status Updated</h1>
+                <p>Your order #${orderData.orderNumber} has been updated</p>
+            </div>
+            
+            <div class="content">
+                <p>Hello <strong>${orderData.name}</strong>,</p>
+                
+                <p>Your order status has been updated from <strong>${oldStatus}</strong> to <strong>${newStatus}</strong>.</p>
+                
+                <div class="order-info">
+                    <h3 style="color: #2c5aa0; margin-bottom: 15px;">Order Details</h3>
+                    <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+                    <p><strong>Order Date:</strong> ${orderDate}</p>
+                    <p><strong>Current Status:</strong> <span class="status-badge">${newStatus}</span></p>
+                    <p><strong>Total Amount:</strong> ₹${orderData.totalAmount.toFixed(2)}</p>
+                </div>
+
+                ${orderData.trackingNumber ? `
+                <div class="tracking-info">
+                    <h3 style="color: #1565c0; margin-bottom: 15px;">🚚 Tracking Information</h3>
+                    <p><strong>Tracking Number:</strong> ${orderData.trackingNumber}</p>
+                    <p><strong>Carrier:</strong> ${orderData.carrier}</p>
+                    ${orderData.trackingUrl ? `<p><strong>Track Your Order:</strong> <a href="${orderData.trackingUrl}" style="color: #1565c0;">Click here to track</a></p>` : ''}
+                    ${orderData.estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString()}</p>` : ''}
+                </div>
+                ` : ''}
+
+                ${newStatus === 'SHIPPED' ? `
+                <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #155724; margin-bottom: 10px;">🎉 Your Order is on the Way!</h4>
+                    <p style="margin: 0; color: #155724;">We've shipped your order. You can track its progress using the tracking information above.</p>
+                </div>
+                ` : ''}
+
+                ${newStatus === 'DELIVERED' ? `
+                <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #155724; margin-bottom: 10px;">🎊 Order Delivered Successfully!</h4>
+                    <p style="margin: 0; color: #155724;">Your order has been delivered. We hope you love your purchase!</p>
+                </div>
+                ` : ''}
+
+                <div style="margin-top: 20px;">
+                    <p>Thank you for shopping with Hanger Garments!</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Hanger Garments</strong></p>
+                <p>Nourishing Lives Naturally</p>
+                <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                    This is an automated status update email. Please do not reply to this message.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    ORDER STATUS UPDATE - Hanger Garments
+
+    Hello ${orderData.name},
+
+    Your order status has been updated from ${oldStatus} to ${newStatus}.
+
+    ORDER DETAILS:
+    --------------
+    Order Number: ${orderData.orderNumber}
+    Order Date: ${orderDate}
+    Current Status: ${newStatus}
+    Total Amount: ₹${orderData.totalAmount.toFixed(2)}
+
+    ${orderData.trackingNumber ? `
+    TRACKING INFORMATION:
+    ---------------------
+    Tracking Number: ${orderData.trackingNumber}
+    Carrier: ${orderData.carrier}
+    ${orderData.trackingUrl ? `Track Your Order: ${orderData.trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
+    ` : ''}
+
+    ${newStatus === 'SHIPPED' ? `
+    🎉 Your Order is on the Way!
+    We've shipped your order. You can track its progress using the tracking information above.
+    ` : ''}
+
+    ${newStatus === 'DELIVERED' ? `
+    🎊 Order Delivered Successfully!
+    Your order has been delivered. We hope you love your purchase!
+    ` : ''}
+
+    Thank you for shopping with Hanger Garments!
+
+    --
+    Hanger Garments
+    Nourishing Lives Naturally
+        `.trim()
+    };
+    },
+
+    orderRefundNotification: (orderData, refundData) => {
+    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    return {
+        subject: `Order Refund Processed - #${orderData.orderNumber} - Hanger Garments`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order Refund - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #28a745 0%, #20c997 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .refund-info { background: #d4edda; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .order-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>💰 Refund Processed</h1>
+                <p>Your refund for order #${orderData.orderNumber} has been processed</p>
+            </div>
+            
+            <div class="content">
+                <p>Hello <strong>${orderData.name}</strong>,</p>
+                
+                <p>We have processed your refund for order <strong>#${orderData.orderNumber}</strong>.</p>
+                
+                <div class="refund-info">
+                    <h3 style="color: #155724; margin-bottom: 15px;">Refund Details</h3>
+                    <p><strong>Refund Amount:</strong> ₹${refundData.refundAmount.toFixed(2)}</p>
+                    <p><strong>Refund Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Refund Reason:</strong> ${refundData.reason}</p>
+                    ${refundData.razorpayRefundId ? `<p><strong>Refund ID:</strong> ${refundData.razorpayRefundId}</p>` : ''}
+                    <p style="margin-top: 15px; color: #155724;"><strong>Note:</strong> The refund will reflect in your original payment method within 5-7 business days.</p>
+                </div>
+
+                <div class="order-info">
+                    <h3 style="color: #495057; margin-bottom: 15px;">Order Details</h3>
+                    <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+                    <p><strong>Order Date:</strong> ${orderDate}</p>
+                    <p><strong>Original Amount:</strong> ₹${orderData.totalAmount.toFixed(2)}</p>
+                    <p><strong>Refunded Amount:</strong> ₹${refundData.refundAmount.toFixed(2)}</p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <p>If you have any questions about your refund, please contact our support team.</p>
+                    <p>We hope to serve you better in the future.</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Hanger Garments</strong></p>
+                <p>Nourishing Lives Naturally</p>
+                <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                    This is an automated refund notification email. Please do not reply to this message.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    ORDER REFUND PROCESSED - Hanger Garments
+
+    Hello ${orderData.name},
+
+    We have processed your refund for order #${orderData.orderNumber}.
+
+    REFUND DETAILS:
+    ---------------
+    Refund Amount: ₹${refundData.refundAmount.toFixed(2)}
+    Refund Date: ${new Date().toLocaleDateString()}
+    Refund Reason: ${refundData.reason}
+    ${refundData.razorpayRefundId ? `Refund ID: ${refundData.razorpayRefundId}\n` : ''}
+    Note: The refund will reflect in your original payment method within 5-7 business days.
+
+    ORDER DETAILS:
+    --------------
+    Order Number: ${orderData.orderNumber}
+    Order Date: ${orderDate}
+    Original Amount: ₹${orderData.totalAmount.toFixed(2)}
+    Refunded Amount: ₹${refundData.refundAmount.toFixed(2)}
+
+    If you have any questions about your refund, please contact our support team.
+    We hope to serve you better in the future.
+
+    --
+    Hanger Garments
+    Nourishing Lives Naturally
+        `.trim()
+    };
+    }
+
 };

@@ -4,11 +4,21 @@ import userService from './userService.js';
 import categoryService from './categoryService.js';
 import subcategoryService from './subcategoryService.js';
 import productService from './productService.js';
+import contactService from './contactService.js';
+import ratingService from './ratingService.js';
+import orderService from './orderService.js';
+import razorpayService from './razorpayService.js';
+import sliderService from './sliderService.js';
 
 export {
   authService,
   userService,
   categoryService,
   subcategoryService,
-  productService
+  productService,
+  contactService,
+  ratingService,
+  orderService,
+  razorpayService,
+  sliderService
 };

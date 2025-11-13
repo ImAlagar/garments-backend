@@ -32,6 +32,116 @@ export const getUserById = asyncHandler(async (req, res) => {
   });
 });
 
+// Create user (Admin only)
+export const createUser = asyncHandler(async (req, res) => {
+  // Extract data from FormData
+  const { name, email, password, phone, role, companyName, businessType, gstNumber, websiteUrl, instagramUrl, city, state } = req.body;
+  
+  // Validate required fields
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({
+      success: false,
+      message: 'Name, email, password, and role are required fields'
+    });
+  }
+
+  // Validate role
+  const validRoles = ['ADMIN', 'CUSTOMER', 'WHOLESALER'];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+    });
+  }
+
+  // Validate password strength
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must be at least 6 characters long'
+    });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid email address'
+    });
+  }
+
+  try {
+    const userData = {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      phone: phone?.trim(),
+      role
+    };
+
+    // Include wholesaler profile data if role is WHOLESALER
+    if (role === 'WHOLESALER') {
+      if (!companyName || !businessType || !city || !state) {
+        return res.status(400).json({
+          success: false,
+          message: 'Company name, business type, city, and state are required for wholesalers'
+        });
+      }
+
+      userData.wholesalerProfile = {
+        companyName: companyName.trim(),
+        businessType,
+        gstNumber: gstNumber?.trim(),
+        websiteUrl: websiteUrl?.trim(),
+        instagramUrl: instagramUrl?.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        shopPhotos: [] // Initialize empty, can be updated later
+      };
+
+      // Handle shop photos upload if any
+      if (req.files && req.files.shopPhotos) {
+        // This will be handled by the service layer
+        userData.shopPhotos = req.files.shopPhotos;
+      }
+    }
+
+    const newUser = await userService.createUser(userData);
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: newUser
+    });
+  } catch (error) {
+    logger.error('Create user error:', { 
+      email, 
+      role, 
+      error: error.message 
+    });
+
+    if (error.message.includes('Email already exists')) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email address is already registered'
+      });
+    }
+
+    if (error.message.includes('Phone number already exists')) {
+      return res.status(409).json({
+        success: false,
+        message: 'Phone number is already registered'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create user'
+    });
+  }
+});
+
 // Update user profile
 export const updateProfile = asyncHandler(async (req, res) => {
   const { userId } = req.params;

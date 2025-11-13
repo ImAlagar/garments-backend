@@ -30,28 +30,72 @@ import {
   toggleFeatured,
   autoUpdateMerchandising
 } from '../controllers/productController.js';
+import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
+import { validateProduct, validateProductUpdate } from '../middleware/validation.js';
 
 const router = express.Router();
 
+const storage = multer.memoryStorage();
+
 const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit per file
-        files: 50 // Maximum 50 files total
-    },
-    fileFilter: (req, file, cb) => {
-        // Allow any fieldname that starts with 'variantImages'
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error(`Invalid file type: ${file.mimetype}. Only images are allowed.`), false);
-        }
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 50 // Maximum 50 files total
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type: ${file.mimetype}. Only images are allowed.`), false);
     }
+  }
 });
 
-// SIMPLE APPROACH: Use .any() to accept all files
-const handleVariantImagesUpload = upload.any();
+// FIXED: Use fields to handle both text fields and files in one go
+const handleVariantImagesUpload = (req, res, next) => {
+  // Use .any() to handle all fields and files
+  upload.any()(req, res, (err) => {
+    if (err) {
+      console.error('FormData parsing error:', err);
+      return res.status(400).json({
+        success: false,
+        message: 'Error parsing form data: ' + err.message
+      });
+    }
+        
+    if (req.files) {
+      req.files.forEach((file, index) => {
+        console.log(`File ${index}:`, {
+          fieldname: file.fieldname,
+          originalname: file.originalname,
+          size: file.size
+        });
+      });
+    }
+    
+    // Parse JSON fields from FormData strings
+    try {
+      if (req.body.variants && typeof req.body.variants === 'string') {
+        req.body.variants = JSON.parse(req.body.variants);
+      }
+      
+      if (req.body.productDetails && typeof req.body.productDetails === 'string') {
+        req.body.productDetails = JSON.parse(req.body.productDetails);
+      }
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid JSON format in variants or productDetails field'
+      });
+    }
+    
+    next();
+  });
+};
+
+
 // Public routes
 router.get('/', getAllProducts);
 router.get('/search', searchProducts);
@@ -63,67 +107,59 @@ router.get('/featured/products', getFeaturedProducts);
 router.get('/new-arrivals/products', getNewArrivals);
 router.get('/best-sellers/products', getBestSellers);
 
+// Admin routes (with auth)
+router.get('/admin/stats', auth, authorize('ADMIN'), getProductStats);
 
-// Admin routes (without auth for testing)
-router.get('/admin/stats', getProductStats);
-router.post('/admin', (req, res, next) => {
-    handleVariantImagesUpload(req, res, (err) => {
-        if (err) {
-            console.error('File upload error:', err);
-            return res.status(400).json({
-                success: false,
-                message: `File upload failed: ${err.message}`
-            });
-        }
-        
-        // Log uploaded files for debugging
-        if (req.files && req.files.length > 0) {
-            console.log('=== UPLOADED FILES DEBUG ===');
-            console.log('Total files uploaded:', req.files.length);
-            req.files.forEach((file, index) => {
-                console.log(`File ${index}:`, {
-                    fieldname: file.fieldname,
-                    originalname: file.originalname,
-                    mimetype: file.mimetype,
-                    size: file.size
-                });
-            });
-        } else {
-            console.log('No files uploaded');
-        }
-        
-        next();
-    });
-}, createProduct);
-router.put('/admin/:productId', upload.array('images', 10), updateProduct);
-router.delete('/admin/:productId', deleteProduct);
-router.patch('/admin/:productId/status', toggleProductStatus);
+// In your product routes, update the validation middleware logging
+router.post('/admin', 
+  handleVariantImagesUpload,
+  (req, res, next) => {
+    next();
+  },
+  validateProduct,
+  (req, res, next) => {
+    next();
+  },
+  createProduct
+);
+
+// Update product route
+router.put('/admin/:productId', 
+  auth, 
+  authorize('ADMIN'),
+  handleVariantImagesUpload,
+  validateProductUpdate, 
+  updateProduct
+);
+
+router.delete('/admin/:productId', auth, authorize('ADMIN'), deleteProduct);
+router.patch('/admin/:productId/status', auth, authorize('ADMIN'), toggleProductStatus);
+
 // Admin routes for merchandising management
-router.patch('/admin/:productId/best-seller', toggleBestSeller);
-router.patch('/admin/:productId/new-arrival', toggleNewArrival);
-router.patch('/admin/:productId/featured', toggleFeatured);
-router.post('/admin/merchandising/auto-update', autoUpdateMerchandising);
+router.patch('/admin/:productId/best-seller', auth, authorize('ADMIN'), toggleBestSeller);
+router.patch('/admin/:productId/new-arrival', auth, authorize('ADMIN'), toggleNewArrival);
+router.patch('/admin/:productId/featured', auth, authorize('ADMIN'), toggleFeatured);
+router.post('/admin/merchandising/auto-update', auth, authorize('ADMIN'), autoUpdateMerchandising);
 
+// Product details routes (with auth)
+router.post('/admin/:productId/details', auth, authorize('ADMIN'), addProductDetails);
+router.put('/admin/:productId/details/:detailId', auth, authorize('ADMIN'), updateProductDetail);
+router.delete('/admin/:productId/details/:detailId', auth, authorize('ADMIN'), removeProductDetail);
 
-// Product details routes (without auth for testing)
-router.post('/admin/:productId/details', addProductDetails);
-router.put('/admin/:productId/details/:detailId', updateProductDetail);
-router.delete('/admin/:productId/details/:detailId', removeProductDetail);
+// Product images routes (with auth)
+router.post('/admin/:productId/images', auth, authorize('ADMIN'), upload.array('images', 10), addProductImages);
+router.delete('/admin/:productId/images/:imageId', auth, authorize('ADMIN'), removeProductImage);
+router.patch('/admin/:productId/images/:imageId/primary', auth, authorize('ADMIN'), setPrimaryProductImage);
 
-// Product images routes (without auth for testing)
-router.post('/admin/:productId/images', upload.array('images', 10), addProductImages);
-router.delete('/admin/:productId/images/:imageId', removeProductImage);
-router.patch('/admin/:productId/images/:imageId/primary', setPrimaryProductImage);
+// Product variants routes (with auth)
+router.post('/admin/:productId/variants', auth, authorize('ADMIN'), upload.array('images', 10), addProductVariant);
+router.put('/admin/:productId/variants/:variantId', auth, authorize('ADMIN'), upload.array('images', 10), updateProductVariant);
+router.delete('/admin/:productId/variants/:variantId', auth, authorize('ADMIN'), removeProductVariant);
+router.patch('/admin/:productId/variants/:variantId/stock', auth, authorize('ADMIN'), updateVariantStock);
 
-// Product variants routes (without auth for testing)
-router.post('/admin/:productId/variants', upload.array('images', 10), addProductVariant);
-router.put('/admin/:productId/variants/:variantId', upload.array('images', 10), updateProductVariant);
-router.delete('/admin/:productId/variants/:variantId', removeProductVariant);
-router.patch('/admin/:productId/variants/:variantId/stock', updateVariantStock);
-
-// Variant images routes (without auth for testing)
-router.post('/admin/:productId/variants/:variantId/images', upload.array('images', 10), addVariantImages);
-router.delete('/admin/:productId/variants/:variantId/images/:imageId', removeVariantImage);
-router.patch('/admin/:productId/variants/:variantId/images/:imageId/primary', setPrimaryVariantImage);
+// Variant images routes (with auth)
+router.post('/admin/:productId/variants/:variantId/images', auth, authorize('ADMIN'), upload.array('images', 10), addVariantImages);
+router.delete('/admin/:productId/variants/:variantId/images/:imageId', auth, authorize('ADMIN'), removeVariantImage);
+router.patch('/admin/:productId/variants/:variantId/images/:imageId/primary', auth, authorize('ADMIN'), setPrimaryVariantImage);
 
 export default router;

@@ -16,7 +16,6 @@ class AuthService {
 async register(userData, files = []) {
   const { email, password, name, role, phone, businessType, ...wholesalerData } = userData;
 
-  console.log('Registration data:', { email, role, phone, businessType, wholesalerData });
 
   // Check if user exists
   const existingUser = await prisma.user.findFirst({
@@ -63,7 +62,6 @@ async register(userData, files = []) {
 
       // Create wholesaler profile if applicable
       if (role === 'WHOLESALER') {
-        console.log('Creating wholesaler profile with businessType:', businessType);
         
         let shopPhotoUrls = [];
 
@@ -101,8 +99,6 @@ async register(userData, files = []) {
           city: wholesalerData.city || null,
           state: wholesalerData.state || null,
         };
-
-        console.log('Wholesaler profile data:', profileData);
 
         await tx.wholesalerProfile.create({
           data: profileData
@@ -336,8 +332,6 @@ async register(userData, files = []) {
         expectedVolume: 'To be determined', // Default value
         additionalInfo: `Business registered as ${profileData.businessType} in ${profileData.city}, ${profileData.state}`
       };
-
-      console.log('Sending admin notification for wholesaler:', wholesalerInfo);
 
       // Find admin users
       const admins = await prisma.user.findMany({

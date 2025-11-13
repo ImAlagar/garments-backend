@@ -8,6 +8,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model HomeSlider {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  smallText   String?
+  offerText   String?
+  buttonText  String?
+  buttonLink  String?
+  layout      String   @default("left") // left, right, center
+  bgImage     String   // Background image URL
+  image       String   // Main image URL
+  imagePublicId String?
+  bgImagePublicId String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0) // For sorting
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("home_sliders")
+}
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -75,7 +100,7 @@ enum BusinessType {
 
 model Category {
   id            String    @id @default(cuid())
-  name          CategoryType
+  name          String    @unique  // CHANGED FROM CategoryType TO String
   description   String?
   image         String?
   imagePublicId String?
@@ -217,16 +242,17 @@ model Rating {
 }
 
 model Contact {
-  id        String        @id @default(cuid())
-  name      String
-  phone     String
-  email     String
-  message   String
-  status    ContactStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  userId    String?
-  users     User?         @relation(fields: [userId], references: [id])
+  id          String        @id @default(cuid())
+  name        String
+  phone       String?       // Made optional
+  email       String
+  message     String
+  status      ContactStatus @default(PENDING)
+  adminNotes  String?       // Added this field
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      String?
+  users       User?         @relation(fields: [userId], references: [id])
 
   @@map("contacts")
 }
@@ -245,12 +271,18 @@ model Order {
   status           OrderStatus   @default(PENDING)
   totalAmount      Float
   subtotal         Float
-  shippingCost     Float         @default(0)
   discount         Float         @default(0)
+  shippingCost     Float         @default(0)
   paymentStatus    PaymentStatus @default(PENDING)
   paymentMethod    String
-  razorpayOrderId  String?
-  razorpayPaymentId String?
+  
+  // PhonePe Payment Fields
+  phonepeMerchantTransactionId String?   @unique
+  phonepeTransactionId        String?    @unique
+  phonepePaymentInstrumentType String?   // UPI, CARD, NETBANKING, etc.
+  phonepeResponseCode         String?
+  phonepeResponseMessage      String?
+  
   couponId         String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -258,15 +290,14 @@ model Order {
   user             User          @relation(fields: [userId], references: [id])
   coupon           Coupon?       @relation(fields: [couponId], references: [id])
 
-  // Add these tracking fields
+  // Tracking fields
   trackingNumber   String?   @unique
-  carrier          String?   // e.g., "FedEx", "UPS", "DHL"
+  carrier          String?
   trackingUrl      String?
   estimatedDelivery DateTime?
   shippedAt       DateTime?
   deliveredAt     DateTime?
   
-  // Add tracking history
   trackingHistory TrackingHistory[]
 
   @@map("orders")
@@ -291,7 +322,7 @@ model TrackingHistory {
   id          String   @id @default(cuid())
   orderId     String
   status      String  
-  location    String?
+  location    String? 
   description String
   createdAt   DateTime @default(now())
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -301,7 +332,7 @@ model TrackingHistory {
 
 model Address {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String 
   street    String
   city      String
   state     String
@@ -314,17 +345,6 @@ model Address {
   @@map("addresses")
 }
 
-model ShippingRate {
-  id        String   @id @default(cuid())
-  state     String   @unique
-  rate      Float
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("shipping_rates")
-}
-
 model Coupon {
   id             String       @id @default(cuid())
   code           String       @unique
@@ -335,6 +355,7 @@ model Coupon {
   maxDiscount    Float?
   usageLimit     Int?
   usedCount      Int          @default(0)
+  totalDiscounts Float        @default(0) // ADD THIS FIELD
   validFrom      DateTime
   validUntil     DateTime
   isActive       Boolean      @default(true)
@@ -351,12 +372,6 @@ enum UserRole {
   WHOLESALER
 }
 
-enum CategoryType {
-  MEN
-  WOMEN
-  KIDS
-  UNISEX
-}
 
 enum OrderStatus {
   PENDING

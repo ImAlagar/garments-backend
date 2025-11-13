@@ -1,4 +1,5 @@
 // controllers/subcategoryController.js
+import prisma from '../config/database.js';
 import { subcategoryService } from '../services/index.js';
 import { asyncHandler } from '../utils/helpers.js';
 import logger from '../utils/logger.js';
@@ -90,5 +91,47 @@ export const toggleSubcategoryStatus = asyncHandler(async (req, res) => {
     success: true,
     message: `Subcategory ${isActive ? 'activated' : 'deactivated'} successfully`,
     data: updatedSubcategory
+  });
+});
+
+
+// Get subcategories by category ID
+export const getSubcategoriesByCategory = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+  const { isActive = 'true' } = req.query;
+  
+  // Validate category exists
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId }
+  });
+  
+  if (!category) {
+    return res.status(404).json({
+      success: false,
+      message: 'Category not found'
+    });
+  }
+  
+  const subcategories = await prisma.subcategory.findMany({
+    where: {
+      categoryId,
+      isActive: isActive === 'true'
+    },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    },
+    orderBy: {
+      name: 'asc'
+    }
+  });
+  
+  res.status(200).json({
+    success: true,
+    data: subcategories
   });
 });

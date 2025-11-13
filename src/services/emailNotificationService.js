@@ -236,7 +236,7 @@ class EmailNotificationService {
   }
 
 
-    async sendOrderConfirmationCustomer(orderData) {
+  async sendOrderConfirmationCustomer(orderData) {
     try {
       const template = emailTemplates.orderConfirmationCustomer(orderData);
       
@@ -283,6 +283,46 @@ class EmailNotificationService {
     }
   }
 
+  async sendOrderStatusUpdate(orderData, oldStatus, newStatus) {
+    try {
+      const template = emailTemplates.orderStatusUpdate(orderData, oldStatus, newStatus);
+      
+      const result = await emailService.sendEmail({
+        to: orderData.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        from: `"Hanger Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Order status update email failed:', error.message);
+      // Don't throw error - continue even if email fails
+    }
+  }
+
+  async sendOrderRefundNotification(orderData, refundData) {
+    try {
+      const template = emailTemplates.orderRefundNotification(orderData, refundData);
+      
+      const result = await emailService.sendEmail({
+        to: orderData.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        from: `"Hanger Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      });
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Order refund notification email failed:', error.message);
+      // Don't throw error - continue even if email fails
+    }
+  }
+
   async sendOrderNotifications(orderData) {
     try {
       // Send to customer
@@ -291,6 +331,7 @@ class EmailNotificationService {
       // Send to admin
       await this.sendOrderConfirmationAdmin(orderData);
       
+      logger.info(`Order notifications sent for: ${orderData.orderNumber}`);
       
     } catch (error) {
       console.error('❌ Order notifications failed:', error.message);
@@ -314,6 +355,8 @@ class EmailNotificationService {
       throw error;
     }
   }
+
+
 
 }
 

@@ -66,19 +66,60 @@ export const getProductByCode = asyncHandler(async (req, res) => {
   });
 });
 
-// Create product (Admin only)
 export const createProduct = asyncHandler(async (req, res) => {
   const productData = req.body;
-  const files = req.files ? Object.values(req.files).flat() : [];
+  const files = req.files || [];
   
+  // Extract variantColors from body if present
+  const variantColors = productData.variantColors;
+  if (variantColors) {
+    // Remove variantColors from productData to avoid validation issues
+    delete productData.variantColors;
+  }
+
+  try {
+    const product = await productService.createProduct(productData, files, variantColors);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Product created successfully',
+      data: product
+    });
+  } catch (error) {
+    console.error('Error in createProduct controller:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Update product (Admin only)
+export const updateProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const updateData = req.body;
+  const files = req.files || [];
+  
+  console.log('=== UPDATE PRODUCT CONTROLLER ===');
+  console.log('Update data received:', Object.keys(updateData));
+  console.log('Files received:', files.length);
+  
+  // Extract variantColors from body if present
+  const variantColors = updateData.variantColors;
+  if (variantColors) {
+    console.log('Variant colors found:', variantColors);
+    delete updateData.variantColors;
+  }
+
   // Parse JSON fields
   try {
-    if (productData.productDetails && typeof productData.productDetails === 'string') {
-      productData.productDetails = JSON.parse(productData.productDetails);
+    if (updateData.productDetails && typeof updateData.productDetails === 'string') {
+      updateData.productDetails = JSON.parse(updateData.productDetails);
     }
     
-    if (productData.variants && typeof productData.variants === 'string') {
-      productData.variants = JSON.parse(productData.variants);
+    // ✅ FIX: Parse variants if it's a string
+    if (updateData.variants && typeof updateData.variants === 'string') {
+      updateData.variants = JSON.parse(updateData.variants);
     }
   } catch (error) {
     logger.error('JSON parsing error:', error);
@@ -88,45 +129,29 @@ export const createProduct = asyncHandler(async (req, res) => {
     });
   }
   
-  const product = await productService.createProduct(productData, files);
-  
-  res.status(201).json({
-    success: true,
-    message: 'Product created successfully',
-    data: product
-  });
-});
+  console.log('Parsed variants:', updateData.variants);
+  console.log('Parsed productDetails:', updateData.productDetails);
 
-// Update product (Admin only)
-export const updateProduct = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const updateData = req.body;
-  const files = req.files || [];
-  
-  // Parse JSON fields
   try {
-    if (updateData.productDetails && typeof updateData.productDetails === 'string') {
-      updateData.productDetails = JSON.parse(updateData.productDetails);
-    }
+    const updatedProduct = await productService.updateProduct(
+      productId, 
+      updateData, 
+      files,
+      variantColors // ✅ PASS variantColors to service
+    );
+    
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      data: updatedProduct
+    });
   } catch (error) {
-    logger.error('JSON parsing error:', error);
-    return res.status(400).json({
+    logger.error('Error updating product:', error);
+    res.status(400).json({
       success: false,
-      message: 'Invalid JSON format in productDetails field'
+      message: error.message
     });
   }
-  
-  const updatedProduct = await productService.updateProduct(
-    productId, 
-    updateData, 
-    files
-  );
-  
-  res.status(200).json({
-    success: true,
-    message: 'Product updated successfully',
-    data: updatedProduct
-  });
 });
 
 // Delete product (Admin only)
@@ -180,11 +205,28 @@ export const updateProductDetail = asyncHandler(async (req, res) => {
   });
 });
 
+// Update ALL product details for a product (Admin only)
+export const updateProductDetails = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { productDetails } = req.body;
+  
+  const updatedProduct = await productService.updateProductDetails(
+    productId, 
+    productDetails
+  );
+  
+  res.status(200).json({
+    success: true,
+    message: 'All product details updated successfully',
+    data: updatedProduct
+  });
+});
+
 // Remove product detail (Admin only)
 export const removeProductDetail = asyncHandler(async (req, res) => {
   const { productId, detailId } = req.params;
   
-  await productService.removeProductDetail(productId, detailId);
+  await productService.deleteProductDetail(productId, detailId);
   
   res.status(200).json({
     success: true,

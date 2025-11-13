@@ -1,4 +1,4 @@
-// routes/userRoutes.js
+// routes/userRoutes.js - UPDATE WITH VALIDATION
 import express from 'express';
 import {
   getAllUsers,
@@ -11,10 +11,13 @@ import {
   updateAvatar,
   removeAvatar,
   deleteShopPhoto,
-  getUserStats
+  getUserStats,
+  createUser
 } from '../controllers/userController.js';
+
 import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
+import { validateCreateUser, validateUpdateUser } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -33,6 +36,7 @@ const upload = multer({
 });
 
 // Admin only routes
+router.post('/admin/users', auth, authorize('ADMIN'), validateCreateUser, createUser); // ADD VALIDATION
 router.get('/admin/users', auth, authorize('ADMIN'), getAllUsers);
 router.get('/admin/users/stats', auth, authorize('ADMIN'), getUserStats);
 router.delete('/admin/users/:userId', auth, authorize('ADMIN'), deleteUser);
@@ -41,7 +45,7 @@ router.patch('/admin/users/:userId/role', auth, authorize('ADMIN'), changeUserRo
 
 // User profile routes (users can update their own profiles)
 router.get('/users/:userId', auth, getUserById);
-router.patch('/users/:userId/profile', auth, updateProfile);
+router.patch('/users/:userId/profile', auth, validateUpdateUser, updateProfile); // ADD VALIDATION
 router.patch('/users/:userId/wholesaler-profile', auth, upload.array('shopPhotos', 5), updateWholesalerProfile);
 router.patch('/users/:userId/avatar', auth, upload.single('avatar'), updateAvatar);
 router.delete('/users/:userId/avatar', auth, removeAvatar);

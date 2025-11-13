@@ -8,21 +8,17 @@ class SubcategoryService {
 async getAllSubcategories({ page, limit, categoryId, isActive }) {
   const skip = (page - 1) * limit;
   
-  console.log('Subcategory Query parameters:', { page, limit, categoryId, isActive });
   
   const where = {};
   
   if (categoryId) {
     where.categoryId = categoryId;
-    console.log('Applied categoryId filter:', categoryId);
   }
   
   if (isActive !== undefined) {
     where.isActive = isActive;
-    console.log('Applied isActive filter:', isActive);
   }
   
-  console.log('Final WHERE clause:', where);
   
   const [subcategories, total] = await Promise.all([
     prisma.subcategory.findMany({
@@ -32,7 +28,7 @@ async getAllSubcategories({ page, limit, categoryId, isActive }) {
       include: {
         category: {
           select: {
-            id: true,
+            id: true, 
             name: true,
             image: true
           }
@@ -53,9 +49,7 @@ async getAllSubcategories({ page, limit, categoryId, isActive }) {
     prisma.subcategory.count({ where })
   ]);
   
-  console.log('Found subcategories:', subcategories.length);
-  console.log('Total count:', total);
-  console.log('Subcategories:', subcategories);
+
   
   return {
     subcategories,

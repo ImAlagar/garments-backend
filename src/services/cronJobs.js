@@ -4,11 +4,9 @@ import productService from './services/productService.js';
 
 // Run every day at 2 AM
 cron.schedule('0 2 * * *', async () => {
-  console.log('Running merchandising auto-update...');
   try {
     await productService.autoMarkNewArrivals();
     await productService.autoUpdateBestSellers();
-    console.log('Merchandising auto-update completed');
   } catch (error) {
     console.error('Error in merchandising auto-update:', error);
   }

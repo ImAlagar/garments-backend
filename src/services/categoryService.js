@@ -80,53 +80,60 @@ async getAllCategories({ page, limit, isActive, includeSubcategories }) {
     return category;
   }
   
-  // Create category
-  async createCategory(categoryData, file = null) {
-    const { name, description, isActive = true } = categoryData;
-    
-    // Check if category name already exists
-    const existingCategory = await prisma.category.findFirst({
-      where: { name }
-    });
-    
-    if (existingCategory) {
-      throw new Error('Category name already exists');
-    }
-    
-    let imageUrl = null;
-    let imagePublicId = null;
-    
-    // Upload category image if provided
-    if (file) {
-      try {
-        const uploadResult = await s3UploadService.uploadCategoryImage(file.buffer);
-        imageUrl = uploadResult.url;
-        imagePublicId = uploadResult.key;
-      } catch (uploadError) {
-        logger.error('Failed to upload category image:', uploadError);
-        throw new Error('Failed to upload category image');
-      }
-    }
-    
-    const category = await prisma.category.create({
-      data: {
-        name,
-        description,
-        image: imageUrl,
-        imagePublicId,
-        isActive,
-        subcategories: {
-          create: [] // Initialize with empty subcategories
-        }
-      },
-      include: {
-        subcategories: true
-      }
-    });
-    
-    logger.info(`Category created: ${category.id}`);
-    return category;
+// services/categoryService.js
+// Create category
+async createCategory(categoryData, file = null) {
+  const { name, description, isActive = true } = categoryData;
+  
+  // REMOVE THIS ENUM VALIDATION - since we're using strings now
+  // const validCategoryTypes = ['MEN', 'WOMEN', 'KIDS', 'ACCESSORIES'];
+  // if (!validCategoryTypes.includes(name)) {
+  //   throw new Error(`Category name must be one of: ${validCategoryTypes.join(', ')}`);
+  // }
+  
+  // Check if category name already exists
+  const existingCategory = await prisma.category.findFirst({
+    where: { name }
+  });
+  
+  if (existingCategory) {
+    throw new Error('Category name already exists');
   }
+  
+  let imageUrl = null;
+  let imagePublicId = null;
+  
+  // Upload category image if provided
+  if (file) {
+    try {
+      const uploadResult = await s3UploadService.uploadCategoryImage(file.buffer);
+      imageUrl = uploadResult.url;
+      imagePublicId = uploadResult.key;
+    } catch (uploadError) {
+      logger.error('Failed to upload category image:', uploadError);
+      throw new Error('Failed to upload category image');
+    }
+  }
+  
+  const category = await prisma.category.create({
+    data: {
+      name,
+      description,
+      image: imageUrl,
+      imagePublicId,
+      isActive,
+      subcategories: {
+        create: [] // Initialize with empty subcategories
+      }
+    },
+    include: {
+      subcategories: true
+    }
+  });
+  
+  logger.info(`Category created: ${category.id}`);
+  return category;
+}
   
   // Update category
   async updateCategory(categoryId, updateData, file = null) {

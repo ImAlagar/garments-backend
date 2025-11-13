@@ -1,4 +1,3 @@
-// routes/categoryRoutes.js
 import express from 'express';
 import {
   getAllCategories,
@@ -12,6 +11,11 @@ import {
   removeCategoryImage
 } from '../controllers/categoryController.js';
 import { auth, authorize } from '../middleware/auth.js';
+import { 
+  validateCategory, 
+  validateCategoryUpdate, 
+  validateStatusToggle 
+} from '../middleware/validation.js'; // Import validations
 import multer from 'multer';
 
 const router = express.Router();
@@ -36,10 +40,10 @@ router.get('/:categoryId', getCategoryById);
 
 // Admin only routes
 router.get('/admin/stats', auth, authorize('ADMIN'), getCategoryStats);
-router.post('/admin', auth, authorize('ADMIN'), upload.single('image'), createCategory);
-router.put('/admin/:categoryId', auth, authorize('ADMIN'), upload.single('image'), updateCategory);
+router.post('/admin', auth, authorize('ADMIN'), upload.single('image'), validateCategory, createCategory); // Add validation
+router.put('/admin/:categoryId', auth, authorize('ADMIN'), upload.single('image'), validateCategoryUpdate, updateCategory); // Add validation
 router.delete('/admin/:categoryId', auth, authorize('ADMIN'), deleteCategory);
-router.patch('/admin/:categoryId/status', auth, authorize('ADMIN'), toggleCategoryStatus);
+router.patch('/admin/:categoryId/status', auth, authorize('ADMIN'), validateStatusToggle, toggleCategoryStatus); // Add validation
 router.patch('/admin/:categoryId/image', auth, authorize('ADMIN'), upload.single('image'), updateCategoryImage);
 router.delete('/admin/:categoryId/image', auth, authorize('ADMIN'), removeCategoryImage);
 
