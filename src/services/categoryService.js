@@ -12,10 +12,18 @@ async getAllCategories({ page, limit, isActive, includeSubcategories }) {
   
   // Only apply filter if isActive is explicitly provided
   if (isActive !== undefined) {
-    where.isActive = isActive;
+    where.isActive = isActive === 'true' ? true : isActive === 'false' ? false : isActive;
   }
   
-  const include = {};
+  const include = {
+    _count: {
+      select: {
+        products: true,
+        subcategories: true
+      }
+    }
+  };
+  
   if (includeSubcategories) {
     include.subcategories = {
       where: { isActive: true },
@@ -30,44 +38,71 @@ async getAllCategories({ page, limit, isActive, includeSubcategories }) {
     };
   }
   
-  const [categories, total] = await Promise.all([
-    prisma.category.findMany({
-      where,
-      skip,
-      take: limit,
-      include,
-      orderBy: {
-        createdAt: 'desc'
+  try {
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({
+        where,
+        skip,
+        take: limit,
+        include,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      prisma.category.count({ where })
+    ]);
+    
+    return {
+      categories,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
       }
-    }),
-    prisma.category.count({ where })
-  ]);
-  
-  return categories;
+    };
+  } catch (error) {
+    logger.error('Error in getAllCategories:', error);
+    throw new Error('Failed to fetch categories');
+  }
 }
 
-  // Get category by ID
-  async getCategoryById(categoryId, includeSubcategories = false) {
-    const include = {};
-    if (includeSubcategories) {
-      include.subcategories = {
-        where: { isActive: true },
-        include: {
-          products: {
-            where: { status: 'ACTIVE' },
-            select: {
-              id: true,
-              name: true,
-              productCode: true,
-              normalPrice: true,
-              offerPrice: true,
-              status: true
-            }
+// Get category by ID - Also include counts
+async getCategoryById(categoryId, includeSubcategories = false) {
+  const include = {
+    _count: {
+      select: {
+        products: true,
+        subcategories: true
+      }
+    }
+  };
+  
+  if (includeSubcategories) {
+    include.subcategories = {
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            products: true
+          }
+        },
+        products: {
+          where: { status: 'ACTIVE' },
+          select: {
+            id: true,
+            name: true,
+            productCode: true,
+            normalPrice: true,
+            offerPrice: true,
+            status: true
           }
         }
-      };
-    }
-    
+      }
+    };
+  }
+  
+  try {
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
       include
@@ -78,18 +113,15 @@ async getAllCategories({ page, limit, isActive, includeSubcategories }) {
     }
     
     return category;
+  } catch (error) {
+    logger.error('Error in getCategoryById:', error);
+    throw new Error('Failed to fetch category');
   }
+}
   
-// services/categoryService.js
 // Create category
 async createCategory(categoryData, file = null) {
   const { name, description, isActive = true } = categoryData;
-  
-  // REMOVE THIS ENUM VALIDATION - since we're using strings now
-  // const validCategoryTypes = ['MEN', 'WOMEN', 'KIDS', 'ACCESSORIES'];
-  // if (!validCategoryTypes.includes(name)) {
-  //   throw new Error(`Category name must be one of: ${validCategoryTypes.join(', ')}`);
-  // }
   
   // Check if category name already exists
   const existingCategory = await prisma.category.findFirst({

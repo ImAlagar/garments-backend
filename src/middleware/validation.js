@@ -191,44 +191,6 @@ export const validateOrder = [
 ];
 
 
-export const validateSlider = (req, res, next) => {
-  const {
-    title,
-    bgImage,
-    image,
-    layout
-  } = req.body;
-
-  const errors = [];
-
-  if (!title || title.trim() === '') {
-    errors.push('Title is required');
-  }
-
-  if (!bgImage || bgImage.trim() === '') {
-    errors.push('Background image is required');
-  }
-
-  if (!image || image.trim() === '') {
-    errors.push('Image is required');
-  }
-
-  if (layout && !['left', 'right', 'center'].includes(layout)) {
-    errors.push('Layout must be one of: left, right, center');
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation failed',
-      errors
-    });
-  }
-
-  next();
-};
-
-
 export const validateProduct = [
   // Check if required fields exist
   body('name')
@@ -766,3 +728,447 @@ export const validatePassword = [
     next();
   }
 ];
+
+// Parse form data middleware
+export const parseFormData = (req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    // Parse boolean fields
+    if (req.body.isActive !== undefined) {
+      req.body.isActive = req.body.isActive === 'true' || req.body.isActive === true;
+    }
+    
+    // Parse number fields
+    if (req.body.order !== undefined) {
+      req.body.order = parseInt(req.body.order) || 0;
+    }
+    
+    // Parse layout with default
+    if (req.body.layout) {
+      req.body.layout = req.body.layout.toString().trim();
+    } else {
+      req.body.layout = 'left';
+    }
+    
+    // Trim string fields and handle empty strings
+    const stringFields = ['title', 'subtitle', 'description', 'smallText', 'offerText', 'buttonText', 'buttonLink'];
+    stringFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        const value = req.body[field].toString().trim();
+        req.body[field] = value === '' ? null : value;
+      }
+    });
+    
+    // Handle date fields
+    if (req.body.startDate === '') req.body.startDate = null;
+    if (req.body.endDate === '') req.body.endDate = null;
+  }
+  
+  console.log('Parsed form data:', req.body);
+  next();
+};
+
+// Slider validation
+export const validateSlider = [
+  
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Slider title is required')
+    .isLength({ min: 2, max: 300 })
+    .withMessage('Title must be between 2 and 200 characters'),
+
+  body('subtitle')
+    .optional()
+    .trim()
+    .isLength({ max: 300 })
+    .withMessage('Subtitle must be less than 200 characters'),
+
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must be less than 1000 characters'),
+
+  body('smallText')
+    .optional()
+    .trim()
+    .isLength({ max: 300 })
+    .withMessage('Small text must be less than 100 characters'),
+
+  body('offerText')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Offer text must be less than 100 characters'),
+
+  body('buttonText')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Button text must be less than 50 characters'),
+
+  body('buttonLink')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Button link must be less than 500 characters')
+    .custom((value) => {
+      if (value && !value.startsWith('/') && !value.startsWith('http')) {
+        throw new Error('Button link must start with "/" for internal links or "http" for external links');
+      }
+      return true;
+    }),
+
+  body('layout')
+    .optional()
+    .isIn(['left', 'right', 'center'])
+    .withMessage('Layout must be one of: left, right, center'),
+
+  body('order')
+    .optional()
+    .isInt({ min: 0, max: 1000 })
+    .withMessage('Order must be an integer between 0 and 1000'),
+
+  body('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive must be a boolean value'),
+
+  body('startDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Start date must be a valid ISO 8601 date')
+    .custom((value, { req }) => {
+      if (value && req.body.endDate) {
+        const startDate = new Date(value);
+        const endDate = new Date(req.body.endDate);
+        if (startDate >= endDate) {
+          throw new Error('Start date must be before end date');
+        }
+      }
+      return true;
+    }),
+
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('End date must be a valid ISO 8601 date')
+    .custom((value, { req }) => {
+      if (value && req.body.startDate) {
+        const startDate = new Date(req.body.startDate);
+        const endDate = new Date(value);
+        if (endDate <= startDate) {
+          throw new Error('End date must be after start date');
+        }
+      }
+      return true;
+    }),
+
+  // Validation result middleware
+  (req, res, next) => {
+    const errors = validationResult(req);
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider validation failed',
+        errors: errors.array()
+      });
+    }
+
+    next();
+  }
+];
+
+// Slider update validation (similar but with optional fields)
+export const validateSliderUpdate = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 200 })
+    .withMessage('Title must be between 2 and 200 characters'),
+
+  body('subtitle')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Subtitle must be less than 200 characters'),
+
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Description must be less than 1000 characters'),
+
+  body('smallText')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Small text must be less than 100 characters'),
+
+  body('offerText')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Offer text must be less than 100 characters'),
+
+  body('buttonText')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Button text must be less than 50 characters'),
+
+  body('buttonLink')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Button link must be less than 500 characters')
+    .custom((value) => {
+      if (value && !value.startsWith('/') && !value.startsWith('http')) {
+        throw new Error('Button link must start with "/" for internal links or "http" for external links');
+      }
+      return true;
+    }),
+
+  body('layout')
+    .optional()
+    .isIn(['left', 'right', 'center'])
+    .withMessage('Layout must be one of: left, right, center'),
+
+  body('order')
+    .optional()
+    .isInt({ min: 0, max: 1000 })
+    .withMessage('Order must be an integer between 0 and 1000'),
+
+  body('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive must be a boolean value'),
+
+  body('startDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Start date must be a valid ISO 8601 date')
+    .custom((value, { req }) => {
+      if (value && req.body.endDate) {
+        const startDate = new Date(value);
+        const endDate = new Date(req.body.endDate);
+        if (startDate >= endDate) {
+          throw new Error('Start date must be before end date');
+        }
+      }
+      return true;
+    }),
+
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('End date must be a valid ISO 8601 date')
+    .custom((value, { req }) => {
+      if (value && req.body.startDate) {
+        const startDate = new Date(req.body.startDate);
+        const endDate = new Date(value);
+        if (endDate <= startDate) {
+          throw new Error('End date must be after start date');
+        }
+      }
+      return true;
+    }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider update validation failed',
+        errors: errors.array()
+      });
+    }
+    next();
+  }
+];
+
+// Slider status toggle validation
+export const validateSliderStatusToggle = [
+  body('isActive')
+    .notEmpty()
+    .withMessage('isActive field is required')
+    .isBoolean()
+    .withMessage('isActive must be a boolean value'),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider status toggle validation failed',
+        errors: errors.array()
+      });
+    }
+    next();
+  }
+];
+
+// Slider reorder validation
+export const validateSliderReorder = [
+  body('sliderOrders')
+    .isArray({ min: 1 })
+    .withMessage('Slider orders must be a non-empty array'),
+
+  body('sliderOrders.*.id')
+    .notEmpty()
+    .withMessage('Slider ID is required for each order item'),
+
+  body('sliderOrders.*.order')
+    .isInt({ min: 0 })
+    .withMessage('Order must be a non-negative integer'),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider reorder validation failed',
+        errors: errors.array()
+      });
+    }
+    next();
+  }
+];
+
+// File upload validation middleware (for images)
+export const validateSliderImages = (req, res, next) => {
+  console.log('Validating slider images...');
+  console.log('Request files:', req.files);
+
+  // Check if files are present in the request
+  if (req.files) {
+    const { bgImage, image } = req.files;
+
+    // Validate background image
+    if (bgImage && bgImage[0]) {
+      const bgFile = bgImage[0];
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      console.log('BG Image details:', {
+        mimetype: bgFile.mimetype,
+        size: bgFile.size,
+        originalname: bgFile.originalname
+      });
+
+      // Check file type using multiple methods
+      const isValidType = allowedMimeTypes.includes(bgFile.mimetype) ||
+                         bgFile.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+
+      if (!isValidType) {
+        return res.status(400).json({
+          success: false,
+          message: 'Background image must be a JPEG, JPG, PNG, or WebP file. Received: ' + bgFile.mimetype
+        });
+      }
+
+      if (bgFile.size > maxSize) {
+        return res.status(400).json({
+          success: false,
+          message: 'Background image size must be less than 5MB'
+        });
+      }
+    }
+
+    // Validate main image
+    if (image && image[0]) {
+      const mainFile = image[0];
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      console.log('Main Image details:', {
+        mimetype: mainFile.mimetype,
+        size: mainFile.size,
+        originalname: mainFile.originalname
+      });
+
+      // Check file type using multiple methods
+      const isValidType = allowedMimeTypes.includes(mainFile.mimetype) ||
+                         mainFile.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+
+      if (!isValidType) {
+        return res.status(400).json({
+          success: false,
+          message: 'Main image must be a JPEG, JPG, PNG, or WebP file. Received: ' + mainFile.mimetype
+        });
+      }
+
+      if (mainFile.size > maxSize) {
+        return res.status(400).json({
+          success: false,
+          message: 'Main image size must be less than 5MB'
+        });
+      }
+    }
+  }
+
+  next();
+};
+
+// Combined validation for slider creation with images
+export const validateCreateSlider = [
+  // First validate the form data
+  ...validateSlider,
+  // Then validate the images
+  validateSliderImages,
+  // Final validation result check
+  (req, res, next) => {
+    const errors = validationResult(req);
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider creation validation failed',
+        errors: errors.array()
+      });
+    }
+
+    // Additional custom validation for required images
+    if (!req.files || !req.files.bgImage) {
+      return res.status(400).json({
+        success: false,
+        message: 'Background image is required'
+      });
+    }
+
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({
+        success: false,
+        message: 'Main image is required'
+      });
+    }
+
+    next();
+  }
+];
+
+// Combined validation for slider update with optional images
+export const validateUpdateSlider = [
+  // First validate the form data
+  ...validateSliderUpdate,
+  // Then validate the images if provided
+  validateSliderImages,
+  // Final validation result check
+  (req, res, next) => {
+    const errors = validationResult(req);
+    
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slider update validation failed',
+        errors: errors.array()
+      });
+    }
+
+    next();
+  }
+];
+
+
+

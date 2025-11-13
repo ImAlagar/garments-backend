@@ -93,56 +93,55 @@ class SliderService {
     return slider;
   }
 
-  // Create new slider
-  async createSlider(sliderData) {
-    const {
-      title,
-      subtitle,
-      description,
-      smallText,
-      offerText,
-      buttonText,
-      buttonLink,
-      layout,
-      bgImage,
-      image,
-      imagePublicId,
-      bgImagePublicId,
-      isActive,
-      order,
-      startDate,
-      endDate
-    } = sliderData;
+async createSlider(sliderData) {
+  const {
+    title,
+    subtitle,
+    description,
+    smallText,
+    offerText,
+    buttonText,
+    buttonLink,
+    layout,
+    bgImage, // This is now the S3 URL
+    image,   // This is now the S3 URL
+    imagePublicId, // This is the S3 key
+    bgImagePublicId, // This is the S3 key
+    isActive,
+    order,
+    startDate,
+    endDate
+  } = sliderData;
 
-    // Validate required fields
-    if (!title || !bgImage || !image) {
-      throw new Error('Title, background image, and image are required');
-    }
-
-    const slider = await prisma.homeSlider.create({
-      data: {
-        title,
-        subtitle: subtitle || null,
-        description: description || null,
-        smallText: smallText || null,
-        offerText: offerText || null,
-        buttonText: buttonText || null,
-        buttonLink: buttonLink || null,
-        layout: layout || 'left',
-        bgImage,
-        image,
-        imagePublicId: imagePublicId || null,
-        bgImagePublicId: bgImagePublicId || null,
-        isActive: isActive !== undefined ? isActive : true,
-        order: order || 0,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null
-      }
-    });
-
-    logger.info(`Slider created: ${slider.id}`);
-    return slider;
+  // Validate required fields
+  if (!title || !bgImage || !image) {
+    throw new Error('Title, background image, and image are required');
   }
+
+  const slider = await prisma.homeSlider.create({
+    data: {
+      title,
+      subtitle: subtitle || null,
+      description: description || null,
+      smallText: smallText || null,
+      offerText: offerText || null,
+      buttonText: buttonText || null,
+      buttonLink: buttonLink || null,
+      layout: layout || 'left',
+      bgImage, // S3 URL
+      image,   // S3 URL
+      imagePublicId: imagePublicId || null, // S3 key
+      bgImagePublicId: bgImagePublicId || null, // S3 key
+      isActive: isActive !== undefined ? isActive : true,
+      order: order || 0,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null
+    }
+  });
+
+  logger.info(`Slider created: ${slider.id}`);
+  return slider;
+}
 
   // Update slider
   async updateSlider(sliderId, updateData) {
@@ -228,10 +227,10 @@ class SliderService {
   }
 
 
-    // Get slider statistics
-  async getSliderStats() {
-    const currentDate = new Date();
+async getSliderStats() {
+  const currentDate = new Date();
 
+  try {
     // Get total sliders count
     const totalSliders = await prisma.homeSlider.count();
 
@@ -290,8 +289,10 @@ class SliderService {
     // Get sliders with button actions
     const slidersWithButtons = await prisma.homeSlider.count({
       where: {
-        buttonText: { not: null },
-        buttonLink: { not: null }
+        AND: [
+          { buttonText: { not: null } },
+          { buttonLink: { not: null } }
+        ]
       }
     });
 
@@ -324,23 +325,28 @@ class SliderService {
       }
     });
 
-    // Get sliders without images (potential issues)
-    const slidersWithoutBgImage = await prisma.homeSlider.count({
-      where: {
-        OR: [
-          { bgImage: null },
-          { bgImage: '' }
-        ]
+    // FIXED: Get sliders without images - using separate queries
+    // First get all sliders and check for missing images manually
+    const allSliders = await prisma.homeSlider.findMany({
+      select: {
+        id: true,
+        bgImage: true,
+        image: true
       }
     });
 
-    const slidersWithoutImage = await prisma.homeSlider.count({
-      where: {
-        OR: [
-          { image: null },
-          { image: '' }
-        ]
-      }
+    // Calculate missing image counts manually
+    let slidersWithoutBgImageCount = 0;
+    let slidersWithoutImageCount = 0;
+    let slidersWithoutAnyImages = 0;
+
+    allSliders.forEach(slider => {
+      const hasBgImage = slider.bgImage && slider.bgImage.trim() !== '';
+      const hasImage = slider.image && slider.image.trim() !== '';
+
+      if (!hasBgImage) slidersWithoutBgImageCount++;
+      if (!hasImage) slidersWithoutImageCount++;
+      if (!hasBgImage && !hasImage) slidersWithoutAnyImages++;
     });
 
     return {
@@ -357,17 +363,22 @@ class SliderService {
       slidersWithOffers,
       recentSliders,
       topOrderedSliders,
-      slidersWithoutBgImage,
-      slidersWithoutImage,
+      slidersWithoutBgImage: slidersWithoutBgImageCount,
+      slidersWithoutImage: slidersWithoutImageCount,
+      slidersWithoutAnyImages,
       // Summary stats
       summary: {
         activePercentage: totalSliders > 0 ? Math.round((activeSliders / totalSliders) * 100) : 0,
         withButtonsPercentage: totalSliders > 0 ? Math.round((slidersWithButtons / totalSliders) * 100) : 0,
-        recentPercentage: totalSliders > 0 ? Math.round((recentSliders / totalSliders) * 100) : 0
+        recentPercentage: totalSliders > 0 ? Math.round((recentSliders / totalSliders) * 100) : 0,
+        imagesMissingPercentage: totalSliders > 0 ? Math.round((slidersWithoutAnyImages / totalSliders) * 100) : 0
       }
     };
+  } catch (error) {
+    console.error('Error in getSliderStats:', error);
+    throw error;
   }
-
+}
   // Get slider performance metrics (if you want to track views/clicks later)
   async getSliderPerformance() {
     // This can be extended later when you add analytics tracking

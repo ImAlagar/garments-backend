@@ -9,6 +9,8 @@ import ratingService from './ratingService.js';
 import orderService from './orderService.js';
 import razorpayService from './razorpayService.js';
 import sliderService from './sliderService.js';
+import dashboardService from './dashboardService.js';
+import analyticsService from './analyticsService.js';
 
 export {
   authService,
@@ -20,5 +22,7 @@ export {
   ratingService,
   orderService,
   razorpayService,
-  sliderService
+  sliderService,
+  dashboardService,
+  analyticsService
 };

@@ -1,3 +1,4 @@
+// routes/index.js
 import express from 'express';
 const router = express.Router();
 
@@ -6,11 +7,13 @@ import userRoutes from './userRoutes.js';
 import categoryRoutes from './categoryRoutes.js';
 import subcategoryRoutes from './subcategoryRoutes.js';
 import productRoutes from './productRoutes.js';
-import contactRoutes from './contactRoutes.js'; // Add this line
+import contactRoutes from './contactRoutes.js';
 import couponRoutes from './couponRoutes.js';
-import ratingRoutes from './ratingRoutes.js'; // Add this line
-import orderRoutes from './orderRoutes.js'; // Add this line
+import ratingRoutes from './ratingRoutes.js';
+import orderRoutes from './orderRoutes.js';
 import sliderRoutes from './sliderRoutes.js';
+import dashboardRoutes from './dashboardRoutes.js'; // Add this line
+import analyticsRoutes from './analyticsRoutes.js';
 
 
 router.use('/auth', authRoutes);
@@ -18,10 +21,13 @@ router.use('/auth', userRoutes);
 router.use('/category', categoryRoutes);
 router.use('/subcategory', subcategoryRoutes);
 router.use('/products', productRoutes);
-router.use('/contacts', contactRoutes); // Add this line
+router.use('/contacts', contactRoutes);
 router.use('/coupons', couponRoutes);
-router.use('/ratings', ratingRoutes); // Add this line
-router.use('/orders', orderRoutes); // Add this line
+router.use('/ratings', ratingRoutes);
+router.use('/orders', orderRoutes);
 router.use('/sliders', sliderRoutes);
+router.use('/dashboard', dashboardRoutes); // Add this line
+router.use('/analytics', analyticsRoutes);
+
 
 export default router;

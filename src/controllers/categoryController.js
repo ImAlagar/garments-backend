@@ -10,13 +10,14 @@ export const getAllCategories = asyncHandler(async (req, res) => {
   const result = await categoryService.getAllCategories({
     page: parseInt(page),
     limit: parseInt(limit),
-    isActive: isActive !== undefined ? isActive === 'true' : undefined, // Fix here
+    isActive: isActive, // Let service handle the conversion
     includeSubcategories: includeSubcategories === 'true'
   });
   
   res.status(200).json({
     success: true,
-    data: result
+    data: result.categories, // Changed from result to result.categories
+    pagination: result.pagination
   });
 });
 

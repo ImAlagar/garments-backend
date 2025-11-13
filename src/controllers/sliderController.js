@@ -1,5 +1,6 @@
 // controllers/sliderController.js
 import { sliderService } from '../services/index.js';
+import s3SliderService from '../services/s3SliderService.js';
 import { asyncHandler } from '../utils/helpers.js';
 
 // Get active sliders for home page (Public)
@@ -40,24 +41,109 @@ export const getSliderById = asyncHandler(async (req, res) => {
   });
 });
 
-// Create slider (Admin only)
 export const createSlider = asyncHandler(async (req, res) => {
-  const sliderData = req.body;
-  
-  const slider = await sliderService.createSlider(sliderData);
-  
-  res.status(201).json({
-    success: true,
-    message: 'Slider created successfully',
-    data: slider
-  });
+  console.log('Request body:', req.body);
+  console.log('Request files:', req.files);
+
+  // Extract data from req.body (already parsed by middleware)
+  const sliderData = {
+    title: req.body.title,
+    subtitle: req.body.subtitle || null,
+    description: req.body.description || null,
+    smallText: req.body.smallText || null,
+    offerText: req.body.offerText || null,
+    buttonText: req.body.buttonText || null,
+    buttonLink: req.body.buttonLink || null,
+    layout: req.body.layout || 'left',
+    order: req.body.order ? parseInt(req.body.order) : 0,
+    isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+    startDate: req.body.startDate || null,
+    endDate: req.body.endDate || null
+  };
+
+  console.log('Processed slider data:', sliderData);
+
+  // Validate that required files are provided
+  if (!req.files?.bgImage || !req.files?.image) {
+    return res.status(400).json({
+      success: false,
+      message: 'Both background image and main image are required'
+    });
+  }
+
+  try {
+    // Upload images to S3
+    const uploadResult = await s3SliderService.uploadSliderImages(
+      req.files.bgImage[0],
+      req.files.image[0]
+    );
+
+    // Add S3 URLs to slider data
+    sliderData.bgImage = uploadResult.bgImage.url;
+    sliderData.bgImagePublicId = uploadResult.bgImage.key;
+    sliderData.image = uploadResult.mainImage.url;
+    sliderData.imagePublicId = uploadResult.mainImage.key;
+
+    console.log('Final slider data with images:', sliderData);
+
+    // Create slider in database
+    const slider = await sliderService.createSlider(sliderData);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Slider created successfully',
+      data: slider
+    });
+  } catch (uploadError) {
+    console.error('S3 upload failed:', uploadError);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to upload images to cloud storage'
+    });
+  }
 });
 
 // Update slider (Admin only)
 export const updateSlider = asyncHandler(async (req, res) => {
   const { sliderId } = req.params;
-  const updateData = req.body;
   
+  const updateData = {
+    ...req.body,
+    // Parse dates if provided
+    ...(req.body.startDate && { startDate: new Date(req.body.startDate) }),
+    ...(req.body.endDate && { endDate: new Date(req.body.endDate) })
+  };
+
+  // Handle uploaded files
+  if (req.files) {
+    try {
+      // If new images are uploaded, upload to S3 and update URLs
+      if (req.files.bgImage && req.files.bgImage[0]) {
+        const bgImageResult = await s3SliderService.uploadSliderBgImage(
+          req.files.bgImage[0],
+          sliderId
+        );
+        updateData.bgImage = bgImageResult.url;
+        updateData.bgImagePublicId = bgImageResult.key;
+      }
+
+      if (req.files.image && req.files.image[0]) {
+        const mainImageResult = await S3SliderService.uploadSliderMainImage(
+          req.files.image[0],
+          sliderId
+        );
+        updateData.image = mainImageResult.url;
+        updateData.imagePublicId = mainImageResult.key;
+      }
+    } catch (uploadError) {
+      console.error('S3 upload failed during update:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload images to cloud storage'
+      });
+    }
+  }
+
   const updatedSlider = await sliderService.updateSlider(sliderId, updateData);
   
   res.status(200).json({
@@ -71,12 +157,24 @@ export const updateSlider = asyncHandler(async (req, res) => {
 export const deleteSlider = asyncHandler(async (req, res) => {
   const { sliderId } = req.params;
   
-  await sliderService.deleteSlider(sliderId);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Slider deleted successfully'
-  });
+  try {
+    // First delete images from S3
+    await S3SliderService.deleteSliderImages(sliderId);
+    
+    // Then delete slider from database
+    await sliderService.deleteSlider(sliderId);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Slider deleted successfully'
+    });
+  } catch (error) {
+    console.error('Slider deletion failed:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete slider'
+    });
+  }
 });
 
 // Toggle slider status (Admin only)
