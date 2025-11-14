@@ -79,6 +79,7 @@ app.get('/api/health/database', async (req, res) => {
 });
 
 // Debug endpoint - MOVE THIS AFTER HEALTH CHECKS
+// In your app.js - replace the debug endpoint with this version
 app.get('/api/debug/database', async (req, res) => {
   try {
     // Check if prisma is defined
@@ -90,31 +91,62 @@ app.get('/api/debug/database', async (req, res) => {
       });
     }
 
-    // Test basic database operations with error handling for each table
-    const tables = {};
-    const tableQueries = [
-      { name: 'users', query: prisma.user.count() },
-      { name: 'products', query: prisma.product.count() },
-      { name: 'orders', query: prisma.order.count() },
-      { name: 'categories', query: prisma.category.count() },
-      { name: 'subcategories', query: prisma.subcategory.count() },
-      { name: 'ratings', query: prisma.rating.count() },
-      { name: 'homeSliders', query: prisma.homeSlider.count() },
-      { name: 'contacts', query: prisma.contact.count() }
+    // List of expected Prisma models with safe access
+    const models = [
+      'user', 'product', 'order', 'category', 'subcategory', 
+      'rating', 'homeSlider', 'contact', 'productVariant', 'orderItem'
     ];
 
-    // Execute all queries with individual error handling
-    for (const { name, query } of tableQueries) {
+    const tables = {};
+    const results = [];
+
+    // Check each model safely
+    for (const modelName of models) {
       try {
-        tables[name] = await query;
+        // Check if the model exists in Prisma client
+        if (!prisma[modelName]) {
+          tables[modelName] = `MODEL_NOT_FOUND: ${modelName} not in Prisma client`;
+          results.push({ model: modelName, status: 'missing', count: null });
+          continue;
+        }
+
+        // Try to count records
+        const count = await prisma[modelName].count();
+        tables[modelName] = count;
+        results.push({ model: modelName, status: 'success', count });
+        
       } catch (error) {
-        tables[name] = `ERROR: ${error.message}`;
+        // Handle specific errors
+        if (error.message.includes('does not exist')) {
+          tables[modelName] = `TABLE_NOT_FOUND: ${modelName} table doesn't exist`;
+          results.push({ model: modelName, status: 'table_missing', count: null });
+        } else if (error.message.includes('prisma')) {
+          tables[modelName] = `PRISMA_ERROR: ${error.message}`;
+          results.push({ model: modelName, status: 'error', count: null });
+        } else {
+          tables[modelName] = `ERROR: ${error.message}`;
+          results.push({ model: modelName, status: 'error', count: null });
+        }
       }
     }
 
+    // Analyze results
+    const successful = results.filter(r => r.status === 'success');
+    const missingTables = results.filter(r => r.status === 'table_missing');
+    const missingModels = results.filter(r => r.status === 'missing');
+    const errors = results.filter(r => r.status === 'error');
+
     res.json({ 
       success: true, 
+      summary: {
+        totalModels: models.length,
+        successful: successful.length,
+        missingTables: missingTables.length,
+        missingModels: missingModels.length,
+        errors: errors.length
+      },
       tables,
+      details: results,
       databaseUrl: process.env.DATABASE_URL ? 'Configured' : 'Missing',
       nodeEnv: process.env.NODE_ENV || 'not set',
       timestamp: new Date().toISOString()
