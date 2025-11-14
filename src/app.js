@@ -7,6 +7,7 @@ import 'dotenv/config';
 
 import routes from './routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import prisma from './config/database.js';
 
 const app = express();
 
@@ -36,6 +37,28 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', routes);
+
+
+// Add this temporary route to test database connectivity
+app.get('/api/debug/database', async (req, res) => {
+  try {
+    // Test basic database operations
+    const tables = {
+      users: await prisma.user.count(),
+      products: await prisma.product.count(),
+      orders: await prisma.order.count(),
+      categories: await prisma.category.count(),
+      subcategories: await prisma.subcategory.count(),
+      ratings: await prisma.rating.count(),
+      homeSliders: await prisma.homeSlider.count(),
+      contacts: await prisma.contact.count()
+    };
+
+    res.json({ success: true, tables });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
 
 // Health Check
 app.get('/health', (req, res) => {

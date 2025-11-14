@@ -24,4 +24,6 @@ router.get('/quick-stats', auth, authorize('ADMIN'), getQuickStats);
 router.get('/sales-data', auth, authorize('ADMIN'), getSalesData);
 router.get('/updates', auth, authorize('ADMIN'), getDashboardUpdates);
 
+
+
 export default router;
