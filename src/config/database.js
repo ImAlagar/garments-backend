@@ -13,7 +13,7 @@ try {
   // Test connection on startup
   prisma.$connect()
     .then(() => {
-      logger.info('✅ Database connected successfully');
+      logger.info('✅ Database connected successfully');  
     })
     .catch((error) => {
       logger.error('❌ Database connection failed:', {
