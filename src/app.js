@@ -75,6 +75,8 @@ app.get('/api/health/database', async (req, res) => {
   }
 });
 
+
+
 // Enhanced Debug endpoint
 app.get('/api/debug/database', async (req, res) => {
   try {
@@ -123,6 +125,50 @@ app.get('/api/debug/database', async (req, res) => {
       success: false, 
       error: error.message,
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Add this to your app.js - TEMPORARY DEBUG ENDPOINT
+app.get('/api/debug/production-check', async (req, res) => {
+  try {
+    if (!prisma) {
+      return res.json({ success: false, error: 'Prisma not available' });
+    }
+
+    console.log('🔍 Checking PRODUCTION database...');
+
+    // Check homeSlider data
+    const sliderCount = await prisma.homeSlider.count();
+    const sliders = await prisma.homeSlider.findMany({
+      select: { id: true, title: true, isActive: true, createdAt: true }
+    });
+
+    // Check table existence
+    const tables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name;
+    `;
+
+    const homeSlidersExists = tables.some(t => t.table_name === 'home_sliders');
+
+    res.json({
+      success: true,
+      productionCheck: {
+        homeSlidersTableExists: homeSlidersExists,
+        totalSliders: sliderCount,
+        sliders: sliders,
+        allTables: tables.map(t => t.table_name),
+        databaseUrl: process.env.DATABASE_URL ? 'Set' : 'Missing'
+      }
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message
     });
   }
 });
