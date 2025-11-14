@@ -10,29 +10,46 @@ export const getDashboardData = asyncHandler(async (req, res) => {
   logger.info(`Fetching dashboard data for time range: ${timeRange}`);
 
   try {
-    const [
-      overview,
-      businessMetrics,
-      recentActivities,
-      topProducts,
-      quickStats,
-      salesData
-    ] = await Promise.all([
-      dashboardService.getDashboardOverview(timeRange),
-      dashboardService.getBusinessMetrics(),
-      dashboardService.getRecentActivities(),
-      dashboardService.getTopProducts(),
-      dashboardService.getQuickStats(),
-      dashboardService.getSalesData(timeRange)
+    // Use Promise.allSettled to handle individual failures
+    const results = await Promise.allSettled([
+      dashboardService.getDashboardOverview(timeRange).catch(err => {
+        logger.error('Overview error:', err);
+        return null;
+      }),
+      dashboardService.getBusinessMetrics().catch(err => {
+        logger.error('Business metrics error:', err);
+        return null;
+      }),
+      dashboardService.getRecentActivities().catch(err => {
+        logger.error('Recent activities error:', err);
+        return [];
+      }),
+      dashboardService.getTopProducts().catch(err => {
+        logger.error('Top products error:', err);
+        return [];
+      }),
+      dashboardService.getQuickStats().catch(err => {
+        logger.error('Quick stats error:', err);
+        return null;
+      }),
+      dashboardService.getSalesData(timeRange).catch(err => {
+        logger.error('Sales data error:', err);
+        return { labels: [], values: [] };
+      })
     ]);
 
+    const [overview, businessMetrics, recentActivities, topProducts, quickStats, salesData] = 
+      results.map(result => 
+        result.status === 'fulfilled' ? result.value : getFallbackData(result.reason)
+      );
+
     const dashboardData = {
-      overview,
-      business: businessMetrics,
-      recentActivities,
-      topProducts,
-      quickStats,
-      salesData,
+      overview: overview || getDefaultOverview(),
+      business: businessMetrics || getDefaultBusinessMetrics(),
+      recentActivities: recentActivities || [],
+      topProducts: topProducts || [],
+      quickStats: quickStats || getDefaultQuickStats(),
+      salesData: salesData || { labels: [], values: [] },
       timestamp: new Date().toISOString()
     };
 
@@ -42,13 +59,48 @@ export const getDashboardData = asyncHandler(async (req, res) => {
       data: dashboardData
     });
   } catch (error) {
-    logger.error('Error in getDashboardData:', error);
+    logger.error('Critical error in getDashboardData:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch dashboard data'
     });
   }
 });
+
+// Fallback functions
+function getFallbackData(error) {
+  logger.error('Fallback data due to:', error.message);
+  return null;
+}
+
+function getDefaultOverview() {
+  return {
+    totalRevenue: { value: 0, change: 0, label: 'Total Revenue' },
+    totalOrders: { value: 0, change: 0, label: 'Total Orders' },
+    totalProducts: { value: 0, change: 0, label: 'Active Products' },
+    totalCustomers: { value: 0, change: 0, label: 'Customers' }
+  };
+}
+
+function getDefaultBusinessMetrics() {
+  return {
+    activeSliders: { value: 0, label: 'Active Sliders' },
+    pendingOrders: { value: 0, label: 'Pending Orders' },
+    lowStockProducts: { value: 0, label: 'Low Stock' },
+    pendingContacts: { value: 0, label: 'Pending Contacts' },
+    conversionRate: { value: 0, change: 0, label: 'Conversion Rate' },
+    averageOrderValue: { value: 0, change: 0, label: 'Avg Order Value' }
+  };
+}
+
+function getDefaultQuickStats() {
+  return {
+    wholesalers: { count: 0, pending: 0 },
+    categories: { count: 0, active: 0 },
+    subcategories: { count: 0, active: 0 },
+    ratings: { total: 0, pending: 0 }
+  };
+}
 
 // Get only overview statistics
 export const getDashboardOverview = asyncHandler(async (req, res) => {

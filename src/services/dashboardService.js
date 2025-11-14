@@ -187,48 +187,54 @@ class DashboardService {
   }
 
   // Get quick stats
-  async getQuickStats() {
-    try {
-      const [
-        wholesalers,
-        categories,
-        subcategories,
-        ratings
-      ] = await Promise.all([
-        prisma.user.count({ where: { role: 'WHOLESALER' } }),
-        prisma.user.count({ where: { role: 'WHOLESALER', isApproved: false } }),
-        prisma.category.count({ where: { isActive: true } }),
-        prisma.subcategory.count({ where: { isActive: true } }),
-        prisma.rating.count(),
-        prisma.rating.count({ where: { isApproved: false } })
-      ]);
+async getQuickStats() {
+  try {
+    const safeCount = async (model, where = {}) => {
+      try {
+        return await prisma[model].count({ where });
+      } catch (error) {
+        logger.warn(`Count failed for ${model}:`, error.message);
+        return 0;
+      }
+    };
 
-      return {
-        wholesalers: { 
-          count: wholesalers, 
-          pending: await prisma.user.count({ 
-            where: { role: 'WHOLESALER', isApproved: false } 
-          }) 
-        },
-        categories: { 
-          count: await prisma.category.count(),
-          active: await prisma.category.count({ where: { isActive: true } })
-        },
-        subcategories: { 
-          count: await prisma.subcategory.count(),
-          active: await prisma.subcategory.count({ where: { isActive: true } })
-        },
-        ratings: { 
-          total: await prisma.rating.count(),
-          pending: await prisma.rating.count({ where: { isApproved: false } })
-        }
-      };
-    } catch (error) {
-      logger.error('Error in getQuickStats:', error);
-      throw new Error('Failed to fetch quick stats');
-    }
+    const [
+      wholesalersCount,
+      pendingWholesalers,
+      categoriesCount,
+      activeCategories,
+      subcategoriesCount,
+      activeSubcategories,
+      ratingsTotal,
+      pendingRatings
+    ] = await Promise.all([
+      safeCount('user', { role: 'WHOLESALER' }),
+      safeCount('user', { role: 'WHOLESALER', isApproved: false }),
+      safeCount('category'),
+      safeCount('category', { isActive: true }),
+      safeCount('subcategory'),
+      safeCount('subcategory', { isActive: true }),
+      safeCount('rating'),
+      safeCount('rating', { isApproved: false })
+    ]);
+
+    return {
+      wholesalers: { count: wholesalersCount, pending: pendingWholesalers },
+      categories: { count: categoriesCount, active: activeCategories },
+      subcategories: { count: subcategoriesCount, active: activeSubcategories },
+      ratings: { total: ratingsTotal, pending: pendingRatings }
+    };
+  } catch (error) {
+    logger.error('Error in getQuickStats:', error);
+    // Return default values instead of throwing
+    return {
+      wholesalers: { count: 0, pending: 0 },
+      categories: { count: 0, active: 0 },
+      subcategories: { count: 0, active: 0 },
+      ratings: { total: 0, pending: 0 }
+    };
   }
-
+}
   // Get sales data for charts
   async getSalesData(timeRange = 'monthly') {
     try {
