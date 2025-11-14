@@ -1,18 +1,53 @@
-// controllers/dashboardController.js
-import prisma from '../config/database.js';
 import { dashboardService } from '../services/index.js';
 import { asyncHandler } from '../utils/helpers.js';
 import logger from '../utils/logger.js';
+import prisma from '../config/database.js';
 
-
+// Helper function to check database availability
 const checkDatabase = () => {
   if (!prisma) {
+    logger.error('Prisma client is not available');
     throw new Error('Database connection not available');
   }
   return true;
 };
 
+// Fallback data functions
+const getFallbackData = (error) => {
+  logger.error('Fallback data due to:', error.message);
+  return null;
+};
 
+const getDefaultOverview = () => {
+  return {
+    totalRevenue: { value: 0, change: 0, label: 'Total Revenue' },
+    totalOrders: { value: 0, change: 0, label: 'Total Orders' },
+    totalProducts: { value: 0, change: 0, label: 'Active Products' },
+    totalCustomers: { value: 0, change: 0, label: 'Customers' }
+  };
+};
+
+const getDefaultBusinessMetrics = () => {
+  return {
+    activeSliders: { value: 0, label: 'Active Sliders' },
+    pendingOrders: { value: 0, label: 'Pending Orders' },
+    lowStockProducts: { value: 0, label: 'Low Stock' },
+    pendingContacts: { value: 0, label: 'Pending Contacts' },
+    conversionRate: { value: 0, change: 0, label: 'Conversion Rate' },
+    averageOrderValue: { value: 0, change: 0, label: 'Avg Order Value' }
+  };
+};
+
+const getDefaultQuickStats = () => {
+  return {
+    wholesalers: { count: 0, pending: 0 },
+    categories: { count: 0, active: 0 },
+    subcategories: { count: 0, active: 0 },
+    ratings: { total: 0, pending: 0 }
+  };
+};
+
+// Get complete dashboard data
 export const getDashboardData = asyncHandler(async (req, res) => {
   const { timeRange = 'monthly' } = req.query;
   
@@ -22,7 +57,7 @@ export const getDashboardData = asyncHandler(async (req, res) => {
     // Check database first
     checkDatabase();
 
-    // Use Promise.allSettled to handle individual failures
+    // Use Promise.allSettled to handle individual failures gracefully
     const results = await Promise.allSettled([
       dashboardService.getDashboardOverview(timeRange),
       dashboardService.getBusinessMetrics(),
@@ -32,19 +67,26 @@ export const getDashboardData = asyncHandler(async (req, res) => {
       dashboardService.getSalesData(timeRange)
     ]);
 
-    // Log any failures
+    // Log any failures for debugging
+    const componentNames = ['overview', 'businessMetrics', 'recentActivities', 'topProducts', 'quickStats', 'salesData'];
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        const componentNames = ['overview', 'businessMetrics', 'recentActivities', 'topProducts', 'quickStats', 'salesData'];
         logger.error(`Dashboard component ${componentNames[index]} failed:`, result.reason);
       }
     });
 
+    // Extract values from settled promises
     const [overview, businessMetrics, recentActivities, topProducts, quickStats, salesData] = 
-      results.map(result => 
-        result.status === 'fulfilled' ? result.value : getFallbackData(result.reason)
-      );
+      results.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          logger.warn(`Using fallback data for ${componentNames[index]}`);
+          return getFallbackData(result.reason);
+        }
+      });
 
+    // Build dashboard data with fallbacks
     const dashboardData = {
       overview: overview || getDefaultOverview(),
       business: businessMetrics || getDefaultBusinessMetrics(),
@@ -63,7 +105,7 @@ export const getDashboardData = asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error('Critical error in getDashboardData:', error);
     
-    // Return a basic successful response with empty data
+    // Return fallback data instead of error for better UX
     res.status(200).json({
       success: true,
       message: 'Dashboard data loaded with fallback values',
@@ -80,46 +122,12 @@ export const getDashboardData = asyncHandler(async (req, res) => {
   }
 });
 
-// Fallback functions
-function getFallbackData(error) {
-  logger.error('Fallback data due to:', error.message);
-  return null;
-}
-
-function getDefaultOverview() {
-  return {
-    totalRevenue: { value: 0, change: 0, label: 'Total Revenue' },
-    totalOrders: { value: 0, change: 0, label: 'Total Orders' },
-    totalProducts: { value: 0, change: 0, label: 'Active Products' },
-    totalCustomers: { value: 0, change: 0, label: 'Customers' }
-  };
-}
-
-function getDefaultBusinessMetrics() {
-  return {
-    activeSliders: { value: 0, label: 'Active Sliders' },
-    pendingOrders: { value: 0, label: 'Pending Orders' },
-    lowStockProducts: { value: 0, label: 'Low Stock' },
-    pendingContacts: { value: 0, label: 'Pending Contacts' },
-    conversionRate: { value: 0, change: 0, label: 'Conversion Rate' },
-    averageOrderValue: { value: 0, change: 0, label: 'Avg Order Value' }
-  };
-}
-
-function getDefaultQuickStats() {
-  return {
-    wholesalers: { count: 0, pending: 0 },
-    categories: { count: 0, active: 0 },
-    subcategories: { count: 0, active: 0 },
-    ratings: { total: 0, pending: 0 }
-  };
-}
-
 // Get only overview statistics
 export const getDashboardOverview = asyncHandler(async (req, res) => {
   const { timeRange = 'monthly' } = req.query;
 
   try {
+    checkDatabase();
     const overview = await dashboardService.getDashboardOverview(timeRange);
 
     res.status(200).json({
@@ -139,6 +147,7 @@ export const getDashboardOverview = asyncHandler(async (req, res) => {
 // Get business metrics
 export const getBusinessMetrics = asyncHandler(async (req, res) => {
   try {
+    checkDatabase();
     const businessMetrics = await dashboardService.getBusinessMetrics();
 
     res.status(200).json({
@@ -160,6 +169,7 @@ export const getRecentActivities = asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
   try {
+    checkDatabase();
     const recentActivities = await dashboardService.getRecentActivities(parseInt(limit));
 
     res.status(200).json({
@@ -181,6 +191,7 @@ export const getTopProducts = asyncHandler(async (req, res) => {
   const { limit = 5 } = req.query;
 
   try {
+    checkDatabase();
     const topProducts = await dashboardService.getTopProducts(parseInt(limit));
 
     res.status(200).json({
@@ -200,6 +211,7 @@ export const getTopProducts = asyncHandler(async (req, res) => {
 // Get quick stats
 export const getQuickStats = asyncHandler(async (req, res) => {
   try {
+    checkDatabase();
     const quickStats = await dashboardService.getQuickStats();
 
     res.status(200).json({
@@ -221,6 +233,7 @@ export const getSalesData = asyncHandler(async (req, res) => {
   const { timeRange = 'monthly' } = req.query;
 
   try {
+    checkDatabase();
     const salesData = await dashboardService.getSalesData(timeRange);
 
     res.status(200).json({
@@ -237,10 +250,11 @@ export const getSalesData = asyncHandler(async (req, res) => {
   }
 });
 
-// Get real-time dashboard updates (for websockets/live updates)
+// Get real-time dashboard updates
 export const getDashboardUpdates = asyncHandler(async (req, res) => {
   try {
-    // This could be enhanced for real-time updates
+    checkDatabase();
+    
     const updates = {
       newOrders: await dashboardService.getPendingOrders(),
       newContacts: await dashboardService.getPendingContacts(),
