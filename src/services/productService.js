@@ -134,6 +134,11 @@ class ProductService {
 
     // Get product by ID - IMPROVED
     async getProductById(productId, includeVariants = true) {
+        // Validate input
+        if (!productId || typeof productId !== 'string') {
+            throw new Error('Valid product ID is required');
+        }
+
         const include = {
             category: {
                 select: {
@@ -167,7 +172,6 @@ class ProductService {
                     createdAt: 'desc'
                 }
             },
-            // ALWAYS include variants with their images
             variants: {
                 include: {
                     variantImages: {
@@ -185,7 +189,8 @@ class ProductService {
         });
         
         if (!product) {
-            throw new Error('Product not found');
+            logger.warn(`Product not found with ID: ${productId}`);
+            return null;
         }
         
         // Calculate average rating
@@ -498,11 +503,6 @@ class ProductService {
     }
 
     async updateProduct(productId, updateData, files = [], variantColors = []) {
-        console.log('=== UPDATE PRODUCT SERVICE ===');
-        console.log('Product ID:', productId);
-        console.log('Update data keys:', Object.keys(updateData));
-        console.log('Files count:', files.length);
-        console.log('Variant colors:', variantColors);
         
         const product = await prisma.product.findUnique({
             where: { id: productId },
@@ -535,7 +535,6 @@ class ProductService {
         
         // ✅ FIX: Ensure variants is always an array
         const variantsData = Array.isArray(variants) ? variants : [];
-        console.log('Variants data:', variantsData);
         
         // Existing category/subcategory validation...
         if (categoryId && categoryId !== product.categoryId) {
@@ -562,9 +561,7 @@ class ProductService {
         // ✅ FIX: Group images using variantColors
         let variantImagesByColor = {};
         if (variantsData.length > 0 && files.length > 0) {
-            console.log('Grouping NEW variant images...');
             variantImagesByColor = this.groupVariantImagesByColor(files, variantsData, variantColors);
-            console.log('New images grouped by color:', Object.keys(variantImagesByColor));
         }
         
         // Update product data
@@ -582,7 +579,6 @@ class ProductService {
         
         // Handle product details update if provided
         if (productDetails && Array.isArray(productDetails)) {
-            console.log('Updating product details...');
             // Delete existing product details
             await prisma.productDetail.deleteMany({
                 where: { productId }
@@ -599,7 +595,6 @@ class ProductService {
         
         // ✅ FIX: Handle variants update ONLY if variants data is provided
         if (variantsData.length > 0) {
-            console.log('Updating variants...');
             
             // Get existing variant images grouped by color for preservation
             const existingImagesByColor = {};
@@ -612,7 +607,6 @@ class ProductService {
                 }
             });
             
-            console.log('Existing images by color:', Object.keys(existingImagesByColor));
             
             // Delete existing variants and their images
             await prisma.productVariantImage.deleteMany({
@@ -634,7 +628,6 @@ class ProductService {
                 const colorImages = variantImagesByColor[color] || [];
                 const existingColorImages = existingImagesByColor[color] || [];
                 
-                console.log(`Processing color "${color}" with ${sizes.length} sizes, ${colorImages.length} new images, and ${existingColorImages.length} existing images`);
                 
                 let variantImagesData = [];
                 
@@ -642,7 +635,6 @@ class ProductService {
                 if (colorImages.length > 0) {
                     // Upload new variant images if provided
                     try {
-                        console.log(`Uploading ${colorImages.length} NEW images for color "${color}"...`);
                         const uploadResults = await s3UploadService.uploadMultipleImages(
                             colorImages,
                             `products/${product.productCode}/variants/${color}`
@@ -655,7 +647,6 @@ class ProductService {
                             color: color
                         }));
                         
-                        console.log(`✅ Successfully uploaded ${variantImagesData.length} images for "${color}"`);
                         
                     } catch (uploadError) {
                         logger.error('Failed to upload variant images during update:', uploadError);
@@ -663,7 +654,6 @@ class ProductService {
                     }
                 } else if (existingColorImages.length > 0) {
                     // ✅ FIX: Preserve existing images when no new images are uploaded
-                    console.log(`🔄 Preserving ${existingColorImages.length} existing images for color "${color}"`);
                     
                     variantImagesData = existingColorImages.map((image, index) => ({
                         imageUrl: image.imageUrl,
@@ -672,9 +662,8 @@ class ProductService {
                         color: color
                     }));
                     
-                    console.log(`✅ Preserved ${variantImagesData.length} existing images for "${color}"`);
                 } else {
-                    console.log(`⚠️ No images found for color "${color}"`);
+                    console.error(`⚠️ No images found for color "${color}"`);
                 }
                 
                 // Create individual variants for each size
@@ -712,7 +701,6 @@ class ProductService {
                         }
                     });
                     
-                    console.log(`Created variant: ${color} - ${size} - Stock: ${stock}`);
                 }
             }
             
@@ -721,9 +709,8 @@ class ProductService {
                 create: flattenedVariants
             };
             
-            console.log(`Total variants to create: ${flattenedVariants.length}`);
         } else {
-            console.log('No variants data provided, keeping existing variants');
+            console.error('No variants data provided, keeping existing variants');
         }
         
         const updatedProduct = await prisma.product.update({
@@ -1476,50 +1463,62 @@ class ProductService {
 
     // Get best seller products
     async getBestSellerProducts(limit = 8) {
-        const products = await prisma.product.findMany({
-            where: {
-                status: 'ACTIVE'
+        const where = {
+            status: 'ACTIVE',
+            isBestSeller: true
+        };
+
+        const include = {
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
             },
-            include: {
-                category: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
+            subcategory: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
+            },
+            productDetails: true,
+            ratings: {
+                where: {
+                    isApproved: true
                 },
-                variants: {
-                    include: {
-                        variantImages: {
-                            where: { isPrimary: true },
-                            take: 1
-                        },
-                        orderItems: {
-                            select: {
-                                quantity: true
-                            }
+                select: {
+                    rating: true,
+                    review: true
+                }
+            },
+            variants: {
+                include: {
+                    variantImages: {
+                        orderBy: {
+                            isPrimary: 'desc'
                         }
                     }
+                }
+            }
+        };
+        // First get all best seller products
+        const products = await prisma.product.findMany({
+            where,
+            include,
+            orderBy: [
+                {
+                    isBestSeller: 'desc'
                 },
-                ratings: {
-                    where: {
-                        isApproved: true
-                    },
-                    select: {
-                        rating: true
-                    }
+                {
+                    createdAt: 'desc'
                 }
-            },
-            orderBy: {
-                // Order by total sales (sum of order items quantities)
-                variants: {
-                    _count: 'desc'
-                }
-            },
-            take: limit
+            ]
         });
 
         // Calculate sales count and average ratings
-        const productsWithSales = products.map(product => {
+        const productsWithSalesAndRatings = products.map(product => {
             const totalSales = product.variants.reduce((sum, variant) => {
                 return sum + variant.orderItems.reduce((itemSum, item) => itemSum + item.quantity, 0);
             }, 0);
@@ -1537,9 +1536,12 @@ class ProductService {
             };
         });
 
-        // Sort by total sales
-        return productsWithSales.sort((a, b) => b.totalSales - a.totalSales);
+        // Sort by total sales and take the limit
+        return productsWithSalesAndRatings
+            .sort((a, b) => b.totalSales - a.totalSales)
+            .slice(0, limit);
     }
+
 
     // Get new arrivals
     async getNewArrivals(limit = 8) {
@@ -1594,6 +1596,101 @@ class ProductService {
         return productsWithRatings;
     }
 
+    // Get related products
+async getRelatedProducts({ category, exclude, limit = 10 }) {
+    try {
+        logger.info(`Fetching related products - Category: ${category}, Exclude: ${exclude}, Limit: ${limit}`);
+        
+        // Validate inputs
+        if (!category || !exclude) {
+            throw new Error('Category and exclude parameters are required');
+        }
+
+        const where = {
+            category: {
+                name: {
+                    equals: category,
+                    mode: 'insensitive'
+                }
+            },
+            id: {
+                not: exclude
+            },
+            status: 'ACTIVE' // Only show active products
+        };
+
+        const include = {
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
+            },
+            subcategory: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
+            },
+            productDetails: true,
+            ratings: {
+                where: {
+                    isApproved: true
+                },
+                select: {
+                    rating: true
+                }
+            },
+            variants: {
+                where: {
+                    stock: {
+                        gt: 0 // Only include variants with stock
+                    }
+                },
+                include: {
+                    variantImages: {
+                        orderBy: {
+                            isPrimary: 'desc'
+                        }
+                    }
+                }
+            }
+        };
+
+        const relatedProducts = await prisma.product.findMany({
+            where,
+            take: parseInt(limit),
+            include,
+            orderBy: {
+                createdAt: 'desc' // Show newest first
+            }
+        });
+
+        logger.info(`Found ${relatedProducts.length} related products`);
+
+        // Calculate average ratings and format response
+        const formattedProducts = relatedProducts.map(product => {
+            const ratings = product.ratings;
+            const avgRating = ratings.length > 0 
+                ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+                : 0;
+
+            return {
+                ...product,
+                avgRating: Math.round(avgRating * 10) / 10,
+                totalRatings: ratings.length
+            };
+        });
+
+        return formattedProducts;
+        
+    } catch (error) {
+        logger.error('Error in getRelatedProducts:', error);
+        throw error;
+    }
+}
     // Add this method to your ProductService class
     async toggleProductStatus(productId, status) {
     const product = await prisma.product.findUnique({
@@ -1781,168 +1878,224 @@ class ProductService {
     }
 
     // Get best seller products (UPDATED: Using the flag)
-    async getBestSellerProducts(limit = 8) {
-    const products = await prisma.product.findMany({
-        where: {
-        status: 'ACTIVE',
-        isBestSeller: true
-        },
-        include: {
-        category: {
-            select: {
-            id: true,
-            name: true,
-            image: true
-            }
-        },
-        variants: {
-            include: {
-            variantImages: {
-                where: { isPrimary: true },
-                take: 1
-            }
-            }
-        },
-        ratings: {
-            where: {
-            isApproved: true
-            },
-            select: {
-            rating: true
-            }
-        }
-        },
-        orderBy: {
-        createdAt: 'desc'
-        },
-        take: limit
-    });
-
-    // Calculate average ratings
-    const productsWithRatings = products.map(product => {
-        const ratings = product.ratings;
-        const avgRating = ratings.length > 0 
-        ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-        : 0;
-
-        return {
-        ...product,
-        avgRating: Math.round(avgRating * 10) / 10,
-        totalRatings: ratings.length
+    async getBestSellerProducts(limit = 8, includeVariants = true) {
+        const where = {
+            status: 'ACTIVE',
+            isBestSeller: true
         };
-    });
 
-    return productsWithRatings;
+        const include = {
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
+            },
+            subcategory: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true
+                }
+            },
+            productDetails: true,
+            ratings: {
+                where: {
+                    isApproved: true
+                },
+                select: {
+                    rating: true,
+                    review: true
+                }
+            }
+        };
+
+        // Only include variants if requested
+        if (includeVariants) {
+            include.variants = {
+                include: {
+                    variantImages: {
+                        orderBy: {
+                            isPrimary: 'desc'
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            quantity: true
+                        }
+                    }
+                }
+            };
+        }
+
+        // First get all best seller products
+        const products = await prisma.product.findMany({
+            where,
+            include,
+            orderBy: [
+                {
+                    isBestSeller: 'desc'
+                },
+                {
+                    createdAt: 'desc'
+                }
+            ]
+        });
+
+        // Calculate sales count and average ratings
+        const productsWithSalesAndRatings = products.map(product => {
+            let totalSales = 0;
+            
+            // Only calculate sales if variants are included
+            if (includeVariants && product.variants) {
+                totalSales = product.variants.reduce((sum, variant) => {
+                    return sum + (variant.orderItems?.reduce((itemSum, item) => itemSum + item.quantity, 0) || 0);
+                }, 0);
+            }
+
+            const ratings = product.ratings;
+            const avgRating = ratings.length > 0 
+                ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+                : 0;
+
+            return {
+                ...product,
+                totalSales,
+                avgRating: Math.round(avgRating * 10) / 10,
+                totalRatings: ratings.length
+            };
+        });
+
+        // Sort by total sales and take the limit
+        return productsWithSalesAndRatings
+            .sort((a, b) => b.totalSales - a.totalSales)
+            .slice(0, limit);
     }
 
     // Get new arrivals (UPDATED: Using the flag)
-    async getNewArrivals(limit = 8) {
-    const products = await prisma.product.findMany({
-        where: {
-        status: 'ACTIVE',
-        isNewArrival: true
-        },
-        include: {
-        category: {
-            select: {
-            id: true,
-            name: true,
-            image: true
-            }
-        },
-        variants: {
-            include: {
-            variantImages: {
-                where: { isPrimary: true },
-                take: 1
-            }
-            }
-        },
-        ratings: {
-            where: {
-            isApproved: true
-            },
-            select: {
-            rating: true
-            }
+        async getNewArrivals(limit = 8) {
+            const products = await prisma.product.findMany({
+                where: {
+                    status: 'ACTIVE',
+                    isNewArrival: true
+                },
+                include: {
+                    category: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true
+                        }
+                    },
+                    subcategory: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true
+                        }
+                    },
+                    variants: {
+                        include: {
+                            variantImages: {
+                                orderBy: {
+                                    isPrimary: 'desc'
+                                }
+                            }
+                        }
+                    },
+                    ratings: {
+                        where: {
+                            isApproved: true
+                        },
+                        select: {
+                            rating: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: limit
+            });
+
+            // Calculate average ratings
+            const productsWithRatings = products.map(product => {
+                const ratings = product.ratings;
+                const avgRating = ratings.length > 0 
+                    ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+                    : 0;
+
+                return {
+                    ...product,
+                    avgRating: Math.round(avgRating * 10) / 10,
+                    totalRatings: ratings.length
+                };
+            });
+
+            return productsWithRatings;
         }
-        },
-        orderBy: {
-        createdAt: 'desc'
-        },
-        take: limit
-    });
-
-    // Calculate average ratings
-    const productsWithRatings = products.map(product => {
-        const ratings = product.ratings;
-        const avgRating = ratings.length > 0 
-        ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-        : 0;
-
-        return {
-        ...product,
-        avgRating: Math.round(avgRating * 10) / 10,
-        totalRatings: ratings.length
-        };
-    });
-
-    return productsWithRatings;
-    }
-
     // Get featured products
     async getFeaturedProducts(limit = 8) {
-    const products = await prisma.product.findMany({
-        where: {
-        status: 'ACTIVE',
-        featured: true
-        },
-        include: {
-        category: {
-            select: {
-            id: true,
-            name: true,
-            image: true
-            }
-        },
-        variants: {
-            include: {
-            variantImages: {
-                where: { isPrimary: true },
-                take: 1
-            }
-            }
-        },
-        ratings: {
+        const products = await prisma.product.findMany({
             where: {
-            isApproved: true
+                status: 'ACTIVE',
+                featured: true
             },
-            select: {
-            rating: true
-            }
-        }
-        },
-        orderBy: {
-        createdAt: 'desc'
-        },
-        take: limit
-    });
+            include: {
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true
+                    }
+                },
+                variants: {
+                    include: {
+                        variantImages: {
+                            orderBy: {
+                                isPrimary: 'desc'
+                            }
+                        }
+                    }
+                },
+                ratings: {
+                    where: {
+                        isApproved: true
+                    },
+                    select: {
+                        rating: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: limit
+        });
 
-    // Calculate average ratings
-    const productsWithRatings = products.map(product => {
-        const ratings = product.ratings;
-        const avgRating = ratings.length > 0 
-        ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-        : 0;
+        // Calculate average ratings
+        const productsWithRatings = products.map(product => {
+            const ratings = product.ratings;
+            const avgRating = ratings.length > 0 
+                ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+                : 0;
 
-        return {
-        ...product,
-        avgRating: Math.round(avgRating * 10) / 10,
-        totalRatings: ratings.length
-        };
-    });
+            return {
+                ...product,
+                avgRating: Math.round(avgRating * 10) / 10,
+                totalRatings: ratings.length
+            };
+        });
 
-    return productsWithRatings;
+        return productsWithRatings;
     }
 
     // Auto-mark products as new arrivals (products created in last 30 days)

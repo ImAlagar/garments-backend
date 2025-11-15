@@ -28,7 +28,8 @@ import {
   toggleBestSeller,
   toggleNewArrival,
   toggleFeatured,
-  autoUpdateMerchandising
+  autoUpdateMerchandising,
+  getRelatedProducts
 } from '../controllers/productController.js';
 import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
@@ -67,11 +68,6 @@ const handleVariantImagesUpload = (req, res, next) => {
         
     if (req.files) {
       req.files.forEach((file, index) => {
-        console.log(`File ${index}:`, {
-          fieldname: file.fieldname,
-          originalname: file.originalname,
-          size: file.size
-        });
       });
     }
     
@@ -100,6 +96,8 @@ const handleVariantImagesUpload = (req, res, next) => {
 router.get('/', getAllProducts);
 router.get('/search', searchProducts);
 router.get('/code/:productCode', getProductByCode);
+router.get('/related', getRelatedProducts); // ← ADD THIS LINE
+
 router.get('/:productId', getProductById);
 
 // Public routes for merchandising

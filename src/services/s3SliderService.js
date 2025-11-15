@@ -23,7 +23,6 @@ class S3SliderService {
         file.mimetype || 'image/jpeg'
       );
 
-      console.log('Slider background image uploaded to S3:', result);
       return result;
     } catch (error) {
       console.error('Slider background image upload failed:', error);
@@ -51,7 +50,6 @@ class S3SliderService {
         file.mimetype || 'image/jpeg'
       );
 
-      console.log('Slider main image uploaded to S3:', result);
       return result;
     } catch (error) {
       console.error('Slider main image upload failed:', error);
@@ -93,7 +91,6 @@ class S3SliderService {
       
       if (images.length > 0) {
         await S3UploadService.deleteMultipleImages(images.map(img => img.key));
-        console.log(`Deleted ${images.length} images for slider: ${sliderId}`);
       }
 
       return { deleted: images.length };
@@ -109,7 +106,6 @@ class S3SliderService {
   async deleteSliderImageByKey(key) {
     try {
       await S3UploadService.deleteImage(key);
-      console.log('Deleted slider image:', key);
     } catch (error) {
       console.error('Slider image deletion failed:', error);
       throw new Error(`Slider image deletion failed: ${error.message}`);

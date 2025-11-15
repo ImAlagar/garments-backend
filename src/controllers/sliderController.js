@@ -42,8 +42,7 @@ export const getSliderById = asyncHandler(async (req, res) => {
 });
 
 export const createSlider = asyncHandler(async (req, res) => {
-  console.log('Request body:', req.body);
-  console.log('Request files:', req.files);
+
 
   // Extract data from req.body (already parsed by middleware)
   const sliderData = {
@@ -61,7 +60,6 @@ export const createSlider = asyncHandler(async (req, res) => {
     endDate: req.body.endDate || null
   };
 
-  console.log('Processed slider data:', sliderData);
 
   // Validate that required files are provided
   if (!req.files?.bgImage || !req.files?.image) {
@@ -84,7 +82,6 @@ export const createSlider = asyncHandler(async (req, res) => {
     sliderData.image = uploadResult.mainImage.url;
     sliderData.imagePublicId = uploadResult.mainImage.key;
 
-    console.log('Final slider data with images:', sliderData);
 
     // Create slider in database
     const slider = await sliderService.createSlider(sliderData);

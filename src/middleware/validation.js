@@ -763,7 +763,6 @@ export const parseFormData = (req, res, next) => {
     if (req.body.endDate === '') req.body.endDate = null;
   }
   
-  console.log('Parsed form data:', req.body);
   next();
 };
 
@@ -1038,8 +1037,7 @@ export const validateSliderReorder = [
 
 // File upload validation middleware (for images)
 export const validateSliderImages = (req, res, next) => {
-  console.log('Validating slider images...');
-  console.log('Request files:', req.files);
+
 
   // Check if files are present in the request
   if (req.files) {
@@ -1051,11 +1049,6 @@ export const validateSliderImages = (req, res, next) => {
       const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
-      console.log('BG Image details:', {
-        mimetype: bgFile.mimetype,
-        size: bgFile.size,
-        originalname: bgFile.originalname
-      });
 
       // Check file type using multiple methods
       const isValidType = allowedMimeTypes.includes(bgFile.mimetype) ||
@@ -1082,11 +1075,6 @@ export const validateSliderImages = (req, res, next) => {
       const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
-      console.log('Main Image details:', {
-        mimetype: mainFile.mimetype,
-        size: mainFile.size,
-        originalname: mainFile.originalname
-      });
 
       // Check file type using multiple methods
       const isValidType = allowedMimeTypes.includes(mainFile.mimetype) ||

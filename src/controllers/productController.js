@@ -39,10 +39,24 @@ export const getProductById = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { includeVariants } = req.query;
   
+  if (!productId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Product ID is required'
+    });
+  }
+
   const product = await productService.getProductById(
     productId, 
     includeVariants === 'true'
   );
+  
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: 'Product not found'
+    });
+  }
   
   res.status(200).json({
     success: true,
@@ -100,14 +114,11 @@ export const updateProduct = asyncHandler(async (req, res) => {
   const updateData = req.body;
   const files = req.files || [];
   
-  console.log('=== UPDATE PRODUCT CONTROLLER ===');
-  console.log('Update data received:', Object.keys(updateData));
-  console.log('Files received:', files.length);
+
   
   // Extract variantColors from body if present
   const variantColors = updateData.variantColors;
   if (variantColors) {
-    console.log('Variant colors found:', variantColors);
     delete updateData.variantColors;
   }
 
@@ -129,8 +140,6 @@ export const updateProduct = asyncHandler(async (req, res) => {
     });
   }
   
-  console.log('Parsed variants:', updateData.variants);
-  console.log('Parsed productDetails:', updateData.productDetails);
 
   try {
     const updatedProduct = await productService.updateProduct(
@@ -562,41 +571,91 @@ export const toggleFeatured = asyncHandler(async (req, res) => {
   });
 });
 
+// Get related products
+export const getRelatedProducts = asyncHandler(async (req, res) => {
+    const { category, exclude, limit = 10 } = req.query;
+    
+    logger.info(`Related products request - Category: ${category}, Exclude: ${exclude}, Limit: ${limit}`);
+
+    // Validate required parameters
+    if (!category) {
+        return res.status(400).json({
+            success: false,
+            message: 'Category parameter is required'
+        });
+    }
+
+    if (!exclude) {
+        return res.status(400).json({
+            success: false,
+            message: 'Exclude parameter (product ID) is required'
+        });
+    }
+
+    try {
+        const relatedProducts = await productService.getRelatedProducts({
+            category,
+            exclude,
+            limit: parseInt(limit)
+        });
+
+        res.status(200).json({
+            success: true,
+            data: relatedProducts,
+            count: relatedProducts.length
+        });
+        
+    } catch (error) {
+        logger.error('Error in getRelatedProducts controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching related products',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
 // Get best seller products
-export const getBestSellers = asyncHandler(async (req, res) => {
-  const { limit = 8 } = req.query;
-  
-  const products = await productService.getBestSellerProducts(parseInt(limit));
-  
-  res.status(200).json({
-    success: true,
-    data: products
+  export const getBestSellers = asyncHandler(async (req, res) => {
+    const { 
+      limit = 8,
+      includeVariants = 'true' // ← Add this parameter with default value
+    } = req.query;
+    
+    const products = await productService.getBestSellerProducts(
+      parseInt(limit),
+      includeVariants === 'true' // ← Pass it to service
+    );
+    
+    res.status(200).json({
+      success: true,
+      data: products
+    });
   });
-});
 
-// Get new arrivals
-export const getNewArrivals = asyncHandler(async (req, res) => {
-  const { limit = 8 } = req.query;
-  
-  const products = await productService.getNewArrivals(parseInt(limit));
-  
-  res.status(200).json({
-    success: true,
-    data: products
+  // Get new arrivals
+  export const getNewArrivals = asyncHandler(async (req, res) => {
+      const { limit = 8 } = req.query;
+      
+      const products = await productService.getNewArrivals(parseInt(limit));
+      
+      res.status(200).json({
+          success: true,
+          data: products
+      });
   });
-});
 
-// Get featured products
-export const getFeaturedProducts = asyncHandler(async (req, res) => {
-  const { limit = 8 } = req.query;
-  
-  const products = await productService.getFeaturedProducts(parseInt(limit));
-  
-  res.status(200).json({
-    success: true,
-    data: products
+  // Get featured products
+  export const getFeaturedProducts = asyncHandler(async (req, res) => {
+      const { limit = 8 } = req.query;
+      
+      const products = await productService.getFeaturedProducts(parseInt(limit));
+      
+      res.status(200).json({
+          success: true,
+          data: products
+      });
   });
-});
 
 // Auto update merchandising flags (Admin only - can be called via cron job)
 export const autoUpdateMerchandising = asyncHandler(async (req, res) => {
