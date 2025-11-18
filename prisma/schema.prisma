@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model HomeSlider {
   id          String   @id @default(cuid())
   title       String
@@ -18,13 +17,13 @@ model HomeSlider {
   offerText   String?
   buttonText  String?
   buttonLink  String?
-  layout      String   @default("left") // left, right, center
-  bgImage     String   // Background image URL
-  image       String   // Main image URL
+  layout      String   @default("left")
+  bgImage     String
+  image       String
   imagePublicId String?
   bgImagePublicId String?
   isActive    Boolean  @default(true)
-  order       Int      @default(0) // For sorting
+  order       Int      @default(0)
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime @default(now())
@@ -43,30 +42,27 @@ model User {
   isActive        Boolean   @default(true)
   emailVerified   DateTime?
   
-  // Password reset fields
   resetToken      String?
   resetTokenExpiry DateTime?
   
-  // OTP fields for wholesaler login verification
   phone           String?   @unique
   otpSecret       String?
   otpExpiry       DateTime?
   isPhoneVerified Boolean   @default(false)
   
-  // Admin approval for wholesalers
   isApproved      Boolean   @default(false)
   approvedAt      DateTime?
-  approvedBy      String?   // Admin user ID who approved
+  approvedBy      String?
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
-  // Relations
   addresses       Address[]
   contacts        Contact[]
   orders          Order[]
   ratings         Rating[]
   wholesalerProfile WholesalerProfile?
+  customDesigns   CustomDesign[]
 
   @@map("users")
 }
@@ -79,7 +75,7 @@ model WholesalerProfile {
   gstNumber   String?   @unique
   websiteUrl  String?
   instagramUrl String?
-  shopPhotos  String[]  // URLs to uploaded photos
+  shopPhotos  String[]
   city        String?
   state       String?
   createdAt   DateTime  @default(now())
@@ -90,17 +86,9 @@ model WholesalerProfile {
   @@map("wholesaler_profiles")
 }
 
-enum BusinessType {
-  CLOTHING_STORE
-  GST_BUSINESS
-  WEBSITE
-  INSTAGRAM_PAGE
-  STARTUP
-}
-
 model Category {
   id            String    @id @default(cuid())
-  name          String    @unique  // CHANGED FROM CategoryType TO String
+  name          String    @unique
   description   String?
   image         String?
   imagePublicId String?
@@ -151,23 +139,22 @@ model Product {
   offerPrice      Float?
   wholesalePrice  Float?
   
-  // Basic product info
   categoryId      String
   subcategoryId   String?
   
-  // Status
   status          ProductStatus @default(ACTIVE)
   
-  // NEW: Merchandising flags
   isBestSeller    Boolean      @default(false)
   isNewArrival    Boolean      @default(false)
   featured        Boolean      @default(false)
   
-  // Timestamps
+  // Customization support
+  isCustomizable  Boolean      @default(false)
+  baseCustomizationPrice Float? @default(0)
+  
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   
-  // Relations
   category        Category     @relation(fields: [categoryId], references: [id])
   subcategory     Subcategory? @relation(fields: [subcategoryId], references: [id])
   images          ProductImage[]
@@ -175,6 +162,7 @@ model Product {
   ratings         Rating[]
   orderItems      OrderItem[]
   productDetails  ProductDetail[]
+  customizations  ProductCustomization[]
 
   @@map("products")
 }
@@ -202,7 +190,6 @@ model ProductVariant {
   updatedAt   DateTime @updatedAt
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
-  // Variant-specific images
   variantImages ProductVariantImage[]
   orderItems   OrderItem[]
 
@@ -244,11 +231,11 @@ model Rating {
 model Contact {
   id          String        @id @default(cuid())
   name        String
-  phone       String?       // Made optional
+  phone       String?
   email       String
   message     String
   status      ContactStatus @default(PENDING)
-  adminNotes  String?       // Added this field
+  adminNotes  String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   userId      String?
@@ -276,10 +263,9 @@ model Order {
   paymentStatus    PaymentStatus @default(PENDING)
   paymentMethod    String
   
-  // PhonePe Payment Fields
   phonepeMerchantTransactionId String?   @unique
   phonepeTransactionId        String?    @unique
-  phonepePaymentInstrumentType String?   // UPI, CARD, NETBANKING, etc.
+  phonepePaymentInstrumentType String?
   phonepeResponseCode         String?
   phonepeResponseMessage      String?
   
@@ -290,8 +276,7 @@ model Order {
   user             User          @relation(fields: [userId], references: [id])
   coupon           Coupon?       @relation(fields: [couponId], references: [id])
 
-  // Tracking fields
-  trackingNumber   String?   @unique
+  trackingNumber   String?
   carrier          String?
   trackingUrl      String?
   estimatedDelivery DateTime?
@@ -310,12 +295,40 @@ model OrderItem {
   productVariantId  String?
   quantity          Int
   price             Float
+  customDesignId    String?         @unique
+  customizationPrice Float?         @default(0)
   createdAt         DateTime        @default(now())
+  
   order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product           Product         @relation(fields: [productId], references: [id])
   productVariant    ProductVariant? @relation(fields: [productVariantId], references: [id])
+  customDesign      CustomDesign?   @relation(fields: [customDesignId], references: [id])
 
   @@map("order_items")
+}
+
+model CustomDesign {
+  id          String   @id @default(cuid())
+  customizationId String
+  userId      String?
+  sessionId   String?
+  
+  designData  Json
+  previewImage String
+  thumbnailImage String
+  
+  status      DesignStatus @default(DRAFT)
+  
+  orderItemId String?      @unique
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  customization ProductCustomization @relation(fields: [customizationId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
+  orderItem   OrderItem? // Remove the @relation attribute here
+
+  @@map("custom_designs")
 }
 
 model TrackingHistory {
@@ -355,7 +368,7 @@ model Coupon {
   maxDiscount    Float?
   usageLimit     Int?
   usedCount      Int          @default(0)
-  totalDiscounts Float        @default(0) // ADD THIS FIELD
+  totalDiscounts Float        @default(0)
   validFrom      DateTime
   validUntil     DateTime
   isActive       Boolean      @default(true)
@@ -366,12 +379,35 @@ model Coupon {
   @@map("coupons")
 }
 
+// Customization Models
+model ProductCustomization {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  basePrice   Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  maxTextLength   Int       @default(100)
+  maxImages       Int       @default(5)
+  allowedFonts    String[]
+  allowedColors   String[]
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  designs     CustomDesign[]
+  
+  @@map("product_customizations")
+}
+
+
+
+// Enums
 enum UserRole {
   ADMIN
   CUSTOMER
   WHOLESALER
 }
-
 
 enum OrderStatus {
   PENDING
@@ -406,4 +442,19 @@ enum ProductStatus {
   ACTIVE
   INACTIVE
   OUT_OF_STOCK
+}
+
+enum BusinessType {
+  CLOTHING_STORE
+  GST_BUSINESS
+  WEBSITE
+  INSTAGRAM_PAGE
+  STARTUP
+}
+
+enum DesignStatus {
+  DRAFT
+  SAVED
+  ORDERED
+  ARCHIVED
 }

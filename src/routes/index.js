@@ -12,9 +12,11 @@ import couponRoutes from './couponRoutes.js';
 import ratingRoutes from './ratingRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import sliderRoutes from './sliderRoutes.js';
-import dashboardRoutes from './dashboardRoutes.js'; // Add this line
+import dashboardRoutes from './dashboardRoutes.js';
 import analyticsRoutes from './analyticsRoutes.js';
-
+import customizationRoutes from './customizationRoutes.js';
+import designRoutes from './designRoutes.js';
+import imageProxyRoutes from './imageProxy.js';
 
 router.use('/auth', authRoutes);
 router.use('/auth', userRoutes);
@@ -26,8 +28,10 @@ router.use('/coupons', couponRoutes);
 router.use('/ratings', ratingRoutes);
 router.use('/orders', orderRoutes);
 router.use('/sliders', sliderRoutes);
-router.use('/dashboard', dashboardRoutes); // Add this line
+router.use('/dashboard', dashboardRoutes);
 router.use('/analytics', analyticsRoutes);
-
+router.use('/customizations', customizationRoutes);
+router.use('/designs', designRoutes);
+router.use('/images', imageProxyRoutes);
 
 export default router;

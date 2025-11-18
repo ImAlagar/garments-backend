@@ -11,6 +11,8 @@ import razorpayService from './razorpayService.js';
 import sliderService from './sliderService.js';
 import dashboardService from './dashboardService.js';
 import analyticsService from './analyticsService.js';
+import customizationService from './customizationService.js';
+import designService from './designService.js';
 
 export {
   authService,
@@ -24,5 +26,7 @@ export {
   razorpayService,
   sliderService,
   dashboardService,
-  analyticsService
+  analyticsService,
+  customizationService,
+  designService
 };
