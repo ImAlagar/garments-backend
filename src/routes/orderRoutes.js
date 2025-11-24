@@ -13,7 +13,8 @@ import {
   getOrderStats,
   calculateOrderTotals,
   createCODOrder,
-  testPhonePeIntegration
+  testPhonePeIntegration,
+  verifyPaymentAndCreateOrder
 } from '../controllers/orderController.js';
 import { auth, authorize } from '../middleware/auth.js';
 
@@ -22,9 +23,11 @@ const router = express.Router();
 router.post('/calculate-totals', calculateOrderTotals);
 
 // PhonePe Payment Routes
-router.post('/initiate-payment', auth, initiatePayment);
+router.post('/initiate-payment', auth, initiatePayment); // Creates Razorpay order
+router.post('/verify-payment', auth, verifyPaymentAndCreateOrder); // Creates actual order after payment
+router.post('/create-cod-order', auth, createCODOrder); // Creates COD order immediately
+
 router.post('/payment-callback', handlePaymentCallback);
-router.post('/create-cod-order', auth, createCODOrder);
 router.get('/payment-status/:merchantTransactionId', checkPaymentStatus);
 
 // User Routes

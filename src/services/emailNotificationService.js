@@ -1,6 +1,7 @@
 import emailService from './emailService.js';
 import { emailTemplates } from '../utils/emailTemplates.js';
 import { EmailValidator } from '../utils/emailValidator.js';
+import logger from '../utils/logger.js';
 
 class EmailNotificationService {
   constructor() {
@@ -324,19 +325,34 @@ class EmailNotificationService {
   }
 
   async sendOrderNotifications(orderData) {
-    try {
-      // Send to customer
-      await this.sendOrderConfirmationCustomer(orderData);
-      
-      // Send to admin
-      await this.sendOrderConfirmationAdmin(orderData);
-      
-      logger.info(`Order notifications sent for: ${orderData.orderNumber}`);
-      
-    } catch (error) {
-      console.error('❌ Order notifications failed:', error.message);
-      // Continue even if notifications fail
-    }
+      try {
+          console.log('\n📧 EMAIL DEBUG - Data received by email service:');
+          console.log('Order Number:', orderData.orderNumber);
+          console.log('Order Items Count:', orderData.orderItems?.length);
+          
+          if (orderData.orderItems) {
+              orderData.orderItems.forEach((item, index) => {
+                  console.log(`\n📦 Email Item ${index + 1}:`);
+                  console.log('  Product Name:', item.product?.name);
+                  console.log('  Has Images:', !!item.product?.images);
+                  console.log('  Images Count:', item.product?.images?.length || 0);
+                  console.log('  Images Array:', item.product?.images);
+                  console.log('  Image URL:', item.product?.images?.[0]?.imageUrl);
+              });
+          }
+
+          // Send to customer
+          await this.sendOrderConfirmationCustomer(orderData);
+          
+          // Send to admin
+          await this.sendOrderConfirmationAdmin(orderData);
+          
+          logger.info(`Order notifications sent for: ${orderData.orderNumber}`);
+          
+      } catch (error) {
+          console.error('❌ Order notifications failed:', error.message);
+          // Continue even if notifications fail
+      }
   }
 
 

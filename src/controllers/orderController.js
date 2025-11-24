@@ -2,6 +2,52 @@ import orderService from '../services/orderService.js';
 import phonepeService from '../services/phonepeService.js';
 import razorpayService from '../services/razorpayService.js';
 import { asyncHandler } from '../utils/helpers.js';
+import logger from '../utils/logger.js';
+
+
+
+// Initiate Razorpay payment (creates Razorpay order, not our order)
+export const initiatePayment = asyncHandler(async (req, res) => {
+  const { orderData } = req.body;
+  orderData.userId = req.user.id;
+
+  const result = await orderService.initiateRazorpayPayment(orderData);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Payment initiated successfully',
+    data: result
+  });
+});
+
+// Verify payment and create actual order
+export const verifyPaymentAndCreateOrder = asyncHandler(async (req, res) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderData
+  } = req.body;
+
+  const paymentData = {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderData: {
+      ...orderData,
+      userId: req.user.id
+    }
+  };
+
+  const order = await orderService.verifyAndCreateOrder(paymentData);
+  
+  res.status(201).json({
+    success: true,
+    message: 'Order created successfully',
+    data: order
+  });
+});
+
 
 export const createPaymentOrder = asyncHandler(async (req, res) => {
   const { amount, currency = 'INR' } = req.body;
@@ -21,43 +67,7 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
   });
 });
 
-export const verifyPaymentAndCreateOrder = asyncHandler(async (req, res) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    orderData
-  } = req.body;
 
-  const isValidSignature = razorpayService.verifyPayment(
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  );
-
-  if (!isValidSignature) {
-    return res.status(400).json({
-      success: false,
-      message: 'Payment verification failed'
-    });
-  }
-
-  orderData.userId = req.user.id;
-
-  const paymentData = {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  };
-
-  const order = await orderService.createOrder(orderData, paymentData);
-  
-  res.status(201).json({
-    success: true,
-    message: 'Order created successfully',
-    data: order
-  });
-});
 
 export const getAllOrders = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, status, userId, paymentStatus } = req.query;
@@ -174,8 +184,9 @@ export const getOrderStats = asyncHandler(async (req, res) => {
   });
 });
 
+
 export const calculateOrderTotals = asyncHandler(async (req, res) => {
-  const { orderItems, couponCode, shippingState } = req.body;
+  const { orderItems, couponCode } = req.body;
   
   if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
     return res.status(400).json({
@@ -184,42 +195,13 @@ export const calculateOrderTotals = asyncHandler(async (req, res) => {
     });
   }
   
-  const totals = await orderService.calculateOrderTotals(orderItems, couponCode, shippingState);
+  const totals = await orderService.calculateOrderTotals(orderItems, couponCode);
   
   res.status(200).json({
     success: true,
     data: totals
   });
 });
-
-export const initiatePayment = asyncHandler(async (req, res) => {
-  const { 
-    orderData,
-    redirectUrl,
-    callbackUrl 
-  } = req.body;
-
-  if (!orderData) {
-    return res.status(400).json({
-      success: false,
-      message: 'Order data is required'
-    });
-  }
-
-  orderData.userId = req.user.id;
-  orderData.redirectUrl = redirectUrl;
-  orderData.callbackUrl = callbackUrl;
-
-  const result = await orderService.initiatePhonePePayment(orderData);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Payment initiated successfully',
-    data: result
-  });
-});
-
-
 
 export const handlePaymentCallback = asyncHandler(async (req, res) => {
   const callbackData = req.body;
@@ -272,24 +254,16 @@ export const checkPaymentStatus = asyncHandler(async (req, res) => {
 
 
 export const createCODOrder = asyncHandler(async (req, res) => {
-  try {
-    const { orderData } = req.body;
-    orderData.userId = req.user.id;
+  const { orderData } = req.body;
+  orderData.userId = req.user.id;
 
-    const order = await orderService.createCODOrder(orderData);
-    
-    res.status(201).json({
-      success: true,
-      message: 'COD order created successfully',
-      data: order
-    });
-  } catch (error) {
-    logger.error('COD order creation failed:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
+  const order = await orderService.createCODOrder(orderData);
+  
+  res.status(201).json({
+    success: true,
+    message: 'COD order created successfully',
+    data: order
+  });
 });
 
 
@@ -303,7 +277,7 @@ export const testPhonePeIntegration = asyncHandler(async (req, res) => {
       orderId: 'test-' + Date.now(),
       amount: 1, // ₹1 for testing
       userId: 'test-user',
-      redirectUrl: 'http://localhost:3000/payment-success',
+      redirectUrl: 'http://localhost:5173/payment-success',
       callbackUrl: 'http://localhost:5000/api/orders/payment-callback'
     };
 

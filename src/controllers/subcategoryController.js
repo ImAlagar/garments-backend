@@ -2,7 +2,6 @@
 import prisma from '../config/database.js';
 import { subcategoryService } from '../services/index.js';
 import { asyncHandler } from '../utils/helpers.js';
-import logger from '../utils/logger.js';
 
 // Get all subcategories
 export const getAllSubcategories = asyncHandler(async (req, res) => {

@@ -291,6 +291,32 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   });
 });
 
+// Add to controllers/authController.js
+export const forgotPasswordWholesaler = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone) {
+    return res.status(400).json({
+      success: false,
+      message: 'Phone number is required'
+    });
+  }
+
+  const phoneRegex = /^[0-9]{10}$/;
+  if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid 10-digit phone number'
+    });
+  }
+
+  const result = await authService.forgotPasswordWholesaler(phone.replace(/\D/g, ''));
+  
+  res.status(200).json({
+    success: result.success,
+    message: result.message
+  });
+});
 export const resetPassword = asyncHandler(async (req, res) => {
   const { token, userId, password } = req.body;
 
@@ -321,5 +347,32 @@ export const getProfile = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: profile
+  });
+});
+
+// Add this to your authController.js
+export const validateResetToken = asyncHandler(async (req, res) => {
+  const { token, userId } = req.query;
+
+  if (!token || !userId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Token and user ID are required'
+    });
+  }
+
+  const result = await authService.validateResetToken(token, userId);
+  
+  if (!result.isValid) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid or expired reset token'
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Valid reset token',
+    user: result.user
   });
 });

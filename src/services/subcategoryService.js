@@ -174,6 +174,9 @@ async getAllSubcategories({ page, limit, categoryId, isActive }) {
     
     const { name, description, categoryId, isActive } = updateData;
     
+    // Convert isActive from string to boolean if needed
+    const isActiveBoolean = isActive === 'true' || isActive === true;
+    
     // Check if category is being updated and if it exists
     if (categoryId && categoryId !== subcategory.categoryId) {
       const category = await prisma.category.findUnique({
@@ -236,7 +239,7 @@ async getAllSubcategories({ page, limit, categoryId, isActive }) {
         image: imageUrl,
         imagePublicId,
         categoryId,
-        isActive,
+        isActive: isActiveBoolean, // Use the converted boolean value
         updatedAt: new Date()
       },
       include: {

@@ -72,43 +72,46 @@ class CouponService {
     });
   }
 
-  async getAvailableCoupons(subtotal = 0) {
-    const currentDate = new Date();
+  // services/couponService.js
+// services/couponService.js
+async getAvailableCoupons(subtotal = 0) {
+  const currentDate = new Date();
+  
+  console.log('=== DEBUG: getAvailableCoupons ===');
+  console.log('Subtotal received:', subtotal);
+  console.log('Current date:', currentDate);
+  
+  // Simple query first to test
+  const coupons = await prisma.coupon.findMany({
+    where: {
+      isActive: true,
+      validFrom: { lte: currentDate },
+      validUntil: { gte: currentDate }
+    }
+  });
+
+  console.log('Found coupons before filtering:', coupons.length);
+  console.log('All coupons:', coupons);
+
+  // Filter usage limit and min amount in JavaScript
+  const filteredCoupons = coupons.filter(coupon => {
+    const hasUsageLeft = !coupon.usageLimit || coupon.usedCount < coupon.usageLimit;
+    const meetsMinAmount = !coupon.minOrderAmount || subtotal >= coupon.minOrderAmount;
     
-    const coupons = await prisma.coupon.findMany({
-      where: {
-        isActive: true,
-        validFrom: { lte: currentDate },
-        validUntil: { gte: currentDate },
-        OR: [
-          { minOrderAmount: { lte: subtotal } },
-          { minOrderAmount: { equals: null } },
-          { minOrderAmount: { equals: 0 } }
-        ]
-      },
-      select: {
-        id: true,
-        code: true,
-        description: true,
-        discountType: true,
-        discountValue: true,
-        minOrderAmount: true,
-        maxDiscount: true,
-        validUntil: true,
-        usageLimit: true,
-        usedCount: true
-      },
-      orderBy: { discountValue: 'desc' }
-    });
+    console.log(`Coupon ${coupon.code}:`);
+    console.log(`- Has usage left: ${hasUsageLeft} (${coupon.usedCount}/${coupon.usageLimit})`);
+    console.log(`- Meets min amount: ${meetsMinAmount} (subtotal: ${subtotal}, min: ${coupon.minOrderAmount})`);
+    console.log(`- Passes filter: ${hasUsageLeft && meetsMinAmount}`);
+    
+    return hasUsageLeft && meetsMinAmount;
+  });
 
-    // Filter out coupons that have reached usage limit
-    const availableCoupons = coupons.filter(coupon => {
-      const hasReachedLimit = coupon.usageLimit && coupon.usedCount >= coupon.usageLimit;
-      return !hasReachedLimit;
-    });
+  console.log('Filtered coupons count:', filteredCoupons.length);
+  console.log('Filtered coupons:', filteredCoupons);
+  console.log('=== END DEBUG ===');
 
-    return availableCoupons;
-  }
+  return filteredCoupons;
+}
 
   async updateCoupon(id, data) {
     return await prisma.coupon.update({

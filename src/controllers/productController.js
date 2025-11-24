@@ -318,22 +318,38 @@ export const setPrimaryProductImage = asyncHandler(async (req, res) => {
 });
 
 // Add product variant (Admin only)
+// In your productController.js - update the addProductVariant handler
 export const addProductVariant = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const variantData = req.body;
-  const files = req.files || [];
-  
-  const updatedProduct = await productService.addProductVariant(
-    productId, 
-    variantData, 
-    files
-  );
-  
-  res.status(200).json({
-    success: true,
-    message: 'Product variant added successfully',
-    data: updatedProduct
-  });
+    const { productId } = req.params;
+    
+    // Parse FormData fields
+    const color = req.body.color;
+    const sizes = JSON.parse(req.body.sizes || '[]');
+    const files = req.files || [];
+
+    if (!color || !Array.isArray(sizes) || sizes.length === 0) {
+        return res.status(400).json({
+            success: false,
+            message: 'Color and valid sizes array are required'
+        });
+    }
+
+    const variantData = {
+        color,
+        sizes
+    };
+
+    const updatedProduct = await productService.addProductVariant(
+        productId, 
+        variantData, 
+        files
+    );
+
+    res.status(201).json({
+        success: true,
+        message: 'Product variants added successfully',
+        data: updatedProduct
+    });
 });
 
 // Update product variant (Admin only)

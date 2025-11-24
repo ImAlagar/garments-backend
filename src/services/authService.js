@@ -6,8 +6,8 @@ import crypto from 'crypto';
 import prisma from '../config/database.js';
 import { JWT_SECRET } from '../config/index.js';
 import emailNotificationService from './emailNotificationService.js';
-import s3UploadService from './s3UploadService.js';
 import logger from '../utils/logger.js';
+import S3UploadService from './S3UploadService.js';
 
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -68,7 +68,7 @@ async register(userData, files = []) {
         // Upload shop photos to S3 if files are provided
         if (files && files.length > 0) {
           try {
-            const uploadResults = await s3UploadService.uploadWholesalerShopPhotos(
+            const uploadResults = await S3UploadService.uploadWholesalerShopPhotos(
               files, 
               user.id, 
               businessType
@@ -193,28 +193,26 @@ async register(userData, files = []) {
 
   async handleWholesalerLogin(user, phone, otp) {
     if (!user.isApproved) {
-      throw new Error('Your account is pending admin approval. Please wait for verification.');
+      throw new Error("Your account is pending admin approval.");
     }
 
-    // If OTP not provided, send OTP
+    // If OTP not provided → send OTP
     if (!otp) {
-      await this.sendOTP(phone);
-      return { 
-        requiresOTP: true, 
-        message: 'OTP sent to your registered phone number' 
-      };
+      return this.sendOTP(phone);
     }
 
-    // Verify OTP and login
+    // OTP provided → verify
     await this.verifyOTP(phone, otp);
-    const tokens = this.generateTokens(user);
-    const { password: _, otpSecret: __, ...userData } = user;
 
-    return { 
-      user: userData, 
-      ...tokens 
+    const tokens = this.generateTokens(user);
+    const { password: _, otpSecret: __, otpAttempts: ___, ...userData } = user;
+
+    return {
+      user: userData,
+      ...tokens
     };
   }
+
 
   async handlePasswordLogin(user, password) {
     if (!password) {
@@ -237,56 +235,76 @@ async register(userData, files = []) {
   }
 
   async sendOTP(phoneNumber) {
-    // Your existing OTP sending logic
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    const otpSecret = await bcrypt.hash(otp, 10);
+    const user = await prisma.user.findFirst({ where: { phone: phoneNumber } });
 
-    // Update user
-    await prisma.user.updateMany({
-      where: { phone: phoneNumber },
-      data: { otpSecret, otpExpiry }
+    // 🛑 OTP already active → don't send again
+    if (user.otpExpiry && user.otpExpiry > new Date()) {
+      throw new Error("OTP already sent. Please wait until it expires.");
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpSecret = await bcrypt.hash(otp, 10);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min validity
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otpSecret,
+        otpExpiry,
+        otpAttempts: 0 // reset attempts on new OTP
+      }
     });
 
-    // Send via Twilio
     await twilioClient.messages.create({
-      body: `Your verification code is: ${otp}. Valid for 10 minutes.`,
+      body: `HangerGarments: Your OTP is ${otp}. Do not share. Valid for 10 minutes.`,
       to: phoneNumber,
       from: process.env.TWILIO_PHONE_NUMBER
     });
 
-    return { success: true, message: 'OTP sent successfully' };
+    return { requiresOTP: true, message: "OTP sent successfully" };
   }
 
   async verifyOTP(phoneNumber, otp) {
     const user = await prisma.user.findFirst({
-      where: { 
+      where: {
         phone: phoneNumber,
         otpExpiry: { gt: new Date() }
       }
     });
 
     if (!user || !user.otpSecret) {
-      throw new Error('Invalid or expired OTP');
+      throw new Error("Invalid or expired OTP");
     }
 
-    const isValidOTP = await bcrypt.compare(otp, user.otpSecret);
-    if (!isValidOTP) {
-      throw new Error('Invalid OTP');
+    // ❌ Too many wrong attempts
+    if (user.otpAttempts >= 5) {
+      throw new Error("Too many failed attempts. Please request new OTP.");
     }
 
-    // Clear OTP and mark phone as verified
+    const isValid = await bcrypt.compare(otp, user.otpSecret);
+
+    if (!isValid) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { otpAttempts: { increment: 1 } }
+      });
+      throw new Error("Invalid OTP");
+    }
+
+    // OTP success → clear secret, expiry, attempts
     await prisma.user.update({
       where: { id: user.id },
       data: {
         isPhoneVerified: true,
         otpSecret: null,
-        otpExpiry: null
+        otpExpiry: null,
+        otpAttempts: 0
       }
     });
 
-    return { success: true, message: 'OTP verified successfully' };
+    return { success: true, message: "OTP verified successfully" };
   }
+
 
   async handleRegularLogin(user, password) {
     // Verify password for customers/admins
@@ -517,8 +535,8 @@ async register(userData, files = []) {
         }
       });
 
-      // Create reset URL
-      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&id=${user.id}`;
+      // Create reset URL - FIXED: changed 'id' to 'userId'
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&userId=${user.id}`;
 
       // Send password reset email
       await emailNotificationService.sendPasswordReset({
@@ -536,6 +554,109 @@ async register(userData, files = []) {
       throw new Error('Failed to process password reset request');
     }
   }
+
+  // Add to services/authService.js
+async forgotPasswordWholesaler(phone) {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { 
+        phone,
+        role: 'WHOLESALER'
+      }
+    });
+
+    if (!user) {
+      logger.log(`Password reset requested for wholesaler: ${phone} (user not found)`);
+      return { 
+        success: true, 
+        message: 'If an account with that phone number exists, a reset link has been sent.' 
+      };
+    }
+
+    if (!user.isApproved) {
+      throw new Error('Your account is pending admin approval. Please contact support.');
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Set expiry to 1 hour
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Save reset token to database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken: resetTokenHash,
+        resetTokenExpiry
+      }
+    });
+
+    // Create reset URL
+    const resetUrl = `${process.env.FRONTEND_URL}/wholesaler/reset-password?token=${resetToken}&userId=${user.id}`;
+
+    // Send SMS with reset link
+    await twilioClient.messages.create({
+      body: `HangerGarments: Password reset link - ${resetUrl}. This link expires in 1 hour.`,
+      to: phone,
+      from: process.env.TWILIO_PHONE_NUMBER
+    });
+
+    return {
+      success: true,
+      message: 'If an account with that phone number exists, a reset link has been sent via SMS.'
+    };
+
+  } catch (error) {
+    console.error('❌ Wholesaler forgot password error:', error);
+    throw new Error('Failed to process password reset request');
+  }
+}
+
+// Add this method to your AuthService class
+async validateResetToken(token, userId) {
+  try {
+    if (!token || !userId) {
+      return { isValid: false, user: null };
+    }
+
+    // Hash the provided token to compare with stored hash
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find user with valid reset token
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        resetToken: resetTokenHash,
+        resetTokenExpiry: {
+          gt: new Date()
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true
+      }
+    });
+
+    return {
+      isValid: !!user,
+      user: user || null
+    };
+  } catch (error) {
+    console.error('Validate reset token error:', error);
+    return { isValid: false, user: null };
+  }
+}
+
 
   async resetPassword(token, userId, newPassword) {
     try {

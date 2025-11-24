@@ -8,6 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model HomeSlider {
   id          String   @id @default(cuid())
   title       String
@@ -48,6 +49,7 @@ model User {
   phone           String?   @unique
   otpSecret       String?
   otpExpiry       DateTime?
+  otpAttempts     Int       @default(0)  // Add this field
   isPhoneVerified Boolean   @default(false)
   
   isApproved      Boolean   @default(false)
@@ -108,7 +110,7 @@ model Subcategory {
   image       String?
   imagePublicId String?
   isActive    Boolean   @default(true)
-  categoryId  String
+  categoryId  String 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   category    Category  @relation(fields: [categoryId], references: [id])
@@ -194,7 +196,7 @@ model ProductVariant {
   orderItems   OrderItem[]
 
   @@map("product_variants")
-}
+} 
 
 model ProductVariantImage {
   id          String   @id @default(cuid())
@@ -244,6 +246,7 @@ model Contact {
   @@map("contacts")
 }
 
+
 model Order {
   id               String        @id @default(cuid())
   orderNumber      String        @unique
@@ -263,12 +266,13 @@ model Order {
   paymentStatus    PaymentStatus @default(PENDING)
   paymentMethod    String
   
-  phonepeMerchantTransactionId String?   @unique
-  phonepeTransactionId        String?    @unique
-  phonepePaymentInstrumentType String?
-  phonepeResponseCode         String?
-  phonepeResponseMessage      String?
+  // Razorpay fields
+  razorpayOrderId     String?   @unique
+  razorpayPaymentId   String?   @unique
+  razorpaySignature   String?
   
+  customImages OrderCustomImage[]
+
   couponId         String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -288,6 +292,23 @@ model Order {
   @@map("orders")
 }
 
+model OrderCustomImage {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  imageUrl    String   // S3 URL
+  imageKey    String   // S3 key for deletion
+  filename    String   // Original filename
+  description String?  // Optional description
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("order_custom_images")
+  @@index([orderId])
+}
+
+
 model OrderItem {
   id                String          @id @default(cuid())
   orderId           String
@@ -306,6 +327,8 @@ model OrderItem {
 
   @@map("order_items")
 }
+
+
 
 model CustomDesign {
   id          String   @id @default(cuid())
@@ -327,7 +350,7 @@ model CustomDesign {
   customization ProductCustomization @relation(fields: [customizationId], references: [id])
   user        User?     @relation(fields: [userId], references: [id])
   orderItem   OrderItem? // Remove the @relation attribute here
-
+  
   @@map("custom_designs")
 }
 

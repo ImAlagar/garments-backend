@@ -26,7 +26,7 @@ export const config = {
   FROM_EMAIL: process.env.FROM_EMAIL,
   
   // Client URL
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 
   // Logger
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',

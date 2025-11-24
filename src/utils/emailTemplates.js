@@ -1,191 +1,192 @@
 export const emailTemplates = {
-  contactNotification: (contactData) => {
-    const escapeHtml = (text) => {
-      if (!text) return '';
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    };
 
-    const formatMessage = (message) => {
-      if (!message) return 'No message provided';
-      return escapeHtml(message).replace(/\n/g, '<br>');
-    };
+    contactNotification: (contactData) => {
+        const escapeHtml = (text) => {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        };
 
-    const currentDate = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
+        const formatMessage = (message) => {
+        if (!message) return 'No message provided';
+        return escapeHtml(message).replace(/\n/g, '<br>');
+        };
 
-    return {
-      subject: `New Contact Form Submission - ${contactData.name || 'Unknown User'}`,
-      html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Contact Form Submission</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .header p { font-size: 14px; opacity: 0.9; }
-        .content { padding: 30px; }
-        .alert-badge { background: #e8f5e8; color: #2d5e2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #2d5e2d; }
-        .contact-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
-        .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .info-label { font-weight: 600; color: #495057; min-width: 120px; }
-        .info-value { color: #212529; flex: 1; }
-        .message-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
-        .message-label { font-weight: 600; color: #856404; margin-bottom: 8px; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        .action-buttons { margin-top: 24px; text-align: center; }
-        .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
-        .btn-outline { background: transparent; border: 1px solid #2d5e2d; color: #2d5e2d; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-            .info-item { flex-direction: column; }
-            .info-label { margin-bottom: 4px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📩 New Contact Form Submission</h1>
-            <p>Hanger Garments Website</p>
-        </div>
-        
-        <div class="content">
-            <div class="alert-badge">
-                <strong>Action Required:</strong> A new contact form submission has been received and requires your attention.
+        const currentDate = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+        });
+
+        return {
+        subject: `New Contact Form Submission - ${contactData.name || 'Unknown User'}`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Contact Form Submission</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .header p { font-size: 14px; opacity: 0.9; }
+            .content { padding: 30px; }
+            .alert-badge { background: #e8f5e8; color: #2d5e2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #2d5e2d; }
+            .contact-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+            .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+            .info-label { font-weight: 600; color: #495057; min-width: 120px; }
+            .info-value { color: #212529; flex: 1; }
+            .message-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
+            .message-label { font-weight: 600; color: #856404; margin-bottom: 8px; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .action-buttons { margin-top: 24px; text-align: center; }
+            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+            .btn-outline { background: transparent; border: 1px solid #2d5e2d; color: #2d5e2d; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+                .info-item { flex-direction: column; }
+                .info-label { margin-bottom: 4px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📩 New Contact Form Submission</h1>
+                <p>Hanger Garments Website</p>
             </div>
             
-            <div class="contact-info">
-                <h3 style="color: #2d5e2d; margin-bottom: 16px;">👤 Contact Details</h3>
-                
-                <div class="info-item">
-                    <span class="info-label">Full Name:</span>
-                    <span class="info-value">${escapeHtml(contactData.name) || 'Not provided'}</span>
+            <div class="content">
+                <div class="alert-badge">
+                    <strong>Action Required:</strong> A new contact form submission has been received and requires your attention.
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Email Address:</span>
-                    <span class="info-value">
-                        <a href="mailto:${contactData.email}" style="color: #2d5e2d; text-decoration: none;">
-                            ${contactData.email}
-                        </a>
-                    </span>
+                <div class="contact-info">
+                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">👤 Contact Details</h3>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Full Name:</span>
+                        <span class="info-value">${escapeHtml(contactData.name) || 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">
+                            <a href="mailto:${contactData.email}" style="color: #2d5e2d; text-decoration: none;">
+                                ${contactData.email}
+                            </a>
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Phone Number:</span>
+                        <span class="info-value">${contactData.phone ? escapeHtml(contactData.phone) : 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Submission Time:</span>
+                        <span class="info-value">${currentDate}</span>
+                    </div>
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Phone Number:</span>
-                    <span class="info-value">${contactData.phone ? escapeHtml(contactData.phone) : 'Not provided'}</span>
+                <div class="message-section">
+                    <div class="message-label">📝 Message Content:</div>
+                    <div style="color: #856404; line-height: 1.5;">
+                        ${formatMessage(contactData.message)}
+                    </div>
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Submission Time:</span>
-                    <span class="info-value">${currentDate}</span>
+                <div class="action-buttons">
+                    <a href="mailto:${contactData.email}" class="btn">✉️ Reply to ${contactData.name?.split(' ')[0] || 'Customer'}</a>
+                    <a href="tel:${contactData.phone}" class="btn btn-outline" style="${!contactData.phone ? 'display: none;' : ''}">📞 Call Customer</a>
                 </div>
             </div>
             
-            <div class="message-section">
-                <div class="message-label">📝 Message Content:</div>
-                <div style="color: #856404; line-height: 1.5;">
-                    ${formatMessage(contactData.message)}
-                </div>
-            </div>
-            
-            <div class="action-buttons">
-                <a href="mailto:${contactData.email}" class="btn">✉️ Reply to ${contactData.name?.split(' ')[0] || 'Customer'}</a>
-                <a href="tel:${contactData.phone}" class="btn btn-outline" style="${!contactData.phone ? 'display: none;' : ''}">📞 Call Customer</a>
+            <div class="footer">
+                <p>This is an automated notification from Hanger Garments Contact System</p>
+                <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
             </div>
         </div>
-        
-        <div class="footer">
-            <p>This is an automated notification from Hanger Garments Contact System</p>
-            <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
+    </body>
+    </html>
+        `,
+        text: `
+    NEW CONTACT FORM SUBMISSION - Hanger Garments
+
+    A new contact form submission has been received:
+
+    CONTACT DETAILS:
+    ---------------
+    Name: ${contactData.name || 'Not provided'}
+    Email: ${contactData.email}
+    Phone: ${contactData.phone || 'Not provided'}
+    Time: ${currentDate}
+
+    MESSAGE:
+    --------
+    ${contactData.message || 'No message provided'}
+
+    Please respond to this inquiry promptly.
+
+    This is an automated notification from Hanger Garments.
+        `.trim()
+        };
+    },
+
+    contactAutoReply: (contactData) => ({
+        subject: 'Thank You for Contacting Hanger Garments',
+        html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; color: #2d5e2d; }
+            .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Thank You for Contacting Us!</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${contactData.name || 'Valued Customer'},</p>
+                <p>Thank you for reaching out to Hanger Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
+                <p>For urgent inquiries, please call us at [Your Phone Number].</p>
+                <p>Best regards,<br>Hanger Garments Team</p>
+            </div>
         </div>
-    </div>
-</body>
-</html>
-      `,
-      text: `
-NEW CONTACT FORM SUBMISSION - Hanger Garments
+    </body>
+    </html>
+        `,
+        text: `
+    Thank you for contacting Hanger Garments!
 
-A new contact form submission has been received:
+    Dear ${contactData.name || 'Valued Customer'},
 
-CONTACT DETAILS:
----------------
-Name: ${contactData.name || 'Not provided'}
-Email: ${contactData.email}
-Phone: ${contactData.phone || 'Not provided'}
-Time: ${currentDate}
+    Thank you for reaching out to us. We have received your message and our team will get back to you within 24-48 hours.
 
-MESSAGE:
---------
-${contactData.message || 'No message provided'}
+    For urgent inquiries, please call us at [Your Phone Number].
 
-Please respond to this inquiry promptly.
-
-This is an automated notification from Hanger Garments.
-      `.trim()
-    };
-  },
-
-  contactAutoReply: (contactData) => ({
-    subject: 'Thank You for Contacting Hanger Garments',
-    html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; color: #2d5e2d; }
-        .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Thank You for Contacting Us!</h1>
-        </div>
-        <div class="content">
-            <p>Dear ${contactData.name || 'Valued Customer'},</p>
-            <p>Thank you for reaching out to Hanger Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
-            <p>For urgent inquiries, please call us at [Your Phone Number].</p>
-            <p>Best regards,<br>Hanger Garments Team</p>
-        </div>
-    </div>
-</body>
-</html>
-    `,
-    text: `
-Thank you for contacting Hanger Garments!
-
-Dear ${contactData.name || 'Valued Customer'},
-
-Thank you for reaching out to us. We have received your message and our team will get back to you within 24-48 hours.
-
-For urgent inquiries, please call us at [Your Phone Number].
-
-Best regards,
-Hanger Garments Team
-    `.trim()
-  }),
+    Best regards,
+    Hanger Garments Team
+        `.trim()
+    }),
 
     welcomeEmail: (userData) => {
     const currentYear = new Date().getFullYear();
@@ -444,894 +445,482 @@ Hanger Garments
 Nourishing Lives Naturally
       `.trim()
     };
-  },
+    },
 
-  passwordChangedConfirmation: (userData) => {
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-    const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
-    const timestamp = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
-    
-    return {
-      subject: 'Password Changed Successfully - Hanger Garments',
-      html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Changed - Hanger Garments</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #28a745 0%, #20c997 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .content { padding: 30px; }
-        .success-badge { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #28a745; }
-        .security-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>✅ Password Changed Successfully</h1>
-            <p>Hanger Garments Account Security</p>
-        </div>
-        
-        <div class="content">
-            <div class="success-badge">
-                <strong>Success:</strong> Your password has been updated successfully.
-            </div>
-            
-            <p>Hello <strong>${userData.name}</strong>,</p>
-            
-            <p>This email confirms that your Hanger Garments account password was changed on <strong>${timestamp}</strong>.</p>
-            
-            <div class="security-info">
-                <h3 style="color: #495057; margin-bottom: 15px;">🔒 Security Information</h3>
-                <ul style="margin-left: 20px;">
-                    <li>Your new password is now active</li>
-                    <li>You'll need to use this new password for future logins</li>
-                    <li>All your existing sessions remain active</li>
-                </ul>
-            </div>
-            
-            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
-                <p style="margin: 0; color: #856404;">
-                    <strong>Didn't make this change?</strong><br>
-                    If you didn't change your password, please contact our support team immediately at 
-                    <a href="mailto:${supportEmail}" style="color: #856404; text-decoration: underline;">${supportEmail}</a>
-                </p>
-            </div>
-            
-            <p>Thank you for helping us keep your account secure.</p>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated security notification from Hanger Garments</p>
-            <p style="margin-top: 8px;">
-                <strong>Hanger Garments</strong><br>
-                Nourishing Lives Naturally
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-      `,
-      text: `
-PASSWORD CHANGED SUCCESSFULLY - Hanger Garments
-
-Hello ${userData.name},
-
-This email confirms that your Hanger Garments account password was changed on ${timestamp}.
-
-SECURITY INFORMATION:
-- Your new password is now active
-- You'll need to use this new password for future logins
-- All your existing sessions remain active
-
-Didn't make this change?
-If you didn't change your password, please contact our support team immediately at ${supportEmail}
-
-Thank you for helping us keep your account secure.
-
-This is an automated security notification from Hanger Garments.
-
-Hanger Garments
-Nourishing Lives Naturally
-      `.trim()
-    };
-  },
-
-   orderConfirmationCustomer: (orderData) => {
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-    const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
-    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    return {
-      subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
-      html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation - Hanger Garments</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .content { padding: 30px; }
-        .success-badge { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #28a745; }
-        .order-summary { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .order-items { margin: 20px 0; }
-        .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
-        .order-item:last-child { border-bottom: none; }
-        .item-details { flex: 2; }
-        .item-price { flex: 1; text-align: right; }
-        .amount-breakdown { background: #e8f5e8; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .breakdown-row { display: flex; justify-content: space-between; padding: 8px 0; }
-        .breakdown-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 18px; }
-        .shipping-info, .payment-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        .status-badge { display: inline-block; padding: 4px 12px; background: #28a745; color: white; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-            .order-item { flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Order Confirmed!</h1>
-            <p>Thank you for your purchase</p>
-        </div>
-        
-        <div class="content">
-            <div class="success-badge">
-                <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed.
-            </div>
-            
-            <p>Hello <strong>${orderData.name}</strong>,</p>
-            <p>Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.</p>
-            
-            <div class="order-summary">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">📦 Order Summary</h3>
-                <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
-                <p><strong>Order Date:</strong> ${orderDate}</p>
-                <p><strong>Status:</strong> <span class="status-badge">${orderData.status}</span></p>
-            </div>
-
-            <div class="order-items">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">🛒 Order Items</h3>
-                ${orderData.orderItems.map(item => `
-                <div class="order-item">
-                    <div class="item-details">
-                        <strong>${item.product.name}</strong>
-                        <br>
-                        <small>Quantity: ${item.quantity} × ₹${item.price}</small>
-                    </div>
-                    <div class="item-price">
-                        ₹${(item.quantity * item.price).toFixed(2)}
-                    </div>
-                </div>
-                `).join('')}
-            </div>
-
-            <div class="amount-breakdown">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">💰 Amount Breakdown</h3>
-                <div class="breakdown-row">
-                    <span>Subtotal:</span>
-                    <span>₹${orderData.subtotal.toFixed(2)}</span>
-                </div>
-                ${orderData.discount > 0 ? `
-                <div class="breakdown-row" style="color: #28a745;">
-                    <span>Discount:</span>
-                    <span>-₹${orderData.discount.toFixed(2)}</span>
-                </div>
-                ` : ''}
-                <div class="breakdown-row">
-                    <span>Shipping:</span>
-                    <span>₹${orderData.shippingCost.toFixed(2)}</span>
-                </div>
-                <div class="breakdown-row breakdown-total">
-                    <span>Total Amount:</span>
-                    <span>₹${orderData.totalAmount.toFixed(2)}</span>
-                </div>
-            </div>
-
-            <div class="shipping-info">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">🏠 Shipping Address</h3>
-                <p>${orderData.name}<br>
-                ${orderData.address}<br>
-                ${orderData.city}, ${orderData.state} - ${orderData.pincode}<br>
-                📞 ${orderData.phone}<br>
-                ✉️ ${orderData.email}</p>
-            </div>
-
-            <div class="payment-info">
-                <h3 style="color: #2d5e2d; margin-bottom: 15px;">💳 Payment Information</h3>
-                <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
-                <p><strong>Payment Status:</strong> <span class="status-badge">${orderData.paymentStatus}</span></p>
-            </div>
-
-            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="color: #1565c0; margin-bottom: 10px;">📞 Need Help?</h4>
-                <p style="margin: 0;">If you have any questions about your order, contact our support team:</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${supportEmail}" style="color: #1565c0;">${supportEmail}</a></p>
-                <p style="margin: 0;"><strong>Phone:</strong> +91 98765 43210</p>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p><strong>Hanger Garments</strong></p>
-            <p>Nourishing Lives Naturally</p>
-            <p style="margin-top: 15px; font-size: 11px; color: #999;">
-                This is an automated order confirmation email. Please do not reply to this message.
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-      `,
-      text: `
-ORDER CONFIRMED - Hanger Garments
-
-Hello ${orderData.name},
-
-Thank you for your order! We're excited to let you know that we've received your order #${orderData.orderNumber} and it is now being processed.
-
-ORDER SUMMARY:
---------------
-Order Number: ${orderData.orderNumber}
-Order Date: ${orderDate}
-Status: ${orderData.status}
-
-ORDER ITEMS:
-------------
-${orderData.orderItems.map(item => 
-  `• ${item.product.name} - ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-).join('\n')}
-
-AMOUNT BREAKDOWN:
------------------
-Subtotal: ₹${orderData.subtotal.toFixed(2)}
-${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
-Total: ₹${orderData.totalAmount.toFixed(2)}
-
-SHIPPING ADDRESS:
------------------
-${orderData.name}
-${orderData.address}
-${orderData.city}, ${orderData.state} - ${orderData.pincode}
-Phone: ${orderData.phone}
-Email: ${orderData.email}
-
-PAYMENT INFORMATION:
--------------------
-Payment Method: ${orderData.paymentMethod}
-Payment Status: ${orderData.paymentStatus}
-
-Need help? Contact our support team:
-Email: ${supportEmail}
-Phone: +91 98765 43210
-
-
-Thank you for choosing Hanger Garments!
-
---
-Hanger Garments
-Nourishing Lives Naturally
-      `.trim()
-    };
-  },
-
-    orderConfirmationAdmin: (orderData) => {
-    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+    passwordChangedConfirmation: (userData) => {
+        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+        const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+        const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const domain = process.env.DOMAIN_NAME || 'shrivelanorganicfoods.com';
-    const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
-
-    return {
-        // ✅ Fixed subject - removed emoji and excessive symbols
-        subject: `New Order Notification - Order ${orderData.orderNumber} - ${orderData.totalAmount.toFixed(2)} INR`,
+        minute: '2-digit',
+        timeZoneName: 'short'
+        });
         
+        return {
+        subject: 'Password Changed Successfully - Hanger Garments',
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>New Order Notification - Hanger Garments</title>
+        <title>Password Changed - Hanger Garments</title>
         <style>
-            /* Reset and basic styles */
-            body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f6f6f6; }
-            .container { max-width: 700px; margin: 0 auto; background: #ffffff; }
-            .header { background: #2d5e2d; padding: 25px 20px; text-align: center; color: #ffffff; }
-            .header h1 { font-size: 22px; margin: 0 0 10px 0; font-weight: bold; }
-            .content { padding: 25px; }
-            .footer { background: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666666; }
-            
-            /* Content styles */
-            .alert-section { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-            .order-overview { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
-            .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-            .overview-item { background: white; padding: 12px; border-radius: 4px; border-left: 4px solid #2d5e2d; }
-            .order-items { margin: 20px 0; }
-            .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
-            .amount-summary { background: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 4px; }
-            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
-            .summary-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 16px; }
-            .customer-info { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 4px; }
-            .action-buttons { margin-top: 25px; text-align: center; }
-            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; }
-            
-            /* Mobile responsive */
-            @media only screen and (max-width: 600px) {
-                .container { width: 100% !important; }
-                .content { padding: 20px !important; }
-                .overview-grid { grid-template-columns: 1fr; }
-                .btn { display: block; margin: 10px 0; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #28a745 0%, #20c997 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .success-badge { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #28a745; }
+            .security-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <!-- Header -->
             <div class="header">
-                <h1>New Order Received</h1>
-                <p>Order ${orderData.orderNumber} - Requires Processing</p>
+                <h1>✅ Password Changed Successfully</h1>
+                <p>Hanger Garments Account Security</p>
             </div>
             
-            <!-- Content -->
             <div class="content">
-                <div class="alert-section">
-                    <strong>New Order Alert:</strong> A new order has been placed and requires processing.
+                <div class="success-badge">
+                    <strong>Success:</strong> Your password has been updated successfully.
                 </div>
-
-                <div class="order-overview">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Overview</h3>
-                    <div class="overview-grid">
-                        <div class="overview-item">
-                            <strong>Order Number</strong><br>
-                            ${orderData.orderNumber}
-                        </div>
-                        <div class="overview-item">
-                            <strong>Order Date</strong><br>
-                            ${orderDate}
-                        </div>
-                        <div class="overview-item">
-                            <strong>Total Amount</strong><br>
-                            ₹${orderData.totalAmount.toFixed(2)}
-                        </div>
-                        <div class="overview-item">
-                            <strong>Payment Method</strong><br>
-                            ${orderData.paymentMethod}
-                        </div>
-                    </div>
+                
+                <p>Hello <strong>${userData.name}</strong>,</p>
+                
+                <p>This email confirms that your Hanger Garments account password was changed on <strong>${timestamp}</strong>.</p>
+                
+                <div class="security-info">
+                    <h3 style="color: #495057; margin-bottom: 15px;">🔒 Security Information</h3>
+                    <ul style="margin-left: 20px;">
+                        <li>Your new password is now active</li>
+                        <li>You'll need to use this new password for future logins</li>
+                        <li>All your existing sessions remain active</li>
+                    </ul>
                 </div>
-
-                <div class="customer-info">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Customer Information</h3>
-                    <p><strong>Name:</strong> ${orderData.name}</p>
-                    <p><strong>Email:</strong> <a href="mailto:${orderData.email}">${orderData.email}</a></p>
-                    <p><strong>Phone:</strong> <a href="tel:${orderData.phone}">${orderData.phone}</a></p>
-                    <p><strong>Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                    <p style="margin: 0; color: #856404;">
+                        <strong>Didn't make this change?</strong><br>
+                        If you didn't change your password, please contact our support team immediately at 
+                        <a href="mailto:${supportEmail}" style="color: #856404; text-decoration: underline;">${supportEmail}</a>
+                    </p>
                 </div>
-
-                <div class="order-items">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Items</h3>
-                    ${orderData.orderItems.map(item => `
-                    <div class="order-item">
-                        <div style="flex: 2;">
-                            <strong>${item.product.name}</strong>
-                            <br>
-                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
-                        </div>
-                        <div style="flex: 1; text-align: right;">
-                            ₹${(item.quantity * item.price).toFixed(2)}
-                        </div>
-                    </div>
-                    `).join('')}
-                </div>
-
-                <div class="amount-summary">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">Order Summary</h3>
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span>₹${orderData.subtotal.toFixed(2)}</span>
-                    </div>
-                    ${orderData.discount > 0 ? `
-                    <div class="summary-row">
-                        <span>Discount:</span>
-                        <span style="color: #28a745;">-₹${orderData.discount.toFixed(2)}</span>
-                    </div>
-                    ` : ''}
-                    <div class="summary-row">
-                        <span>Shipping:</span>
-                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row summary-total">
-                        <span>Grand Total:</span>
-                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <a href="${adminUrl}/orders/${orderData.id}" class="btn">
-                        View Order in Admin Panel
-                    </a>
-                    <a href="mailto:${orderData.email}?subject=Regarding Order ${orderData.orderNumber}" class="btn" style="background: #6c757d;">
-                        Contact Customer
-                    </a>
-                </div>
-
-                <div style="margin-top: 25px; padding: 15px; background: #e9ecef; border-radius: 4px;">
-                    <h4 style="margin: 0 0 10px 0; color: #495057;">Next Steps:</h4>
-                    <ol style="margin: 0; padding-left: 20px;">
-                        <li>Review order details</li>
-                        <li>Prepare items for shipping</li>
-                        <li>Update order status when shipped</li>
-                    </ol>
-                </div>
+                
+                <p>Thank you for helping us keep your account secure.</p>
             </div>
             
-            <!-- Footer -->
             <div class="footer">
-                <p><strong>Hanger Garments - Order Management System</strong></p>
-                <p>This is an automated notification. Please process this order promptly.</p>
-                <p style="margin-top: 10px; font-size: 11px; color: #999;">
-                    If you believe you received this email in error, please contact system administration.
+                <p>This is an automated security notification from Hanger Garments</p>
+                <p style="margin-top: 8px;">
+                    <strong>Hanger Garments</strong><br>
+                    Nourishing Lives Naturally
                 </p>
             </div>
         </div>
     </body>
     </html>
         `,
-        
-        // ✅ Proper text version
         text: `
-    NEW ORDER NOTIFICATION - Hanger Garments
+    PASSWORD CHANGED SUCCESSFULLY - Hanger Garments
 
-    A new order has been placed and requires processing.
+    Hello ${userData.name},
 
-    ORDER OVERVIEW:
-    ---------------
-    Order Number: ${orderData.orderNumber}
-    Order Date: ${orderDate}
-    Total Amount: ₹${orderData.totalAmount.toFixed(2)}
-    Payment Method: ${orderData.paymentMethod}
-    Payment Status: ${orderData.paymentStatus}
+    This email confirms that your Hanger Garments account password was changed on ${timestamp}.
 
-    CUSTOMER INFORMATION:
-    --------------------
-    Name: ${orderData.name}
-    Email: ${orderData.email}
-    Phone: ${orderData.phone}
-    Address: ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}
+    SECURITY INFORMATION:
+    - Your new password is now active
+    - You'll need to use this new password for future logins
+    - All your existing sessions remain active
 
-    ORDER ITEMS:
-    -----------
-    ${orderData.orderItems.map(item => 
-    `• ${item.product.name}
-    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-    ).join('\n')}
+    Didn't make this change?
+    If you didn't change your password, please contact our support team immediately at ${supportEmail}
 
-    ORDER SUMMARY:
-    --------------
-    Subtotal: ₹${orderData.subtotal.toFixed(2)}
-    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
-    Grand Total: ₹${orderData.totalAmount.toFixed(2)}
+    Thank you for helping us keep your account secure.
 
-    NEXT STEPS:
-    -----------
-    1. Review order details
-    2. Prepare items for shipping
-    3. Update order status when shipped
+    This is an automated security notification from Hanger Garments.
 
-    View order in admin panel: ${adminUrl}/orders/${orderData.id}
-
-    This is an automated order notification from Hanger Garments.
-
-    --
     Hanger Garments
-    Order Management System
+    Nourishing Lives Naturally
         `.trim()
-    };
+        };
     },
-  
 
- wholesalerApprovalNotification: (wholesalerData) => {
-    const escapeHtml = (text) => {
-      if (!text) return '';
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    };
 
-    const currentDate = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
 
-    return {
-      subject: `New Wholesaler Application - ${wholesalerData.businessName || 'Unknown Business'}`,
-      html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Wholesaler Application</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #2c5aa0 0%, #3a7bd5 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .header p { font-size: 14px; opacity: 0.9; }
-        .content { padding: 30px; }
-        .alert-badge { background: #e3f2fd; color: #1565c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #1565c0; }
-        .business-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
-        .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .info-label { font-weight: 600; color: #495057; min-width: 150px; }
-        .info-value { color: #212529; flex: 1; }
-        .requirements-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        .action-buttons { margin-top: 24px; text-align: center; }
-        .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2c5aa0; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
-        .btn-outline { background: transparent; border: 1px solid #2c5aa0; color: #2c5aa0; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-            .info-item { flex-direction: column; }
-            .info-label { margin-bottom: 4px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🏢 New Wholesaler Application</h1>
-            <p>Hanger Garments Wholesaler Program</p>
-        </div>
-        
-        <div class="content">
-            <div class="alert-badge">
-                <strong>Action Required:</strong> A new wholesaler application has been submitted and requires review.
+    wholesalerApprovalNotification: (wholesalerData) => {
+        const escapeHtml = (text) => {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        };
+
+        const currentDate = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+        });
+
+        return {
+        subject: `New Wholesaler Application - ${wholesalerData.businessName || 'Unknown Business'}`,
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Wholesaler Application</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #2c5aa0 0%, #3a7bd5 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .header p { font-size: 14px; opacity: 0.9; }
+            .content { padding: 30px; }
+            .alert-badge { background: #e3f2fd; color: #1565c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #1565c0; }
+            .business-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
+            .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+            .info-label { font-weight: 600; color: #495057; min-width: 150px; }
+            .info-value { color: #212529; flex: 1; }
+            .requirements-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .action-buttons { margin-top: 24px; text-align: center; }
+            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2c5aa0; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+            .btn-outline { background: transparent; border: 1px solid #2c5aa0; color: #2c5aa0; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+                .info-item { flex-direction: column; }
+                .info-label { margin-bottom: 4px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🏢 New Wholesaler Application</h1>
+                <p>Hanger Garments Wholesaler Program</p>
             </div>
             
-            <div class="business-info">
-                <h3 style="color: #2c5aa0; margin-bottom: 16px;">🏢 Business Details</h3>
-                
-                <div class="info-item">
-                    <span class="info-label">Business Name:</span>
-                    <span class="info-value">${escapeHtml(wholesalerData.businessName) || 'Not provided'}</span>
+            <div class="content">
+                <div class="alert-badge">
+                    <strong>Action Required:</strong> A new wholesaler application has been submitted and requires review.
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Contact Person:</span>
-                    <span class="info-value">${escapeHtml(wholesalerData.contactPerson) || 'Not provided'}</span>
+                <div class="business-info">
+                    <h3 style="color: #2c5aa0; margin-bottom: 16px;">🏢 Business Details</h3>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Business Name:</span>
+                        <span class="info-value">${escapeHtml(wholesalerData.businessName) || 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Contact Person:</span>
+                        <span class="info-value">${escapeHtml(wholesalerData.contactPerson) || 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">
+                            <a href="mailto:${wholesalerData.email}" style="color: #2c5aa0; text-decoration: none;">
+                                ${wholesalerData.email}
+                            </a>
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Phone Number:</span>
+                        <span class="info-value">${wholesalerData.phone ? escapeHtml(wholesalerData.phone) : 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Business Type:</span>
+                        <span class="info-value">${wholesalerData.businessType || 'Not specified'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">GST Number:</span>
+                        <span class="info-value">${wholesalerData.gstNumber ? escapeHtml(wholesalerData.gstNumber) : 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Business Address:</span>
+                        <span class="info-value">${wholesalerData.address ? escapeHtml(wholesalerData.address) : 'Not provided'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Expected Order Volume:</span>
+                        <span class="info-value">${wholesalerData.expectedVolume || 'Not specified'}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Submission Time:</span>
+                        <span class="info-value">${currentDate}</span>
+                    </div>
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Email Address:</span>
-                    <span class="info-value">
-                        <a href="mailto:${wholesalerData.email}" style="color: #2c5aa0; text-decoration: none;">
-                            ${wholesalerData.email}
-                        </a>
-                    </span>
+                ${wholesalerData.additionalInfo ? `
+                <div class="requirements-section">
+                    <div class="message-label">📝 Additional Information:</div>
+                    <div style="color: #856404; line-height: 1.5;">
+                        ${escapeHtml(wholesalerData.additionalInfo).replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="requirements-section">
+                    <h4 style="color: #856404; margin-bottom: 10px;">📋 Next Steps Required:</h4>
+                    <ol style="color: #856404; margin-left: 20px;">
+                        <li>Verify business credentials and GST information</li>
+                        <li>Review expected order volume and requirements</li>
+                        <li>Contact applicant for additional information if needed</li>
+                        <li>Approve or reject the application in the admin panel</li>
+                        <li>Send confirmation email to the applicant</li>
+                    </ol>
                 </div>
                 
-                <div class="info-item">
-                    <span class="info-label">Phone Number:</span>
-                    <span class="info-value">${wholesalerData.phone ? escapeHtml(wholesalerData.phone) : 'Not provided'}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Business Type:</span>
-                    <span class="info-value">${wholesalerData.businessType || 'Not specified'}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">GST Number:</span>
-                    <span class="info-value">${wholesalerData.gstNumber ? escapeHtml(wholesalerData.gstNumber) : 'Not provided'}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Business Address:</span>
-                    <span class="info-value">${wholesalerData.address ? escapeHtml(wholesalerData.address) : 'Not provided'}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Expected Order Volume:</span>
-                    <span class="info-value">${wholesalerData.expectedVolume || 'Not specified'}</span>
-                </div>
-                
-                <div class="info-item">
-                    <span class="info-label">Submission Time:</span>
-                    <span class="info-value">${currentDate}</span>
-                </div>
-            </div>
-            
-            ${wholesalerData.additionalInfo ? `
-            <div class="requirements-section">
-                <div class="message-label">📝 Additional Information:</div>
-                <div style="color: #856404; line-height: 1.5;">
-                    ${escapeHtml(wholesalerData.additionalInfo).replace(/\n/g, '<br>')}
-                </div>
-            </div>
-            ` : ''}
-            
-            <div class="requirements-section">
-                <h4 style="color: #856404; margin-bottom: 10px;">📋 Next Steps Required:</h4>
-                <ol style="color: #856404; margin-left: 20px;">
-                    <li>Verify business credentials and GST information</li>
-                    <li>Review expected order volume and requirements</li>
-                    <li>Contact applicant for additional information if needed</li>
-                    <li>Approve or reject the application in the admin panel</li>
-                    <li>Send confirmation email to the applicant</li>
-                </ol>
-            </div>
-            
-            <div class="action-buttons">
-                <a href="mailto:${wholesalerData.email}" class="btn">✉️ Contact ${wholesalerData.contactPerson?.split(' ')[0] || 'Applicant'}</a>
-                <a href="tel:${wholesalerData.phone}" class="btn btn-outline" style="${!wholesalerData.phone ? 'display: none;' : ''}">📞 Call Business</a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated notification from Hanger Garments Wholesaler Management System</p>
-            <p style="margin-top: 8px;">Please review this application within 48 hours.</p>
-        </div>
-    </div>
-</body>
-</html>
-      `,
-      text: `
-NEW WHOLESALER APPLICATION - Hanger Garments
-
-A new wholesaler application has been submitted and requires review.
-
-BUSINESS DETAILS:
------------------
-Business Name: ${wholesalerData.businessName || 'Not provided'}
-Contact Person: ${wholesalerData.contactPerson || 'Not provided'}
-Email: ${wholesalerData.email}
-Phone: ${wholesalerData.phone || 'Not provided'}
-Business Type: ${wholesalerData.businessType || 'Not specified'}
-GST Number: ${wholesalerData.gstNumber || 'Not provided'}
-Business Address: ${wholesalerData.address || 'Not provided'}
-Expected Order Volume: ${wholesalerData.expectedVolume || 'Not specified'}
-Submission Time: ${currentDate}
-
-${wholesalerData.additionalInfo ? `
-ADDITIONAL INFORMATION:
------------------------
-${wholesalerData.additionalInfo}
-` : ''}
-
-NEXT STEPS REQUIRED:
--------------------
-1. Verify business credentials and GST information
-2. Review expected order volume and requirements
-3. Contact applicant for additional information if needed
-4. Approve or reject the application
-5. Send confirmation email to the applicant
-
-Please review this application within 48 hours.
-
-This is an automated notification from Hanger Garments.
-      `.trim()
-    };
-  },
-
-  wholesalerAutoReply: (wholesalerData) => ({
-    subject: 'Wholesaler Application Received - Hanger Garments',
-    html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; color: #2c5aa0; }
-        .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
-        .timeline { margin: 20px 0; }
-        .timeline-item { margin-bottom: 15px; padding-left: 20px; border-left: 3px solid #2c5aa0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Wholesaler Application Received</h1>
-        </div>
-        <div class="content">
-            <p>Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},</p>
-            
-            <p>Thank you for your interest in becoming a wholesale partner with Hanger Garments!</p>
-            
-            <p>We have received your application and our team is currently reviewing it. Here's what you can expect next:</p>
-            
-            <div class="timeline">
-                <div class="timeline-item">
-                    <strong>Application Review</strong><br>
-                    Our team will review your business details within 2-3 business days
-                </div>
-                <div class="timeline-item">
-                    <strong>Verification Call</strong><br>
-                    We may contact you for additional information or clarification
-                </div>
-                <div class="timeline-item">
-                    <strong>Approval Decision</strong><br>
-                    You will receive notification of our decision via email
-                </div>
-                <div class="timeline-item">
-                    <strong>Onboarding</strong><br>
-                    If approved, we'll guide you through the onboarding process
+                <div class="action-buttons">
+                    <a href="mailto:${wholesalerData.email}" class="btn">✉️ Contact ${wholesalerData.contactPerson?.split(' ')[0] || 'Applicant'}</a>
+                    <a href="tel:${wholesalerData.phone}" class="btn btn-outline" style="${!wholesalerData.phone ? 'display: none;' : ''}">📞 Call Business</a>
                 </div>
             </div>
             
-            <p><strong>Business Name:</strong> ${wholesalerData.businessName}</p>
-            <p><strong>Application Date:</strong> ${new Date().toLocaleDateString()}</p>
-            
-            <p>If you have any questions, please don't hesitate to contact our wholesale team.</p>
-            
-            <p>Best regards,<br>
-            <strong>Wholesale Partnership Team</strong><br>
-            Hanger Garments</p>
-        </div>
-    </div>
-</body>
-</html>
-    `,
-    text: `
-Wholesaler Application Received - Hanger Garments
-
-Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},
-
-Thank you for your interest in becoming a wholesale partner with Hanger Garments!
-
-We have received your application and our team is currently reviewing it. Here's what you can expect next:
-
-APPLICATION PROCESS:
--------------------
-• Application Review: Our team will review your business details within 2-3 business days
-• Verification Call: We may contact you for additional information or clarification
-• Approval Decision: You will receive notification of our decision via email
-• Onboarding: If approved, we'll guide you through the onboarding process
-
-APPLICATION DETAILS:
--------------------
-Business Name: ${wholesalerData.businessName}
-Application Date: ${new Date().toLocaleDateString()}
-
-If you have any questions, please don't hesitate to contact our wholesale team.
-
-Best regards,
-Wholesale Partnership Team
-Hanger Garments
-    `.trim()
-  }),
-
-  wholesalerApprovalConfirmation: (wholesalerData) => ({
-    subject: 'Wholesaler Application Approved - Welcome to Hanger Garments!',
-    html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; color: #28a745; }
-        .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
-        .next-steps { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Welcome to Our Wholesale Family!</h1>
-        </div>
-        <div class="content">
-            <p>Dear ${wholesalerData.contactPerson},</p>
-            
-            <p>We are delighted to inform you that your wholesaler application for <strong>${wholesalerData.businessName}</strong> has been approved!</p>
-            
-            <div class="next-steps">
-                <h3>Next Steps to Get Started:</h3>
-                <ul>
-                    <li>Access our wholesale portal using your registered email</li>
-                    <li>Explore our complete product catalog with wholesale pricing</li>
-                    <li>Review our minimum order quantities and shipping policies</li>
-                    <li>Place your first order and experience our quality products</li>
-                </ul>
+            <div class="footer">
+                <p>This is an automated notification from Hanger Garments Wholesaler Management System</p>
+                <p style="margin-top: 8px;">Please review this application within 48 hours.</p>
             </div>
-            
-            <p><strong>Your Wholesale Account Details:</strong></p>
-            <p>Business: ${wholesalerData.businessName}<br>
-            Contact: ${wholesalerData.contactPerson}<br>
-            Email: ${wholesalerData.email}<br>
-            Account Type: Wholesale Partner</p>
-            
-            <p>Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.</p>
-            
-            <p>Welcome to the Hanger Garments family!</p>
-            
-            <p>Best regards,<br>
-            <strong>Wholesale Partnership Team</strong><br>
-            Hanger Garments</p>
         </div>
-    </div>
-</body>
-</html>
-    `,
-    text: `
-Wholesaler Application Approved - Welcome to Hanger Garments!
+    </body>
+    </html>
+        `,
+        text: `
+    NEW WHOLESALER APPLICATION - Hanger Garments
 
-Dear ${wholesalerData.contactPerson},
+    A new wholesaler application has been submitted and requires review.
 
-We are delighted to inform you that your wholesaler application for ${wholesalerData.businessName} has been approved!
+    BUSINESS DETAILS:
+    -----------------
+    Business Name: ${wholesalerData.businessName || 'Not provided'}
+    Contact Person: ${wholesalerData.contactPerson || 'Not provided'}
+    Email: ${wholesalerData.email}
+    Phone: ${wholesalerData.phone || 'Not provided'}
+    Business Type: ${wholesalerData.businessType || 'Not specified'}
+    GST Number: ${wholesalerData.gstNumber || 'Not provided'}
+    Business Address: ${wholesalerData.address || 'Not provided'}
+    Expected Order Volume: ${wholesalerData.expectedVolume || 'Not specified'}
+    Submission Time: ${currentDate}
 
-NEXT STEPS TO GET STARTED:
--------------------------
-• Access our wholesale portal using your registered email
-• Explore our complete product catalog with wholesale pricing
-• Review our minimum order quantities and shipping policies
-• Place your first order and experience our quality products
+    ${wholesalerData.additionalInfo ? `
+    ADDITIONAL INFORMATION:
+    -----------------------
+    ${wholesalerData.additionalInfo}
+    ` : ''}
 
-YOUR WHOLESALE ACCOUNT DETAILS:
-------------------------------
-Business: ${wholesalerData.businessName}
-Contact: ${wholesalerData.contactPerson}
-Email: ${wholesalerData.email}
-Account Type: Wholesale Partner
+    NEXT STEPS REQUIRED:
+    -------------------
+    1. Verify business credentials and GST information
+    2. Review expected order volume and requirements
+    3. Contact applicant for additional information if needed
+    4. Approve or reject the application
+    5. Send confirmation email to the applicant
 
-Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.
+    Please review this application within 48 hours.
 
-Welcome to the Hanger Garments family!
+    This is an automated notification from Hanger Garments.
+        `.trim()
+        };
+    },
 
-Best regards,
-Wholesale Partnership Team
-Hanger Garments
-    `.trim()
-  }),
+    wholesalerAutoReply: (wholesalerData) => ({
+        subject: 'Wholesaler Application Received - Hanger Garments',
+        html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; color: #2c5aa0; }
+            .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+            .timeline { margin: 20px 0; }
+            .timeline-item { margin-bottom: 15px; padding-left: 20px; border-left: 3px solid #2c5aa0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Wholesaler Application Received</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},</p>
+                
+                <p>Thank you for your interest in becoming a wholesale partner with Hanger Garments!</p>
+                
+                <p>We have received your application and our team is currently reviewing it. Here's what you can expect next:</p>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <strong>Application Review</strong><br>
+                        Our team will review your business details within 2-3 business days
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Verification Call</strong><br>
+                        We may contact you for additional information or clarification
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Approval Decision</strong><br>
+                        You will receive notification of our decision via email
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Onboarding</strong><br>
+                        If approved, we'll guide you through the onboarding process
+                    </div>
+                </div>
+                
+                <p><strong>Business Name:</strong> ${wholesalerData.businessName}</p>
+                <p><strong>Application Date:</strong> ${new Date().toLocaleDateString()}</p>
+                
+                <p>If you have any questions, please don't hesitate to contact our wholesale team.</p>
+                
+                <p>Best regards,<br>
+                <strong>Wholesale Partnership Team</strong><br>
+                Hanger Garments</p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    Wholesaler Application Received - Hanger Garments
+
+    Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},
+
+    Thank you for your interest in becoming a wholesale partner with Hanger Garments!
+
+    We have received your application and our team is currently reviewing it. Here's what you can expect next:
+
+    APPLICATION PROCESS:
+    -------------------
+    • Application Review: Our team will review your business details within 2-3 business days
+    • Verification Call: We may contact you for additional information or clarification
+    • Approval Decision: You will receive notification of our decision via email
+    • Onboarding: If approved, we'll guide you through the onboarding process
+
+    APPLICATION DETAILS:
+    -------------------
+    Business Name: ${wholesalerData.businessName}
+    Application Date: ${new Date().toLocaleDateString()}
+
+    If you have any questions, please don't hesitate to contact our wholesale team.
+
+    Best regards,
+    Wholesale Partnership Team
+    Hanger Garments
+        `.trim()
+    }),
+
+    wholesalerApprovalConfirmation: (wholesalerData) => ({
+        subject: 'Wholesaler Application Approved - Welcome to Hanger Garments!',
+        html: `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; margin-bottom: 30px; color: #28a745; }
+            .content { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+            .next-steps { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎉 Welcome to Our Wholesale Family!</h1>
+            </div>
+            <div class="content">
+                <p>Dear ${wholesalerData.contactPerson},</p>
+                
+                <p>We are delighted to inform you that your wholesaler application for <strong>${wholesalerData.businessName}</strong> has been approved!</p>
+                
+                <div class="next-steps">
+                    <h3>Next Steps to Get Started:</h3>
+                    <ul>
+                        <li>Access our wholesale portal using your registered email</li>
+                        <li>Explore our complete product catalog with wholesale pricing</li>
+                        <li>Review our minimum order quantities and shipping policies</li>
+                        <li>Place your first order and experience our quality products</li>
+                    </ul>
+                </div>
+                
+                <p><strong>Your Wholesale Account Details:</strong></p>
+                <p>Business: ${wholesalerData.businessName}<br>
+                Contact: ${wholesalerData.contactPerson}<br>
+                Email: ${wholesalerData.email}<br>
+                Account Type: Wholesale Partner</p>
+                
+                <p>Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.</p>
+                
+                <p>Welcome to the Hanger Garments family!</p>
+                
+                <p>Best regards,<br>
+                <strong>Wholesale Partnership Team</strong><br>
+                Hanger Garments</p>
+            </div>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    Wholesaler Application Approved - Welcome to Hanger Garments!
+
+    Dear ${wholesalerData.contactPerson},
+
+    We are delighted to inform you that your wholesaler application for ${wholesalerData.businessName} has been approved!
+
+    NEXT STEPS TO GET STARTED:
+    -------------------------
+    • Access our wholesale portal using your registered email
+    • Explore our complete product catalog with wholesale pricing
+    • Review our minimum order quantities and shipping policies
+    • Place your first order and experience our quality products
+
+    YOUR WHOLESALE ACCOUNT DETAILS:
+    ------------------------------
+    Business: ${wholesalerData.businessName}
+    Contact: ${wholesalerData.contactPerson}
+    Email: ${wholesalerData.email}
+    Account Type: Wholesale Partner
+
+    Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.
+
+    Welcome to the Hanger Garments family!
+
+    Best regards,
+    Wholesale Partnership Team
+    Hanger Garments
+        `.trim()
+    }),
 
 
     // Add to your existing emailTemplates object
@@ -1567,25 +1156,51 @@ Hanger Garments
     `.trim()
     }),
 
-
-    // Add these order email templates to your existing emailTemplates object
-
+        // Add these order email templates to your existing emailTemplates object
     orderConfirmationCustomer: (orderData) => {
-    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+        const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-    const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
-    const trackingUrl = orderData.trackingUrl || '#';
+        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+        const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+        const trackingUrl = orderData.trackingUrl || '#';
 
-    return {
-        subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
-        html: `
+        // Helper function to get product image
+        const getProductImage = (item) => {
+            const product = item.product || {};
+            const variant = item.productVariant || {};
+            
+            // First priority: Variant images
+            if (variant.variantImages && variant.variantImages.length > 0 && variant.variantImages[0].imageUrl) {
+                return variant.variantImages[0].imageUrl;
+            }
+            
+            // Second priority: Product images
+            if (product.images && product.images.length > 0 && product.images[0].imageUrl) {
+                return product.images[0].imageUrl;
+            }
+            
+            // Fallback: Placeholder
+            const productInitials = product.name.substring(0, 2).toUpperCase() || 'HG';
+            return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
+        };
+
+        // Pre-process order items with images
+        const orderItemsWithImages = orderData.orderItems ? orderData.orderItems.map(item => {
+            return {
+                ...item,
+                displayImage: getProductImage(item)
+            };
+        }) : [];
+
+        return {
+            subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
+            html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -1593,77 +1208,349 @@ Hanger Garments
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Order Confirmation - Hanger Garments</title>
         <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-            .content { padding: 30px; }
-            .success-badge { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #28a745; }
-            .order-summary { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .order-items { margin: 20px 0; }
-            .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
-            .order-item:last-child { border-bottom: none; }
-            .item-details { flex: 2; }
-            .item-price { flex: 1; text-align: right; }
-            .amount-breakdown { background: #e8f5e8; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .breakdown-row { display: flex; justify-content: space-between; padding: 8px 0; }
-            .breakdown-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 18px; }
-            .shipping-info, .payment-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-            .status-badge { display: inline-block; padding: 4px 12px; background: #28a745; color: white; border-radius: 20px; font-size: 12px; font-weight: bold; }
-            .tracking-info { background: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            /* Reset & Base Styles */
+            * { 
+                margin: 0; 
+                padding: 0; 
+                box-sizing: border-box; 
+            }
+            body { 
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+                line-height: 1.6; 
+                color: #333333; 
+                background: #f5f5f7; 
+                padding: 0; 
+            }
+            .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background: #ffffff; 
+            }
+            
+            /* Header - Gradient like getOrderConfirmationEmail */
+            .header { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 40px 30px; 
+                text-align: center; 
+                color: #ffffff; 
+                border-radius: 10px 10px 0 0;
+            }
+            .header h1 { 
+                font-size: 28px; 
+                font-weight: 700; 
+                margin-bottom: 8px; 
+            }
+            .header p { 
+                font-size: 16px; 
+                opacity: 0.9; 
+            }
+            
+            /* Content */
+            .content { 
+                padding: 40px 30px; 
+                border-radius: 0 0 10px 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Success Badge - Updated colors */
+            .success-badge { 
+                background: #d1fae5; 
+                color: #065f46; 
+                padding: 16px 20px; 
+                border-radius: 12px; 
+                margin-bottom: 30px; 
+                border-left: 4px solid #10b981;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .success-badge::before {
+                content: "✓";
+                font-size: 20px;
+                font-weight: bold;
+            }
+            
+            /* Order Summary */
+            .order-summary { 
+                background: #f8f9fa; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 25px 0; 
+                border: 1px solid #ddd;
+            }
+            .section-title { 
+                color: #667eea; 
+                margin-bottom: 20px; 
+                font-size: 20px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            /* Order Items - Updated design */
+            .order-items { 
+                margin: 30px 0; 
+            }
+            .order-item { 
+                display: flex; 
+                align-items: flex-start; 
+                padding: 20px 0; 
+                border-bottom: 1px solid #eee; 
+                gap: 20px; 
+            }
+            .order-item:last-child { 
+                border-bottom: none; 
+            }
+            .item-image { 
+                flex-shrink: 0; 
+                width: 80px; 
+                height: 80px; 
+                border-radius: 12px; 
+                overflow: hidden; 
+                background: #f8fafc; 
+                border: 1px solid #f0f0f0; 
+            }
+            .item-image img { 
+                width: 100%; 
+                height: 100%; 
+                object-fit: cover; 
+                display: block; 
+            }
+            .item-details { 
+                flex: 1; 
+            }
+            .item-price { 
+                flex-shrink: 0; 
+                text-align: right; 
+                min-width: 100px; 
+                font-weight: 700; 
+                color: #667eea; 
+                font-size: 16px;
+            }
+            .product-name { 
+                font-weight: 600; 
+                color: #1a202c; 
+                margin-bottom: 6px; 
+                font-size: 16px;
+            }
+            .product-variant { 
+                color: #718096; 
+                font-size: 14px; 
+                margin-bottom: 6px; 
+            }
+            .product-quantity { 
+                color: #4a5568; 
+                font-size: 14px; 
+            }
+            
+            /* Amount Breakdown - Updated colors */
+            .amount-breakdown { 
+                background: #f8f9fa; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 25px 0; 
+                border: 1px solid #ddd;
+            }
+            .breakdown-row { 
+                display: flex; 
+                justify-content: space-between; 
+                padding: 12px 0; 
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .breakdown-row:last-child {
+                border-bottom: none;
+            }
+            .breakdown-total { 
+                border-top: 2px solid #667eea; 
+                font-weight: bold; 
+                font-size: 18px; 
+                color: #1a202c;
+                padding-top: 16px;
+                margin-top: 8px;
+            }
+            
+            /* Info Cards */
+            .info-card { 
+                background: #f8f9fa; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 25px 0; 
+                border: 1px solid #ddd;
+            }
+            
+            /* Support Section */
+            .support-section { 
+                background: #eff6ff; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 25px 0; 
+                border: 1px solid #bfdbfe;
+            }
+            
+            /* Button - Updated to match getOrderConfirmationEmail */
+            .button { 
+                display: inline-block; 
+                padding: 14px 28px; 
+                background: #28a745; 
+                color: white !important; 
+                text-decoration: none; 
+                border-radius: 6px; 
+                font-weight: 600; 
+                font-size: 16px; 
+                margin: 25px auto; 
+                text-align: center; 
+                transition: all 0.3s ease; 
+            }
+            .button:hover { 
+                background: #218838; 
+                transform: translateY(-2px); 
+                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); 
+            }
+            
+            /* Footer */
+            .footer { 
+                margin-top: 30px; 
+                padding: 20px; 
+                background: #f8f9fa; 
+                text-align: center; 
+                font-size: 12px; 
+                color: #6c757d; 
+                border-radius: 8px; 
+            }
+            
+            /* Status Badge */
+            .status-badge { 
+                display: inline-block; 
+                padding: 6px 16px; 
+                background: #28a745; 
+                color: white; 
+                border-radius: 20px; 
+                font-size: 12px; 
+                font-weight: 600; 
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            /* Mobile Responsive */
             @media (max-width: 600px) {
-                .container { border-radius: 0; }
-                .content { padding: 20px; }
-                .order-item { flex-direction: column; }
+                .container { 
+                    border-radius: 0; 
+                }
+                .content { 
+                    padding: 25px 20px; 
+                }
+                .header {
+                    padding: 30px 20px;
+                }
+                .order-item { 
+                    flex-direction: column; 
+                    align-items: flex-start; 
+                    gap: 15px;
+                }
+                .item-price { 
+                    text-align: left; 
+                    margin-top: 8px; 
+                }
+                .item-image { 
+                    width: 70px; 
+                    height: 70px; 
+                }
+                .info-card, .support-section, .order-summary, .amount-breakdown {
+                    padding: 20px;
+                }
+                .button {
+                    display: block !important;
+                    width: 100% !important;
+                    text-align: center;
+                    margin: 20px 0 !important;
+                    padding: 16px 20px !important;
+                }
             }
         </style>
     </head>
     <body>
         <div class="container">
+            <!-- Header with gradient -->
             <div class="header">
                 <h1>🎉 Order Confirmed!</h1>
-                <p>Thank you for your purchase</p>
+                <p>Thank you for shopping with Hanger Garments</p>
             </div>
             
+            <!-- Content -->
             <div class="content">
+                <!-- Success Message -->
                 <div class="success-badge">
-                    <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed.
+                    <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed and is being processed.
                 </div>
                 
-                <p>Hello <strong>${orderData.name}</strong>,</p>
-                <p>Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.</p>
+                <!-- Greeting -->
+                <p style="margin-bottom: 25px; font-size: 16px; color: #4a5568;">
+                    Hello <strong style="color: #667eea;">${orderData.name}</strong>,<br>
+                    Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.
+                </p>
                 
+                <!-- Order Summary -->
                 <div class="order-summary">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">📦 Order Summary</h3>
-                    <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
-                    <p><strong>Order Date:</strong> ${orderDate}</p>
-                    <p><strong>Status:</strong> <span class="status-badge">${orderData.status}</span></p>
-                </div>
-
-                <div class="order-items">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">🛒 Order Items</h3>
-                    ${orderData.orderItems.map(item => `
-                    <div class="order-item">
-                        <div class="item-details">
-                            <strong>${item.product.name}</strong>
-                            ${item.productVariant ? `<br><small>Variant: ${item.productVariant.color} - ${item.productVariant.size}</small>` : ''}
-                            <br>
-                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
+                    <div class="section-title">
+                        <span>📦</span> Order Summary
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Order Number</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderData.orderNumber}</p>
                         </div>
-                        <div class="item-price">
-                            ₹${(item.quantity * item.price).toFixed(2)}
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Order Date</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderDate}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Status</strong>
+                            <p><span class="status-badge">${orderData.status}</span></p>
+                        </div>
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Total Amount</strong>
+                            <p style="color: #667eea; font-weight: 700; font-size: 18px;">₹${orderData.totalAmount?.toFixed(2) || '0.00'}</p>
                         </div>
                     </div>
-                    `).join('')}
                 </div>
 
+                <!-- Order Items -->
+                <div class="order-items">
+                    <div class="section-title">
+                        <span>🛒</span> Order Items
+                    </div>
+                    ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
+                        const product = item.product || {};
+                        const productName = product.name || 'Product';
+                        const productImage = item.displayImage;
+                        
+                        return `
+                        <div class="order-item">
+                            <div class="item-image">
+                                <img src="${productImage}" alt="${productName}" />
+                            </div>
+                            <div class="item-details">
+                                <div class="product-name">${productName}</div>
+                                ${item.productVariant ? `<div class="product-variant">${item.productVariant.color} - ${item.productVariant.size}</div>` : ''}
+                                <div class="product-quantity">Quantity: ${item.quantity} × ₹${item.price}</div>
+                            </div>
+                            <div class="item-price">
+                                ₹${(item.quantity * item.price).toFixed(2)}
+                            </div>
+                        </div>
+                        `;
+                    }).join('') : '<p style="text-align: center; color: #718096; padding: 40px 0;">No items in order</p>'}
+                </div>
+
+                <!-- Amount Breakdown -->
                 <div class="amount-breakdown">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">💰 Amount Breakdown</h3>
+                    <div class="section-title">
+                        <span>💰</span> Amount Breakdown
+                    </div>
                     <div class="breakdown-row">
                         <span>Subtotal:</span>
-                        <span>₹${orderData.subtotal.toFixed(2)}</span>
+                        <span>₹${orderData.subtotal?.toFixed(2) || '0.00'}</span>
                     </div>
                     ${orderData.discount > 0 ? `
                     <div class="breakdown-row" style="color: #28a745;">
@@ -1674,65 +1561,107 @@ Hanger Garments
                     ${orderData.coupon ? `
                     <div class="breakdown-row">
                         <span>Coupon Applied:</span>
-                        <span>${orderData.coupon.code}</span>
+                        <span style="color: #667eea; font-weight: 600;">${orderData.coupon.code}</span>
                     </div>
                     ` : ''}
                     <div class="breakdown-row">
                         <span>Shipping:</span>
-                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
+                        <span>₹${orderData.shippingCost?.toFixed(2) || '0.00'}</span>
                     </div>
                     <div class="breakdown-row breakdown-total">
                         <span>Total Amount:</span>
-                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
+                        <span>₹${orderData.totalAmount?.toFixed(2) || '0.00'}</span>
+                    </div>
+                </div>
+
+                <!-- Shipping & Payment Info -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+                    <!-- Shipping Address -->
+                    <div class="info-card">
+                        <div class="section-title">
+                            <span>🏠</span> Shipping Address
+                        </div>
+                        <p style="color: #4a5568; line-height: 1.6;">
+                            <strong>${orderData.name}</strong><br>
+                            ${orderData.address}<br>
+                            ${orderData.city}, ${orderData.state} - ${orderData.pincode}<br>
+                            📞 ${orderData.phone}<br>
+                            ✉️ ${orderData.email}
+                        </p>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="info-card">
+                        <div class="section-title">
+                            <span>💳</span> Payment Information
+                        </div>
+                        <p style="color: #4a5568; line-height: 1.6;">
+                            <strong>Payment Method:</strong> ${orderData.paymentMethod}<br>
+                            <strong>Payment Status:</strong> <span class="status-badge">${orderData.paymentStatus}</span><br>
+                            ${orderData.razorpayPaymentId ? `<strong>Payment ID:</strong> ${orderData.razorpayPaymentId}` : ''}
+                        </p>
                     </div>
                 </div>
 
                 ${orderData.trackingNumber ? `
-                <div class="tracking-info">
-                    <h3 style="color: #1565c0; margin-bottom: 15px;">🚚 Tracking Information</h3>
-                    <p><strong>Tracking Number:</strong> ${orderData.trackingNumber}</p>
-                    <p><strong>Carrier:</strong> ${orderData.carrier}</p>
-                    ${orderData.trackingUrl ? `<p><strong>Track Your Order:</strong> <a href="${trackingUrl}" style="color: #1565c0;">Click here to track</a></p>` : ''}
-                    ${orderData.estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString()}</p>` : ''}
+                <!-- Tracking Information -->
+                <div class="info-card" style="background: #eff6ff; border-color: #bfdbfe;">
+                    <div class="section-title">
+                        <span>🚚</span> Tracking Information
+                    </div>
+                    <p style="color: #4a5568; line-height: 1.6;">
+                        <strong>Tracking Number:</strong> ${orderData.trackingNumber}<br>
+                        <strong>Carrier:</strong> ${orderData.carrier}<br>
+                        ${orderData.trackingUrl ? `<strong>Track Your Order:</strong> <a href="${trackingUrl}" style="color: #667eea; text-decoration: none; font-weight: 600;">Click here to track</a><br>` : ''}
+                        ${orderData.estimatedDelivery ? `<strong>Estimated Delivery:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString()}` : ''}
+                    </p>
                 </div>
                 ` : ''}
 
-                <div class="shipping-info">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">🏠 Shipping Address</h3>
-                    <p>${orderData.name}<br>
-                    ${orderData.address}<br>
-                    ${orderData.city}, ${orderData.state} - ${orderData.pincode}<br>
-                    📞 ${orderData.phone}<br>
-                    ✉️ ${orderData.email}</p>
+                <!-- Track Order Button -->
+                <div style="text-align: center; width: 100%;">
+                    <a href="${trackingUrl}" class="button" style="display: inline-block; padding: 14px 28px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; margin: 25px auto; text-align: center;">
+                        Track Your Order
+                    </a>
                 </div>
 
-                <div class="payment-info">
-                    <h3 style="color: #2d5e2d; margin-bottom: 15px;">💳 Payment Information</h3>
-                    <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
-                    <p><strong>Payment Status:</strong> <span class="status-badge">${orderData.paymentStatus}</span></p>
-                    <p><strong>Payment ID:</strong> ${orderData.razorpayPaymentId}</p>
+                <!-- Support Section -->
+                <div class="support-section">
+                    <div class="section-title">
+                        <span>📞</span> Need Help?
+                    </div>
+                    <p style="color: #4a5568; margin-bottom: 15px;">
+                        If you have any questions about your order, our support team is here to help.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <strong style="color: #667eea;">Email Support</strong>
+                            <p><a href="mailto:${supportEmail}" style="color: #667eea; text-decoration: none;">${supportEmail}</a></p>
+                        </div>
+                        <div>
+                            <strong style="color: #667eea;">Phone Support</strong>
+                            <p>+91 98765 43210</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h4 style="color: #1565c0; margin-bottom: 10px;">📞 Need Help?</h4>
-                    <p style="margin: 0;">If you have any questions about your order, contact our support team:</p>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${supportEmail}" style="color: #1565c0;">${supportEmail}</a></p>
-                    <p style="margin: 0;"><strong>Phone:</strong> +91 98765 43210</p>
-                </div>
+                <p style="margin-top: 30px; text-align: center; color: #4a5568;">
+                    With love,<br><strong>Hanger Garments Team 🤍</strong>
+                </p>
             </div>
             
+            <!-- Footer -->
             <div class="footer">
-                <p><strong>Hanger Garments</strong></p>
-                <p>Nourishing Lives Naturally</p>
-                <p style="margin-top: 15px; font-size: 11px; color: #999;">
-                    This is an automated order confirmation email. Please do not reply to this message.
+                <p>© ${new Date().getFullYear()} Hanger Garments. All rights reserved.</p>
+                <p>Need help? Contact us at 
+                    <a href="mailto:${supportEmail}" style="color: #6c757d;">${supportEmail}</a>
                 </p>
             </div>
         </div>
     </body>
     </html>
-        `,
-        text: `
+            `,
+            text: `
     ORDER CONFIRMED - Hanger Garments
 
     Hello ${orderData.name},
@@ -1740,30 +1669,23 @@ Hanger Garments
     Thank you for your order! We're excited to let you know that we've received your order #${orderData.orderNumber} and it is now being processed.
 
     ORDER SUMMARY:
-    --------------
+    -------------
     Order Number: ${orderData.orderNumber}
     Order Date: ${orderDate}
     Status: ${orderData.status}
+    Total Amount: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
 
     ORDER ITEMS:
     ------------
-    ${orderData.orderItems.map(item => 
-    `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''} - ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-    ).join('\n')}
+    ${orderData.orderItems && orderData.orderItems.map(item => 
+    `• ${item.product?.name || 'Product'}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''} - ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
+    ).join('\n') || 'No items'}
 
     AMOUNT BREAKDOWN:
     -----------------
-    Subtotal: ₹${orderData.subtotal.toFixed(2)}
-    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost.toFixed(2)}
-    Total: ₹${orderData.totalAmount.toFixed(2)}
-
-    ${orderData.trackingNumber ? `
-    TRACKING INFORMATION:
-    ---------------------
-    Tracking Number: ${orderData.trackingNumber}
-    Carrier: ${orderData.carrier}
-    ${orderData.trackingUrl ? `Track Your Order: ${trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
-    ` : ''}
+    Subtotal: ₹${orderData.subtotal?.toFixed(2) || '0.00'}
+    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost?.toFixed(2) || '0.00'}
+    Total: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
 
     SHIPPING ADDRESS:
     -----------------
@@ -1777,7 +1699,15 @@ Hanger Garments
     -------------------
     Payment Method: ${orderData.paymentMethod}
     Payment Status: ${orderData.paymentStatus}
-    Payment ID: ${orderData.razorpayPaymentId}
+    ${orderData.razorpayPaymentId ? `Payment ID: ${orderData.razorpayPaymentId}\n` : ''}
+
+    ${orderData.trackingNumber ? `
+    TRACKING INFORMATION:
+    ---------------------
+    Tracking Number: ${orderData.trackingNumber}
+    Carrier: ${orderData.carrier}
+    ${orderData.trackingUrl ? `Track Your Order: ${trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
+    ` : ''}
 
     Need help? Contact our support team:
     Email: ${supportEmail}
@@ -1788,25 +1718,53 @@ Hanger Garments
     --
     Hanger Garments
     Nourishing Lives Naturally
-        `.trim()
-    };
+            `.trim()
+        };
     },
 
     orderConfirmationAdmin: (orderData) => {
-    const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+        const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-    const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
+        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+        const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
 
-    return {
-        subject: `New Order Received - #${orderData.orderNumber} - ₹${orderData.totalAmount.toFixed(2)}`,
-        html: `
+        // Helper function for admin email
+        const getProductImage = (item) => {
+            const product = item.product || {};
+            const variant = item.productVariant || {};
+            
+            // First priority: Variant images
+            if (variant.variantImages && variant.variantImages.length > 0 && variant.variantImages[0].imageUrl) {
+                return variant.variantImages[0].imageUrl;
+            }
+            
+            // Second priority: Product images
+            if (product.images && product.images.length > 0 && product.images[0].imageUrl) {
+                return product.images[0].imageUrl;
+            }
+            
+            // Fallback: Placeholder
+            const productInitials = product.name.substring(0, 2).toUpperCase() || 'HG';
+            return `https://via.placeholder.com/300x300/dc3545/ffffff?text=${productInitials}`;
+        };
+
+        // Pre-process order items with images
+        const orderItemsWithImages = orderData.orderItems ? orderData.orderItems.map(item => {
+            return {
+                ...item,
+                displayImage: getProductImage(item)
+            };
+        }) : [];
+
+        return {
+            subject: `🛒 New Order - #${orderData.orderNumber} - ₹${orderData.totalAmount.toFixed(2)}`,
+            html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -1814,152 +1772,401 @@ Hanger Garments
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>New Order Notification - Hanger Garments</title>
         <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-            .container { max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-            .header { background: linear(135deg, #dc3545 0%, #c82333 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-            .content { padding: 30px; }
-            .alert-badge { background: #ffe6e6; color: #dc3545; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #dc3545; }
-            .order-overview { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-            .overview-item { background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #dc3545; }
-            .order-items { margin: 20px 0; }
-            .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
-            .amount-summary { background: #e8f5e8; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
-            .summary-total { border-top: 2px solid #2d5e2d; font-weight: bold; font-size: 18px; }
-            .customer-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-            .action-buttons { margin-top: 24px; text-align: center; }
-            .btn { display: inline-block; padding: 12px 24px; margin: 0 8px; background: #dc3545; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600; }
-            .btn-outline { background: transparent; border: 2px solid #dc3545; color: #dc3545; }
+            /* Reset & Base Styles */
+            * { 
+                margin: 0; 
+                padding: 0; 
+                box-sizing: border-box; 
+            }
+            body { 
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+                line-height: 1.6; 
+                color: #333333; 
+                background: #f5f5f7; 
+                padding: 0; 
+            }
+            .container { 
+                max-width: 700px; 
+                margin: 0 auto; 
+                background: #ffffff; 
+            }
+            
+            /* Header - Gradient like customer email */
+            .header { 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 40px 30px; 
+                text-align: center; 
+                color: #ffffff; 
+                border-radius: 10px 10px 0 0;
+            }
+            .header h1 { 
+                font-size: 28px; 
+                font-weight: 700; 
+                margin-bottom: 8px; 
+            }
+            
+            /* Content */
+            .content { 
+                padding: 40px 30px; 
+                border-radius: 0 0 10px 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            
+            /* Alert Badge - Updated colors */
+            .alert-badge { 
+                background: #ffe6e6; 
+                color: #dc3545; 
+                padding: 16px 20px; 
+                border-radius: 12px; 
+                margin-bottom: 30px; 
+                border-left: 4px solid #dc3545;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .alert-badge::before {
+                content: "⚠️";
+                font-size: 18px;
+            }
+            
+            /* Overview Grid */
+            .overview-grid { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                gap: 20px; 
+                margin-top: 20px; 
+            }
+            .overview-item { 
+                background: white; 
+                padding: 20px; 
+                border-radius: 12px; 
+                border-left: 4px solid #667eea; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            /* Order Items */
+            .order-items { 
+                margin: 30px 0; 
+            }
+            .order-item { 
+                display: flex; 
+                align-items: flex-start; 
+                padding: 20px 0; 
+                border-bottom: 1px solid #eee; 
+                gap: 20px; 
+            }
+            .order-item:last-child { 
+                border-bottom: none; 
+            }
+            .item-image { 
+                flex-shrink: 0; 
+                width: 70px; 
+                height: 70px; 
+                border-radius: 10px; 
+                overflow: hidden; 
+                background: #f8fafc; 
+                border: 1px solid #f0f0f0; 
+            }
+            .item-image img { 
+                width: 100%; 
+                height: 100%; 
+                object-fit: cover; 
+                display: block; 
+            }
+            .item-details { 
+                flex: 1; 
+            }
+            .item-price { 
+                flex-shrink: 0; 
+                text-align: right; 
+                min-width: 100px; 
+                font-weight: 700; 
+                color: #667eea; 
+                font-size: 16px;
+            }
+            
+            /* Section Titles */
+            .section-title { 
+                color: #667eea; 
+                margin-bottom: 20px; 
+                font-size: 20px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            /* Info Cards */
+            .info-card { 
+                background: #f8f9fa; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 25px 0; 
+                border: 1px solid #ddd;
+            }
+            
+            /* Action Buttons */
+            .action-buttons { 
+                margin-top: 30px; 
+                text-align: center; 
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+            }
+            .btn { 
+                display: inline-block; 
+                padding: 14px 28px; 
+                background: #28a745; 
+                color: white; 
+                text-decoration: none; 
+                border-radius: 6px; 
+                font-size: 14px; 
+                font-weight: 600; 
+                transition: all 0.3s ease;
+            }
+            .btn:hover {
+                background: #218838;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            }
+            .btn-outline { 
+                background: transparent; 
+                border: 2px solid #667eea; 
+                color: #667eea; 
+            }
+            .btn-outline:hover {
+                background: #667eea;
+                color: white;
+            }
+            
+            /* Next Steps */
+            .next-steps { 
+                background: #fff3cd; 
+                border: 1px solid #ffeaa7; 
+                border-radius: 12px; 
+                padding: 25px; 
+                margin: 30px 0; 
+            }
+            
+            /* Footer */
+            .footer { 
+                margin-top: 30px; 
+                padding: 20px; 
+                background: #f8f9fa; 
+                text-align: center; 
+                font-size: 12px; 
+                color: #6c757d; 
+                border-radius: 8px; 
+            }
+            
+            /* Status Badge */
+            .status-badge { 
+                display: inline-block; 
+                padding: 6px 16px; 
+                background: #28a745; 
+                color: white; 
+                border-radius: 20px; 
+                font-size: 12px; 
+                font-weight: 600; 
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            /* Mobile Responsive */
             @media (max-width: 600px) {
-                .container { border-radius: 0; }
-                .content { padding: 20px; }
-                .overview-grid { grid-template-columns: 1fr; }
-                .order-item { flex-direction: column; }
-                .btn { display: block; margin: 10px 0; }
+                .container { 
+                    border-radius: 0; 
+                }
+                .content { 
+                    padding: 25px 20px; 
+                }
+                .header {
+                    padding: 30px 20px;
+                }
+                .overview-grid {
+                    grid-template-columns: 1fr;
+                }
+                .order-item { 
+                    flex-direction: column; 
+                    align-items: flex-start; 
+                    gap: 15px;
+                }
+                .item-price { 
+                    text-align: left; 
+                    margin-top: 8px; 
+                }
+                .action-buttons {
+                    flex-direction: column;
+                }
+                .btn {
+                    text-align: center;
+                    display: block !important;
+                    width: 100% !important;
+                    margin: 5px 0 !important;
+                }
             }
         </style>
     </head>
     <body>
         <div class="container">
+            <!-- Header with gradient -->
             <div class="header">
                 <h1>🛒 New Order Received</h1>
                 <p>Order #${orderData.orderNumber} - Requires Processing</p>
             </div>
             
+            <!-- Content -->
             <div class="content">
+                <!-- Alert -->
                 <div class="alert-badge">
-                    <strong>New Order Alert:</strong> A new order has been placed and requires processing.
+                    <strong>New Order Alert:</strong> A new order has been placed and requires immediate processing.
                 </div>
                 
-                <div class="order-overview">
-                    <h3 style="color: #dc3545; margin-bottom: 16px;">📊 Order Overview</h3>
+                <!-- Order Overview -->
+                <div class="info-card">
+                    <div class="section-title">
+                        <span>📊</span> Order Overview
+                    </div>
                     <div class="overview-grid">
                         <div class="overview-item">
-                            <strong>Order Number</strong><br>
-                            ${orderData.orderNumber}
+                            <strong style="color: #718096; font-size: 14px;">Order Number</strong>
+                            <p style="color: #1a202c; font-weight: 600; font-size: 18px;">${orderData.orderNumber}</p>
                         </div>
                         <div class="overview-item">
-                            <strong>Order Date</strong><br>
-                            ${orderDate}
+                            <strong style="color: #718096; font-size: 14px;">Order Date</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderDate}</p>
                         </div>
                         <div class="overview-item">
-                            <strong>Total Amount</strong><br>
-                            ₹${orderData.totalAmount.toFixed(2)}
+                            <strong style="color: #718096; font-size: 14px;">Total Amount</strong>
+                            <p style="color: #667eea; font-weight: 700; font-size: 20px;">₹${orderData.totalAmount.toFixed(2)}</p>
                         </div>
                         <div class="overview-item">
-                            <strong>Payment Method</strong><br>
-                            ${orderData.paymentMethod}
+                            <strong style="color: #718096; font-size: 14px;">Payment Method</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderData.paymentMethod}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="customer-info">
-                    <h3 style="color: #dc3545; margin-bottom: 16px;">👤 Customer Information</h3>
-                    <p><strong>Name:</strong> ${orderData.name}</p>
-                    <p><strong>Email:</strong> <a href="mailto:${orderData.email}" style="color: #dc3545;">${orderData.email}</a></p>
-                    <p><strong>Phone:</strong> <a href="tel:${orderData.phone}" style="color: #dc3545;">${orderData.phone}</a></p>
-                    <p><strong>Address:</strong> ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
-                    ${orderData.user ? `<p><strong>Customer ID:</strong> ${orderData.user.id}</p>` : ''}
+                <!-- Customer Information -->
+                <div class="info-card">
+                    <div class="section-title">
+                        <span>👤</span> Customer Information
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Name</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderData.name}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Email</strong>
+                            <p><a href="mailto:${orderData.email}" style="color: #667eea; text-decoration: none;">${orderData.email}</a></p>
+                        </div>
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Phone</strong>
+                            <p><a href="tel:${orderData.phone}" style="color: #667eea; text-decoration: none;">${orderData.phone}</a></p>
+                        </div>
+                        ${orderData.user ? `
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Customer ID</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderData.user.id}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong style="color: #718096; font-size: 14px;">Shipping Address</strong>
+                        <p style="color: #4a5568; margin-top: 5px;">${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}</p>
+                    </div>
                 </div>
 
+                <!-- Order Items -->
                 <div class="order-items">
-                    <h3 style="color: #dc3545; margin-bottom: 16px;">📦 Order Items</h3>
-                    ${orderData.orderItems.map(item => `
-                    <div class="order-item">
-                        <div style="flex: 2;">
-                            <strong>${item.product.name}</strong>
-                            ${item.productVariant ? `<br><small>Variant: ${item.productVariant.color} - ${item.productVariant.size}</small>` : ''}
-                            <br>
-                            <small>Quantity: ${item.quantity} × ₹${item.price}</small>
-                        </div>
-                        <div style="flex: 1; text-align: right;">
-                            ₹${(item.quantity * item.price).toFixed(2)}
-                        </div>
+                    <div class="section-title">
+                        <span>📦</span> Order Items
                     </div>
-                    `).join('')}
+                    ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
+                        const product = item.product || {};
+                        return `
+                        <div class="order-item">
+                            <div class="item-image">
+                                <img src="${item.displayImage}" alt="${product.name}" />
+                            </div>
+                            <div class="item-details">
+                                <div style="font-weight: 600; color: #667eea; margin-bottom: 6px; font-size: 16px;">${product.name}</div>
+                                ${item.productVariant ? `<div style="color: #718096; font-size: 14px; margin-bottom: 6px;">${item.productVariant.color} - ${item.productVariant.size}</div>` : ''}
+                                <div style="color: #4a5568; font-size: 14px;">Quantity: ${item.quantity} × ₹${item.price}</div>
+                            </div>
+                            <div class="item-price">
+                                ₹${(item.quantity * item.price).toFixed(2)}
+                            </div>
+                        </div>
+                        `;
+                    }).join('') : '<p style="text-align: center; color: #718096; padding: 40px 0;">No items in order</p>'}
                 </div>
 
-                <div class="amount-summary">
-                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">💰 Order Summary</h3>
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span>₹${orderData.subtotal.toFixed(2)}</span>
+                <!-- Order Summary -->
+                <div class="info-card">
+                    <div class="section-title">
+                        <span>💰</span> Order Summary
                     </div>
-                    ${orderData.discount > 0 ? `
-                    <div class="summary-row" style="color: #28a745;">
-                        <span>Discount:</span>
-                        <span>-₹${orderData.discount.toFixed(2)}</span>
-                    </div>
-                    ` : ''}
-                    ${orderData.coupon ? `
-                    <div class="summary-row">
-                        <span>Coupon Code:</span>
-                        <span>${orderData.coupon.code}</span>
-                    </div>
-                    ` : ''}
-                    <div class="summary-row">
-                        <span>Shipping:</span>
-                        <span>₹${orderData.shippingCost.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row summary-total">
-                        <span>Grand Total:</span>
-                        <span>₹${orderData.totalAmount.toFixed(2)}</span>
+                    <div style="display: grid; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                            <span>Subtotal:</span>
+                            <span style="font-weight: 600;">₹${orderData.subtotal.toFixed(2)}</span>
+                        </div>
+                        ${orderData.discount > 0 ? `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #28a745;">
+                            <span>Discount:</span>
+                            <span style="font-weight: 600;">-₹${orderData.discount.toFixed(2)}</span>
+                        </div>
+                        ` : ''}
+                        ${orderData.coupon ? `
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                            <span>Coupon Code:</span>
+                            <span style="color: #667eea; font-weight: 600;">${orderData.coupon.code}</span>
+                        </div>
+                        ` : ''}
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                            <span>Shipping:</span>
+                            <span style="font-weight: 600;">₹${orderData.shippingCost.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #667eea; font-weight: bold; font-size: 18px;">
+                            <span>Grand Total:</span>
+                            <span style="color: #667eea;">₹${orderData.totalAmount.toFixed(2)}</span>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <a href="${adminUrl}/orders/${orderData.id}" class="btn">📋 View Order in Admin Panel</a>
+                    <a href="${adminUrl}/orders/view/${orderData.id}" class="btn">📋 View Order in Admin Panel</a>
                     <a href="mailto:${orderData.email}?subject=Regarding Order ${orderData.orderNumber}" class="btn btn-outline">✉️ Contact Customer</a>
                 </div>
 
-                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                    <h4 style="color: #856404; margin-bottom: 12px;">🚀 Next Steps:</h4>
-                    <ol style="color: #856404; margin-left: 20px;">
-                        <li>Review order details and verify payment</li>
-                        <li>Prepare items for shipping</li>
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <div class="section-title" style="color: #856404;">
+                        <span>🚀</span> Next Steps
+                    </div>
+                    <ol style="color: #856404; margin-left: 20px; line-height: 1.8;">
+                        <li>Review order details and verify payment status</li>
+                        <li>Prepare items for shipping and update inventory</li>
                         <li>Update order status when shipped</li>
-                        <li>Add tracking information</li>
-                        <li>Notify customer when delivered</li>
+                        <li>Add tracking information to the order</li>
+                        <li>Notify customer when order is delivered</li>
                     </ol>
                 </div>
             </div>
             
+            <!-- Footer -->
             <div class="footer">
-                <p><strong>Hanger Garments - Order Management System</strong></p>
-                <p>This is an automated notification. Please process this order promptly.</p>
-                <p style="margin-top: 8px; font-size: 11px; color: #999;">
-                    If you believe you received this email in error, please contact system administration.
-                </p>
+                <p>© ${new Date().getFullYear()} Hanger Garments. All rights reserved.</p>
+                <p>This is an automated order notification from Hanger Garments Order Management System.</p>
             </div>
         </div>
     </body>
     </html>
-        `,
-        text: `
+            `,
+            text: `
     NEW ORDER NOTIFICATION - Hanger Garments
 
     A new order has been placed and requires processing.
@@ -1982,10 +2189,10 @@ Hanger Garments
 
     ORDER ITEMS:
     -----------
-    ${orderData.orderItems.map(item => 
+    ${orderData.orderItems && orderData.orderItems.map(item => 
     `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}
     Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-    ).join('\n')}
+    ).join('\n') || 'No items'}
 
     ORDER SUMMARY:
     -------------
@@ -2008,8 +2215,8 @@ Hanger Garments
     --
     Hanger Garments
     Order Management System
-        `.trim()
-    };
+            `.trim()
+        };
     },
 
     orderStatusUpdate: (orderData, oldStatus, newStatus) => {

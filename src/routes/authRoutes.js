@@ -9,7 +9,9 @@ import {
   verifyOTP,
   resendOTP,
   approveWholesaler,
-  getPendingWholesalers
+  getPendingWholesalers,
+  validateResetToken,
+  forgotPasswordWholesaler
 } from '../controllers/authController.js';
 import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
@@ -27,6 +29,9 @@ router.post('/verify-otp', verifyOTP); // Unified OTP verification
 router.post('/resend-otp', resendOTP);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.get('/validate-reset-token', validateResetToken); // Add this route
+router.post('/forgot-password-wholesaler', forgotPasswordWholesaler);
+
 
 // Protected routes
 router.post('/logout', auth, logout);

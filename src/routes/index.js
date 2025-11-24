@@ -17,6 +17,7 @@ import analyticsRoutes from './analyticsRoutes.js';
 import customizationRoutes from './customizationRoutes.js';
 import designRoutes from './designRoutes.js';
 import imageProxyRoutes from './imageProxy.js';
+import uploadRoutes from './uploadRoutes.js';
 
 router.use('/auth', authRoutes);
 router.use('/auth', userRoutes);
@@ -33,5 +34,6 @@ router.use('/analytics', analyticsRoutes);
 router.use('/customizations', customizationRoutes);
 router.use('/designs', designRoutes);
 router.use('/images', imageProxyRoutes);
+router.use('/upload', uploadRoutes);
 
 export default router;

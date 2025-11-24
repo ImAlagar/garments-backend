@@ -450,6 +450,7 @@ export const validateCategoryUpdate = [
 ];
 
 // Subcategory validation
+
 export const validateSubcategory = [
   body('name')
     .trim()
@@ -467,11 +468,12 @@ export const validateSubcategory = [
     .isLength({ min: 10, max: 500 })
     .withMessage('Description must be between 10 and 500 characters'),
 
-  body('category')
+  // Change from 'category' to 'categoryId'
+  body('categoryId')
     .notEmpty()
     .withMessage('Category ID is required')
-    .isMongoId()
-    .withMessage('Invalid category ID format'),
+    .isLength({ min: 1 })
+    .withMessage('Category ID cannot be empty'),
 
   body('isActive')
     .optional()
@@ -493,6 +495,7 @@ export const validateSubcategory = [
     next();
   }
 ];
+
 
 // Subcategory update validation
 export const validateSubcategoryUpdate = [
@@ -1074,7 +1077,6 @@ export const validateSliderImages = (req, res, next) => {
       const mainFile = image[0];
       const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
-
 
       // Check file type using multiple methods
       const isValidType = allowedMimeTypes.includes(mainFile.mimetype) ||

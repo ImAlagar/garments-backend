@@ -1,4 +1,6 @@
+// services/razorpayService.js
 import Razorpay from 'razorpay';
+import crypto from 'crypto';
 import logger from '../utils/logger.js';
 
 class RazorpayService {
@@ -9,53 +11,58 @@ class RazorpayService {
     });
   }
 
-  async createOrder(amount, currency = 'INR', receipt = null) {
+  async createOrder(amount, currency = 'INR') {
     try {
       const options = {
-        amount: amount * 100,
+        amount: amount * 100, // Razorpay expects amount in paise
         currency,
-        receipt: receipt || `receipt_${Date.now()}`,
-        payment_capture: 1
+        receipt: `receipt_${Date.now()}`
       };
 
       const order = await this.razorpay.orders.create(options);
+      logger.info(`Razorpay order created: ${order.id}`);
       return order;
     } catch (error) {
-      logger.error('Razorpay order creation failed:', error);
-      throw new Error('Payment gateway error: ' + error.message);
+      logger.error('Error creating Razorpay order:', error);
+      throw new Error('Failed to create payment order');
     }
   }
 
   verifyPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature) {
-    const crypto = require('crypto');
-    
-    const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + '|' + razorpay_payment_id)
-      .digest('hex');
-
-    return generated_signature === razorpay_signature;
-  }
-
-  async processRefund(paymentId, amount) {
     try {
-      const refund = await this.razorpay.payments.refund(paymentId, {
-        amount: amount * 100
-      });
-      return refund;
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest('hex');
+
+      const isValid = expectedSignature === razorpay_signature;
+      
+      if (!isValid) {
+        logger.warn(`Payment verification failed for order: ${razorpay_order_id}`);
+      } else {
+        logger.info(`Payment verified successfully for order: ${razorpay_order_id}`);
+      }
+      
+      return isValid;
     } catch (error) {
-      logger.error('Razorpay refund failed:', error);
-      throw new Error('Refund processing failed: ' + error.message);
+      logger.error('Error verifying payment:', error);
+      return false;
     }
   }
 
-  async getPaymentDetails(paymentId) {
+  async refundPayment(paymentId, amount, notes = {}) {
     try {
-      const payment = await this.razorpay.payments.fetch(paymentId);
-      return payment;
+      const refund = await this.razorpay.payments.refund(paymentId, {
+        amount: amount * 100,
+        notes
+      });
+      
+      logger.info(`Refund processed: ${refund.id} for payment: ${paymentId}`);
+      return refund;
     } catch (error) {
-      logger.error('Failed to fetch payment details:', error);
-      throw new Error('Failed to fetch payment details: ' + error.message);
+      logger.error('Error processing refund:', error);
+      throw new Error('Refund processing failed');
     }
   }
 }

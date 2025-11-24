@@ -801,36 +801,11 @@ class ProductService {
             throw new Error('Product not found');
         }
         
-        const { color, size, stock = 0, sku } = variantData;
+        const { color, sizes } = variantData;
         
-        // Check if variant with same color and size already exists
-        const existingVariant = await prisma.productVariant.findFirst({
-            where: {
-                productId,
-                color,
-                size
-            }
-        });
-        
-        if (existingVariant) {
-            throw new Error('Variant with same color and size already exists');
+        if (!color || !sizes || !Array.isArray(sizes)) {
+            throw new Error('Color and sizes array are required');
         }
-        
-        // Check if SKU already exists
-        if (sku) {
-            const existingSku = await prisma.productVariant.findFirst({
-                where: {
-                    sku,
-                    productId: { not: productId }
-                }
-            });
-            
-            if (existingSku) {
-                throw new Error('SKU already exists');
-            }
-        }
-        
-        const generatedSku = sku || `${product.productCode}-${color}-${size}`;
         
         // Upload variant images if provided
         let variantImages = [];
@@ -852,25 +827,72 @@ class ProductService {
             }
         }
         
-        const variant = await prisma.productVariant.create({
-            data: {
-                productId,
-                color,
-                size,
-                stock: parseInt(stock),
-                sku: generatedSku,
-                variantImages: {
-                    create: variantImages
+        // Create a variant for each size
+        const createdVariants = [];
+        
+        for (const sizeData of sizes) {
+            const { size, stock = 0, sku } = sizeData;
+            
+            if (!size || size === 'undefined') {
+                console.warn('Skipping variant with invalid size:', sizeData);
+                continue;
+            }
+            
+            // Check if variant with same color and size already exists
+            const existingVariant = await prisma.productVariant.findFirst({
+                where: {
+                    productId,
+                    color,
+                    size
                 }
-            },
-            include: {
-                variantImages: {
-                    orderBy: {
-                        isPrimary: 'desc'
+            });
+            
+            if (existingVariant) {
+                throw new Error(`Variant with color ${color} and size ${size} already exists`);
+            }
+            
+            // Check if SKU already exists
+            if (sku) {
+                const existingSku = await prisma.productVariant.findFirst({
+                    where: {
+                        sku,
+                        productId: { not: productId }
                     }
+                });
+                
+                if (existingSku) {
+                    throw new Error(`SKU ${sku} already exists`);
                 }
             }
-        });
+            
+            const generatedSku = sku || `${product.productCode}-${color}-${size}`;
+            
+            const variant = await prisma.productVariant.create({
+                data: {
+                    productId,
+                    color,
+                    size,
+                    stock: parseInt(stock),
+                    sku: generatedSku,
+                    variantImages: {
+                        create: variantImages.map((img, index) => ({
+                            ...img,
+                            // Only set first image as primary for the first variant
+                            isPrimary: createdVariants.length === 0 && index === 0
+                        }))
+                    }
+                },
+                include: {
+                    variantImages: {
+                        orderBy: {
+                            isPrimary: 'desc'
+                        }
+                    }
+                }
+            });
+            
+            createdVariants.push(variant);
+        }
         
         const updatedProduct = await prisma.product.findUnique({
             where: { id: productId },
@@ -887,7 +909,7 @@ class ProductService {
             }
         });
         
-        logger.info(`Product variant added: ${productId}, variantId: ${variant.id}`);
+        logger.info(`Added ${createdVariants.length} variants for product ${productId}, color: ${color}`);
         return updatedProduct;
     }
   

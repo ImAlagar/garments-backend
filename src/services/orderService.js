@@ -2,6 +2,8 @@ import prisma from '../config/database.js';
 import emailNotificationService from './emailNotificationService.js';
 import phonepeService from './phonepeService.js';
 import logger from '../utils/logger.js';
+import razorpayService from './razorpayService.js';  
+import customImageUploadService from './customImageUploadService.js';
 
 class OrderService {
   generateOrderNumber() {
@@ -10,10 +12,9 @@ class OrderService {
     return `ORD-${timestamp}-${random}`;
   }
 
-  async calculateOrderTotals(orderItems, couponCode = null, shippingState = null) {
+  async calculateOrderTotals(orderItems, couponCode = null) {
     let subtotal = 0;
     
-    // Validate order items
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
       throw new Error('Order items are required and must be a non-empty array');
     }
@@ -75,8 +76,8 @@ class OrderService {
           validFrom: { lte: new Date() },
           validUntil: { gte: new Date() },
           OR: [
-            { usageLimit: null }, // No usage limit
-            { usageLimit: { gt: prisma.coupon.fields.usedCount } } // Usage limit greater than used count
+            { usageLimit: null },
+            { usageLimit: { gt: prisma.coupon.fields.usedCount } }
           ]
         }
       });
@@ -95,8 +96,8 @@ class OrderService {
       }
     }
 
-    // Calculate shipping cost (you can customize this based on your business logic)
-    const shippingCost = this.calculateShippingCost(subtotal, shippingState);
+    // Free shipping for all orders
+    const shippingCost = 0;
     const totalAmount = subtotal - discount + shippingCost;
 
     return {
@@ -108,25 +109,235 @@ class OrderService {
     };
   }
 
-  calculateShippingCost(subtotal, shippingState) {
-    // Free shipping for orders above ₹2000
-    if (subtotal >= 2000) {
-      return 0;
+  async initiateRazorpayPayment(orderData) {
+    const {
+      userId,
+      name,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      orderItems,
+      couponCode,
+      customImages = [] // Optional custom images
+    } = orderData;
+
+    // Validate required fields
+    if (!name || !email || !phone || !address || !city || !state || !pincode) {
+      throw new Error('All shipping information fields are required');
     }
 
-    // Different shipping rates based on state
-    const shippingRates = {
-      'DELHI': 50,
-      'MAHARASHTRA': 70,
-      'KARNATAKA': 80,
-      'TAMIL NADU': 90,
-      'WEST BENGAL': 85,
-      'default': 100
+    // Calculate totals
+    const totals = await this.calculateOrderTotals(orderItems, couponCode);
+
+    // Create Razorpay order (this is just a payment order, not our actual order)
+    const razorpayOrder = await razorpayService.createOrder(
+      totals.totalAmount,
+      'INR'
+    );
+
+    // Store temporary order data
+    const tempOrderData = {
+      userId,
+      name,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      orderItems,
+      couponCode,
+      customImages, // Include custom images in temp data
+      totals,
+      razorpayOrderId: razorpayOrder.id
     };
 
-    const state = shippingState?.toUpperCase();
-    return shippingRates[state] || shippingRates.default;
+    logger.info(`Razorpay order initiated for user ${userId}, Amount: ${totals.totalAmount}, Custom Images: ${customImages.length}`);
+
+    return {
+      razorpayOrder,
+      tempOrderData: {
+        ...tempOrderData,
+        orderNumber: this.generateOrderNumber()
+      }
+    };
   }
+
+  async verifyAndCreateOrder(paymentData) {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderData
+    } = paymentData;
+
+    // Verify payment signature
+    const isValid = razorpayService.verifyPayment(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
+
+    if (!isValid) {
+      throw new Error('Payment verification failed');
+    }
+
+    // Calculate totals again to ensure consistency
+    const totals = await this.calculateOrderTotals(orderData.orderItems, orderData.couponCode);
+
+    // Process and upload custom images to S3
+    let uploadedCustomImages = [];
+    if (orderData.customImages && orderData.customImages.length > 0) {
+      try {
+        uploadedCustomImages = await customImageUploadService.processCustomImagesForOrder(
+          orderData.customImages,
+          orderData.userId
+        );
+      } catch (uploadError) {
+        logger.error('Custom images upload failed for payment order', {
+          userId: orderData.userId,
+          error: uploadError.message
+        });
+        throw new Error(`Custom images upload failed: ${uploadError.message}`);
+      }
+    }
+
+    // Create the actual order in database
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: this.generateOrderNumber(),
+        userId: orderData.userId,
+        name: orderData.name,
+        email: orderData.email,
+        phone: orderData.phone,
+        address: orderData.address,
+        city: orderData.city,
+        state: orderData.state,
+        pincode: orderData.pincode,
+        status: 'CONFIRMED',
+        totalAmount: totals.totalAmount,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        shippingCost: totals.shippingCost,
+        paymentStatus: 'PAID',
+        paymentMethod: 'ONLINE',
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
+        couponId: totals.coupon?.id || null,
+        // Create custom image records with actual S3 URLs
+        customImages: uploadedCustomImages.length > 0 ? {
+          create: uploadedCustomImages.map(img => ({
+            imageUrl: img.url,
+            imageKey: img.key,
+            filename: img.filename
+          }))
+        } : undefined,
+        orderItems: {
+          create: await Promise.all(
+            orderData.orderItems.map(async (item) => {
+              const product = await prisma.product.findUnique({
+                where: { id: item.productId },
+                select: {
+                  normalPrice: true,
+                  offerPrice: true,
+                  name: true,
+                  productCode: true
+                }
+              });
+
+              const price = product.offerPrice || product.normalPrice;
+
+              return {
+                productId: item.productId,
+                productVariantId: item.productVariantId || null,
+                quantity: item.quantity,
+                price: price
+              };
+            })
+          )
+        }
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            },
+            productVariant: {
+              select: {
+                id: true,
+                color: true,
+                size: true
+              }
+            }
+          }
+        },
+        customImages: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        coupon: true
+      }
+    });
+
+    // Update stock for variants
+    for (const item of orderData.orderItems) {
+      if (item.productVariantId) {
+        await prisma.productVariant.update({
+          where: { id: item.productVariantId },
+          data: {
+            stock: { decrement: item.quantity }
+          }
+        });
+      }
+    }
+
+    // Increment coupon usage
+    if (totals.coupon) {
+      await prisma.coupon.update({
+        where: { id: totals.coupon.id },
+        data: {
+          usedCount: { increment: 1 }
+        }
+      });
+    }
+
+    // Create tracking history
+    await prisma.trackingHistory.create({
+      data: {
+        orderId: order.id,
+        status: 'CONFIRMED',
+        description: 'Order confirmed and payment received',
+        location: `${order.city}, ${order.state}`
+      }
+    });
+
+    // Send email notification
+    try {
+      await emailNotificationService.sendOrderNotifications(order);
+    } catch (emailError) {
+      logger.error('Failed to send order confirmation email:', emailError);
+    }
+
+    logger.info(`Order created successfully with ${uploadedCustomImages.length} custom images: ${order.orderNumber}`);
+    return order;
+  }
+
 
   async initiatePhonePePayment(orderData) {
     const {
@@ -140,6 +351,7 @@ class OrderService {
       pincode,
       orderItems,
       couponCode,
+      customImages = [],
       paymentMethod = 'ONLINE',
       redirectUrl,
       callbackUrl
@@ -151,7 +363,24 @@ class OrderService {
     }
 
     // Calculate totals
-    const totals = await this.calculateOrderTotals(orderItems, couponCode, state);
+    const totals = await this.calculateOrderTotals(orderItems, couponCode);
+
+    // Process and upload custom images to S3
+    let uploadedCustomImages = [];
+    if (customImages.length > 0) {
+      try {
+        uploadedCustomImages = await CustomImageUploadService.processCustomImagesForOrder(
+          customImages,
+          userId
+        );
+      } catch (uploadError) {
+        logger.error('Custom images upload failed for PhonePe order', {
+          userId,
+          error: uploadError.message
+        });
+        throw new Error(`Custom images upload failed: ${uploadError.message}`);
+      }
+    }
 
     // Create order with PENDING status
     const order = await prisma.order.create({
@@ -173,6 +402,14 @@ class OrderService {
         paymentStatus: 'PENDING',
         paymentMethod,
         couponId: totals.coupon?.id || null,
+        // Create custom image records with actual S3 URLs
+        customImages: uploadedCustomImages.length > 0 ? {
+          create: uploadedCustomImages.map(img => ({
+            imageUrl: img.url,
+            imageKey: img.key,
+            filename: img.filename
+          }))
+        } : undefined,
         orderItems: {
           create: await Promise.all(
             orderItems.map(async (item) => {
@@ -202,10 +439,13 @@ class OrderService {
         orderItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                name: true,
-                productCode: true
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
               }
             },
             productVariant: {
@@ -217,6 +457,7 @@ class OrderService {
             }
           }
         },
+        customImages: true,
         user: {
           select: {
             id: true,
@@ -247,7 +488,7 @@ class OrderService {
       }
     });
 
-    logger.info(`PhonePe payment initiated for order: ${order.orderNumber}, Merchant TXN: ${paymentResponse.merchantTransactionId}`);
+    logger.info(`PhonePe payment initiated for order: ${order.orderNumber}, Custom Images: ${customImages.length}, Merchant TXN: ${paymentResponse.merchantTransactionId}`);
 
     return {
       order,
@@ -273,9 +514,20 @@ class OrderService {
         include: {
           orderItems: {
             include: {
+              product: {
+                include: {
+                  images: {
+                    take: 1,
+                    select: {
+                      imageUrl: true
+                    }
+                  }
+                }
+              },
               productVariant: true
             }
-          }
+          },
+          customImages: true // Include custom images
         }
       });
 
@@ -343,10 +595,13 @@ class OrderService {
           orderItems: {
             include: {
               product: {
-                select: {
-                  id: true,
-                  name: true,
-                  productCode: true
+                include: {
+                  images: {
+                    take: 1,
+                    select: {
+                      imageUrl: true
+                    }
+                  }
                 }
               },
               productVariant: {
@@ -358,6 +613,7 @@ class OrderService {
               }
             }
           },
+          customImages: true, // Include custom images
           user: {
             select: {
               id: true,
@@ -389,7 +645,7 @@ class OrderService {
         }
       }
 
-      logger.info(`PhonePe callback processed: ${merchantTransactionId}, Status: ${newPaymentStatus}, Order: ${order.orderNumber}`);
+      logger.info(`PhonePe callback processed: ${merchantTransactionId}, Status: ${newPaymentStatus}, Order: ${order.orderNumber}, Custom Images: ${order.customImages.length}`);
       return updatedOrder;
 
     } catch (error) {
@@ -424,10 +680,13 @@ class OrderService {
           orderItems: {
             include: {
               product: {
-                select: {
-                  id: true,
-                  name: true,
-                  productCode: true
+                include: {
+                  images: {
+                    take: 1,
+                    select: {
+                      imageUrl: true
+                    }
+                  }
                 }
               },
               productVariant: {
@@ -439,6 +698,7 @@ class OrderService {
               }
             }
           },
+          customImages: true, // Include custom images
           user: {
             select: {
               id: true,
@@ -474,17 +734,12 @@ class OrderService {
 
   async getOrderById(orderId) {
     const order = await prisma.order.findUnique({
-      where: { id: orderId },
+      where: { id: orderId }, // This expects a UUID, not orderNumber
       include: {
         orderItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                name: true,
-                productCode: true,
-                normalPrice: true,
-                offerPrice: true,
+              include: {
                 images: {
                   take: 1,
                   select: {
@@ -502,6 +757,7 @@ class OrderService {
             }
           }
         },
+        customImages: true,
         user: {
           select: {
             id: true,
@@ -533,10 +789,7 @@ class OrderService {
         orderItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                name: true,
-                productCode: true,
+              include: {
                 images: {
                   take: 1,
                   select: {
@@ -554,6 +807,7 @@ class OrderService {
             }
           }
         },
+        customImages: true, // Include custom images
         user: {
           select: {
             id: true,
@@ -616,10 +870,13 @@ class OrderService {
         orderItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                name: true,
-                productCode: true
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
               }
             },
             productVariant: {
@@ -631,6 +888,7 @@ class OrderService {
             }
           }
         },
+        customImages: true, // Include custom images
         user: {
           select: {
             id: true,
@@ -641,6 +899,7 @@ class OrderService {
       }
     });
     
+
     if (status !== order.status) {
       await prisma.trackingHistory.create({
         data: {
@@ -687,14 +946,25 @@ class OrderService {
         orderItems: {
           include: {
             product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            },
+            productVariant: {
               select: {
                 id: true,
-                name: true,
-                productCode: true
+                color: true,
+                size: true
               }
             }
           }
         },
+        customImages: true, // Include custom images
         user: {
           select: {
             id: true,
@@ -732,9 +1002,20 @@ class OrderService {
       include: {
         orderItems: {
           include: {
+            product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            },
             productVariant: true
           }
-        }
+        },
+        customImages: true // Include custom images
       }
     });
     
@@ -783,14 +1064,25 @@ class OrderService {
         orderItems: {
           include: {
             product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            },
+            productVariant: {
               select: {
                 id: true,
-                name: true,
-                productCode: true
+                color: true,
+                size: true
               }
             }
           }
         },
+        customImages: true, // Include custom images
         user: {
           select: {
             id: true,
@@ -858,10 +1150,7 @@ class OrderService {
           orderItems: {
             include: {
               product: {
-                select: {
-                  id: true,
-                  name: true,
-                  productCode: true,
+                include: {
                   images: {
                     take: 1,
                     select: {
@@ -871,14 +1160,19 @@ class OrderService {
                 }
               },
               productVariant: {
-                select: {
-                  id: true,
-                  color: true,
-                  size: true
+                include: {
+                  variantImages: {
+                    take: 1,
+                    select: {
+                      imageUrl: true,
+                      color: true
+                    }
+                  }
                 }
               }
             }
           },
+          customImages: true, // Include custom images
           trackingHistory: {
             take: 3,
             orderBy: {
@@ -1060,7 +1354,21 @@ class OrderService {
         createdAt: { lt: twentyFourHoursAgo }
       },
       include: {
-        orderItems: true
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        customImages: true // Include custom images
       }
     });
 
@@ -1092,34 +1400,8 @@ class OrderService {
     };
   }
 
-
-  // Add this method to your OrderService class
-async createCODOrder(orderData) {
-  const {
-    userId,
-    name,
-    email,
-    phone,
-    address,
-    city,
-    state,
-    pincode,
-    orderItems,
-    couponCode
-  } = orderData;
-
-  // Validate required fields
-  if (!name || !email || !phone || !address || !city || !state || !pincode) {
-    throw new Error('All shipping information fields are required');
-  }
-
-  // Calculate totals
-  const totals = await this.calculateOrderTotals(orderItems, couponCode, state);
-
-  // Create order with COD status
-  const order = await prisma.order.create({
-    data: {
-      orderNumber: this.generateOrderNumber(),
+  async createCODOrder(orderData) {
+    const {
       userId,
       name,
       email,
@@ -1128,101 +1410,169 @@ async createCODOrder(orderData) {
       city,
       state,
       pincode,
-      status: 'CONFIRMED',
-      totalAmount: totals.totalAmount,
-      subtotal: totals.subtotal,
-      discount: totals.discount,
-      shippingCost: totals.shippingCost,
-      paymentStatus: 'PENDING',
-      paymentMethod: 'COD',
-      couponId: totals.coupon?.id || null,
-      orderItems: {
-        create: await Promise.all(
-          orderItems.map(async (item) => {
-            const product = await prisma.product.findUnique({
-              where: { id: item.productId },
-              select: {
-                normalPrice: true,
-                offerPrice: true,
-                name: true,
-                productCode: true
-              }
-            });
+      orderItems,
+      couponCode,
+      customImages = [] // Array of file objects or image data
+    } = orderData;
 
-            const price = product.offerPrice || product.normalPrice;
+    // Validate required fields
+    if (!name || !email || !phone || !address || !city || !state || !pincode) {
+      throw new Error('All shipping information fields are required');
+    }
 
-            return {
-              productId: item.productId,
-              productVariantId: item.productVariantId || null,
-              quantity: item.quantity,
-              price: price
-            };
-          })
-        )
+    // Calculate totals
+    const totals = await this.calculateOrderTotals(orderItems, couponCode);
+
+    // Process and upload custom images to S3
+    let uploadedCustomImages = [];
+    if (customImages.length > 0) {
+      try {
+        uploadedCustomImages = await CustomImageUploadService.processCustomImagesForOrder(
+          customImages,
+          userId
+        );
+      } catch (uploadError) {
+        logger.error('Custom images upload failed for COD order', {
+          userId,
+          error: uploadError.message
+        });
+        throw new Error(`Custom images upload failed: ${uploadError.message}`);
       }
-    },
-    include: {
-      orderItems: {
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              productCode: true
-            }
-          },
-          productVariant: {
-            select: {
-              id: true,
-              color: true,
-              size: true
+    }
+
+    // Create order with COD status
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: this.generateOrderNumber(),
+        userId,
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+        status: 'CONFIRMED',
+        totalAmount: totals.totalAmount,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        shippingCost: totals.shippingCost,
+        paymentStatus: 'PENDING',
+        paymentMethod: 'COD',
+        couponId: totals.coupon?.id || null,
+        // Create custom image records with actual S3 URLs
+        customImages: uploadedCustomImages.length > 0 ? {
+          create: uploadedCustomImages.map(img => ({
+            imageUrl: img.url,
+            imageKey: img.key,
+            filename: img.filename
+          }))
+        } : undefined,
+        orderItems: {
+          create: await Promise.all(
+            orderItems.map(async (item) => {
+              const product = await prisma.product.findUnique({
+                where: { id: item.productId },
+                select: {
+                  normalPrice: true,
+                  offerPrice: true,
+                  name: true,
+                  productCode: true
+                }
+              });
+
+              const price = product.offerPrice || product.normalPrice;
+
+              return {
+                productId: item.productId,
+                productVariantId: item.productVariantId || null,
+                quantity: item.quantity,
+                price: price
+              };
+            })
+          )
+        }
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  take: 1,
+                  select: {
+                    imageUrl: true
+                  }
+                }
+              }
+            },
+            productVariant: {
+              include: {
+                variantImages: {
+                  take: 1,
+                  select: {
+                    imageUrl: true,
+                    color: true
+                  }
+                }
+              }
             }
           }
-        }
-      },
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true
-        }
-      },
-      coupon: true
-    }
-  });
+        },
+        customImages: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        coupon: true
+      }
+    });
 
-  // Update stock for variants
-  for (const item of orderItems) {
-    if (item.productVariantId) {
-      await prisma.productVariant.update({
-        where: { id: item.productVariantId },
+    // Update stock for variants
+    for (const item of orderItems) {
+      if (item.productVariantId) {
+        await prisma.productVariant.update({
+          where: { id: item.productVariantId },
+          data: {
+            stock: { decrement: item.quantity }
+          }
+        });
+      }
+    }
+
+    // Increment coupon usage
+    if (totals.coupon) {
+      await prisma.coupon.update({
+        where: { id: totals.coupon.id },
         data: {
-          stock: { decrement: item.quantity }
+          usedCount: { increment: 1 }
         }
       });
     }
-  }
 
-  // Increment coupon usage
-  if (totals.coupon) {
-    await prisma.coupon.update({
-      where: { id: totals.coupon.id },
+    // Create tracking history
+    await prisma.trackingHistory.create({
       data: {
-        usedCount: { increment: 1 }
+        orderId: order.id,
+        status: 'CONFIRMED',
+        description: 'COD order confirmed',
+        location: `${order.city}, ${order.state}`
       }
     });
-  }
 
-  // Send email notification
-  try {
-    await emailNotificationService.sendOrderNotifications(order);
-  } catch (emailError) {
-    logger.error('Failed to send order confirmation email:', emailError);
-  }
+    // Send email notification
+    try {
+      await emailNotificationService.sendOrderNotifications(order);
+    } catch (emailError) {
+      logger.error('Failed to send COD order confirmation email:', emailError);
+    }
 
-  logger.info(`COD order created successfully: ${order.orderNumber}`);
-  return order;
-}
+    logger.info(`COD order created successfully with ${uploadedCustomImages.length} custom images: ${order.orderNumber}`);
+    return order;
+  }
 
 }
 
