@@ -1,6 +1,6 @@
 // controllers/wholesalerController.js
 import { asyncHandler } from '../utils/helpers.js';
-import s3UploadService from '../services/S3UploadService.js';
+import s3UploadService from '../services/s3UploadService.js';
 import prisma from '../config/database.js';
 
 export const uploadShopPhotos = asyncHandler(async (req, res) => {

@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 import logger from '../utils/logger.js';
-import S3UploadService from './S3UploadService.js';
+import s3UploadService from './s3UploadService.js';
 
 class ProductService {
     
@@ -630,7 +630,7 @@ class ProductService {
             // Upload variant images if provided for this color
             if (colorImages.length > 0) {
                 try {
-                    const uploadResults = await S3UploadService.uploadMultipleImages(
+                    const uploadResults = await s3UploadService.uploadMultipleImages(
                         colorImages,
                         `products/${productCode}/variants/${color}`
                     );
@@ -924,7 +924,7 @@ class ProductService {
                 if (colorImages.length > 0) {
                     // Upload new variant images if provided
                     try {
-                        const uploadResults = await S3UploadService.uploadMultipleImages(
+                        const uploadResults = await s3UploadService.uploadMultipleImages(
                             colorImages,
                             `products/${product.productCode}/variants/${color}`
                         );
@@ -1064,7 +1064,7 @@ class ProductService {
             for (const variantImage of variant.variantImages) {
                 if (variantImage.imagePublicId) {
                     try {
-                        await S3UploadService.deleteImage(variantImage.imagePublicId);
+                        await s3UploadService.deleteImage(variantImage.imagePublicId);
                     } catch (error) {
                         logger.error('Failed to delete variant image from S3:', error);
                     }

@@ -1,5 +1,4 @@
 import {
-  S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
@@ -9,7 +8,7 @@ import { s3Client, S3_BUCKET_NAME } from '../config/s3.js';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger.js';
 
-class S3UploadService {
+class s3UploadService {
   constructor() {
     this.s3Client = s3Client;
     this.bucketName = S3_BUCKET_NAME;
@@ -638,4 +637,4 @@ class S3UploadService {
   }
 }
 
-export default new S3UploadService();
+export default new s3UploadService();

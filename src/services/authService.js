@@ -7,7 +7,7 @@ import prisma from '../config/database.js';
 import { JWT_SECRET } from '../config/index.js';
 import emailNotificationService from './emailNotificationService.js';
 import logger from '../utils/logger.js';
-import S3UploadService from './S3UploadService.js';
+import s3UploadService from './s3UploadService.js';
 
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -68,7 +68,7 @@ async register(userData, files = []) {
         // Upload shop photos to S3 if files are provided
         if (files && files.length > 0) {
           try {
-            const uploadResults = await S3UploadService.uploadWholesalerShopPhotos(
+            const uploadResults = await s3UploadService.uploadWholesalerShopPhotos(
               files, 
               user.id, 
               businessType

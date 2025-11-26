@@ -458,8 +458,8 @@ export const validateSubcategory = [
     .withMessage('Subcategory name is required')
     .isLength({ min: 2, max: 100 })
     .withMessage('Subcategory name must be between 2 and 100 characters')
-    .matches(/^[a-zA-Z0-9\s\-&]+$/)
-    .withMessage('Subcategory name can only contain letters, numbers, spaces, hyphens, and ampersands'),
+    .matches(/^[a-zA-Z0-9\s\-&']+$/) // Added apostrophe here
+    .withMessage('Subcategory name can only contain letters, numbers, spaces, hyphens, ampersands, and apostrophes'),
 
   body('description')
     .trim()
@@ -468,7 +468,6 @@ export const validateSubcategory = [
     .isLength({ min: 10, max: 500 })
     .withMessage('Description must be between 10 and 500 characters'),
 
-  // Change from 'category' to 'categoryId'
   body('categoryId')
     .notEmpty()
     .withMessage('Category ID is required')
@@ -496,7 +495,6 @@ export const validateSubcategory = [
   }
 ];
 
-
 // Subcategory update validation
 export const validateSubcategoryUpdate = [
   body('name')
@@ -504,8 +502,8 @@ export const validateSubcategoryUpdate = [
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage('Subcategory name must be between 2 and 100 characters')
-    .matches(/^[a-zA-Z0-9\s\-&]+$/)
-    .withMessage('Subcategory name can only contain letters, numbers, spaces, hyphens, and ampersands'),
+    .matches(/^[a-zA-Z0-9\s\-&']+$/) // Added apostrophe here
+    .withMessage('Subcategory name can only contain letters, numbers, spaces, hyphens, ampersands, and apostrophes'),
 
   body('description')
     .optional()

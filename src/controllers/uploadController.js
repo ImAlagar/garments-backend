@@ -1,6 +1,6 @@
 // controllers/uploadController.js
 import { asyncHandler } from '../utils/helpers.js';
-import S3UploadService from '../services/S3UploadService.js';
+import s3UploadService from '../services/s3UploadService.js';
 import logger from '../utils/logger.js';
 
 class UploadController {
@@ -48,7 +48,7 @@ class UploadController {
       }
 
       // Upload images to S3
-      const uploadResults = await S3UploadService.uploadMultipleImages(
+      const uploadResults = await s3UploadService.uploadMultipleImages(
         files, 
         'custom-order-images'
       );
@@ -122,7 +122,7 @@ class UploadController {
       }
 
       // Upload image to S3
-      const uploadResult = await S3UploadService.uploadImage(
+      const uploadResult = await s3UploadService.uploadImage(
         file.buffer,
         'custom-order-images',
         null,
@@ -176,7 +176,7 @@ class UploadController {
       }
 
       // Delete images from S3
-      await S3UploadService.deleteMultipleImages(imageKeys);
+      await s3UploadService.deleteMultipleImages(imageKeys);
 
       logger.info('Custom order images deleted successfully', {
         userId: req.user?.id,
@@ -218,7 +218,7 @@ class UploadController {
       }
 
       // Get images for specific order
-      const images = await S3UploadService.getFolderImages(`custom-order-images/order-${orderId}`);
+      const images = await s3UploadService.getFolderImages(`custom-order-images/order-${orderId}`);
 
       res.status(200).json({
         success: true,

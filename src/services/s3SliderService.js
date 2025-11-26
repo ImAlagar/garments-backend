@@ -1,5 +1,5 @@
 // services/s3SliderService.js
-import S3UploadService from './S3UploadService.js';
+import s3UploadService from './s3UploadService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 class S3SliderService {
@@ -16,7 +16,7 @@ class S3SliderService {
         `sliders/${sliderId}/bg-image-${Date.now()}.${this.getFileExtension(file.mimetype)}` :
         `sliders/temp/bg-image-${Date.now()}-${uuidv4().slice(0, 8)}.${this.getFileExtension(file.mimetype)}`;
       
-      const result = await S3UploadService.uploadImage(
+      const result = await s3UploadService.uploadImage(
         file.buffer, 
         '', // Don't use folder parameter since we're providing full fileName
         fileName,
@@ -43,7 +43,7 @@ class S3SliderService {
         `sliders/${sliderId}/main-image-${Date.now()}.${this.getFileExtension(file.mimetype)}` :
         `sliders/temp/main-image-${Date.now()}-${uuidv4().slice(0, 8)}.${this.getFileExtension(file.mimetype)}`;
       
-      const result = await S3UploadService.uploadImage(
+      const result = await s3UploadService.uploadImage(
         file.buffer, 
         '', // Don't use folder parameter
         fileName,
@@ -87,10 +87,10 @@ class S3SliderService {
       }
 
       const prefix = `sliders/${sliderId}/`;
-      const images = await S3UploadService.getFolderImages(prefix);
+      const images = await s3UploadService.getFolderImages(prefix);
       
       if (images.length > 0) {
-        await S3UploadService.deleteMultipleImages(images.map(img => img.key));
+        await s3UploadService.deleteMultipleImages(images.map(img => img.key));
       }
 
       return { deleted: images.length };
@@ -105,7 +105,7 @@ class S3SliderService {
    */
   async deleteSliderImageByKey(key) {
     try {
-      await S3UploadService.deleteImage(key);
+      await s3UploadService.deleteImage(key);
     } catch (error) {
       console.error('Slider image deletion failed:', error);
       throw new Error(`Slider image deletion failed: ${error.message}`);

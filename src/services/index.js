@@ -13,7 +13,7 @@ import dashboardService from './dashboardService.js';
 import analyticsService from './analyticsService.js';
 import customizationService from './customizationService.js';
 import designService from './designService.js';
-import S3UploadService from './S3UploadService.js';
+import s3UploadService from './s3UploadService.js';
 
 export {
   authService,
@@ -30,5 +30,5 @@ export {
   analyticsService,
   customizationService,
   designService,
-  S3UploadService
+  s3UploadService
 };

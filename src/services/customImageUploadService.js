@@ -1,5 +1,5 @@
 // services/customImageUploadService.js
-import S3UploadService from './S3UploadService.js';
+import s3UploadService from './s3UploadService.js';
 import logger from '../utils/logger.js';
 
 class CustomImageUploadService {
@@ -48,7 +48,7 @@ class CustomImageUploadService {
         : `custom-orders/temp/${userId}`;
 
       // Upload files to S3
-      const uploadResults = await S3UploadService.uploadMultipleImages(
+      const uploadResults = await s3UploadService.uploadMultipleImages(
         validFiles,
         folderPath
       );
@@ -109,7 +109,7 @@ class CustomImageUploadService {
         : `custom-orders/temp/${userId}`;
 
       // Upload file to S3
-      const uploadResult = await S3UploadService.uploadImage(
+      const uploadResult = await s3UploadService.uploadImage(
         file.buffer,
         folderPath,
         null,
@@ -151,7 +151,7 @@ class CustomImageUploadService {
         return { success: true, message: 'No images to delete', deletedCount: 0 };
       }
 
-      await S3UploadService.deleteMultipleImages(imageKeys);
+      await s3UploadService.deleteMultipleImages(imageKeys);
 
       logger.info('Custom order images deleted from S3', {
         deletedCount: imageKeys.length,
@@ -183,7 +183,7 @@ class CustomImageUploadService {
       }
 
       const folderPath = `custom-orders/${orderId}`;
-      const images = await S3UploadService.getFolderImages(folderPath);
+      const images = await s3UploadService.getFolderImages(folderPath);
 
       logger.debug('Fetched custom order images', {
         orderId,
@@ -281,10 +281,10 @@ class CustomImageUploadService {
       }
 
       const tempFolderPath = `custom-orders/temp/${userId}`;
-      const tempImages = await S3UploadService.getFolderImages(tempFolderPath);
+      const tempImages = await s3UploadService.getFolderImages(tempFolderPath);
 
       if (tempImages.length > 0) {
-        await S3UploadService.deleteMultipleImages(tempImages.map(img => img.key));
+        await s3UploadService.deleteMultipleImages(tempImages.map(img => img.key));
         
         logger.info('Temporary custom images cleaned up', {
           userId,
