@@ -1,4 +1,3 @@
-// routes/index.js
 import express from 'express';
 const router = express.Router();
 
@@ -18,6 +17,8 @@ import customizationRoutes from './customizationRoutes.js';
 import designRoutes from './designRoutes.js';
 import imageProxyRoutes from './imageProxy.js';
 import uploadRoutes from './uploadRoutes.js';
+// ✅ ADD THIS NEW IMPORT
+import subcategoryQuantityPriceRoutes from './subcategoryQuantityPriceRoutes.js';
 
 router.use('/auth', authRoutes);
 router.use('/auth', userRoutes);
@@ -35,5 +36,7 @@ router.use('/customizations', customizationRoutes);
 router.use('/designs', designRoutes);
 router.use('/images', imageProxyRoutes);
 router.use('/upload', uploadRoutes);
+// ✅ ADD THIS NEW ROUTE
+router.use('/admin/subcategory-quantity-prices', subcategoryQuantityPriceRoutes);
 
 export default router;

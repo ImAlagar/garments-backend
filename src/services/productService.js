@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
-import s3UploadService from './s3UploadService.js';
 import logger from '../utils/logger.js';
+import S3UploadService from './S3UploadService.js';
 
 class ProductService {
     
@@ -132,143 +132,431 @@ class ProductService {
         };
     }
 
+
+    // services/productService.js
+    async calculateQuantityPrice(productId, quantity) {
+        try {
+            
+            if (!productId || quantity < 1) {
+                throw new Error('Valid product ID and quantity are required');
+            }
+
+            // First, check if product exists with basic query
+            const product = await prisma.product.findUnique({
+                where: { 
+                    id: productId 
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    normalPrice: true,
+                    offerPrice: true,
+                    subcategoryId: true
+                }
+            });
+
+
+            if (!product) {
+                throw new Error('Product not found');
+            }
+
+            // Get the effective price (offer price first, then normal price)
+            const normalPrice = product.offerPrice || product.normalPrice;
+            
+            // If no subcategory, return regular pricing
+            if (!product.subcategoryId) {
+                return {
+                    originalPrice: normalPrice * quantity,
+                    quantity: quantity,
+                    applicableDiscount: null,
+                    finalPrice: normalPrice * quantity,
+                    totalSavings: 0,
+                    message: 'No quantity pricing available for this product'
+                };
+            }
+
+            // Get quantity prices for the subcategory
+            const quantityPrices = await prisma.subcategoryQuantityPrice.findMany({
+                where: { 
+                    subcategoryId: product.subcategoryId,
+                    isActive: true,
+                    quantity: { lte: quantity } // Only offers where required quantity <= requested quantity
+                },
+                orderBy: { 
+                    quantity: 'desc' // Get highest applicable quantity first
+                }
+            });
+
+
+            let bestTotal = normalPrice * quantity;
+            let appliedDiscount = null;
+
+            // Find the best applicable discount
+            for (const priceRule of quantityPrices) {
+                if (quantity >= priceRule.quantity) {
+                    let discountAmount = 0;
+                    let finalPriceForRule = 0;
+
+                    if (priceRule.priceType === 'PERCENTAGE') {
+                        // Calculate percentage discount
+                        discountAmount = (priceRule.value / 100) * normalPrice * quantity;
+                        finalPriceForRule = (normalPrice * quantity) - discountAmount;
+                    } else {
+                        // Fixed amount - this is total price for the quantity
+                        finalPriceForRule = priceRule.value;
+                        discountAmount = (normalPrice * quantity) - finalPriceForRule;
+                    }
+
+                    // If this rule gives a better price, use it
+                    if (finalPriceForRule < bestTotal) {
+                        bestTotal = finalPriceForRule;
+                        appliedDiscount = {
+                            quantity: priceRule.quantity,
+                            priceType: priceRule.priceType,
+                            value: priceRule.value,
+                            discountAmount: discountAmount
+                        };
+                    }
+                }
+            }
+
+            const totalSavings = appliedDiscount ? appliedDiscount.discountAmount : 0;
+            
+            let message = 'No quantity discount available';
+            if (appliedDiscount) {
+                if (appliedDiscount.priceType === 'PERCENTAGE') {
+                    message = `${appliedDiscount.value}% discount applied for buying ${appliedDiscount.quantity} or more items`;
+                } else {
+                    message = `Special price ₹${appliedDiscount.value} for buying ${appliedDiscount.quantity} items`;
+                }
+            }
+
+            return {
+                originalPrice: normalPrice * quantity,
+                quantity: quantity,
+                applicableDiscount: appliedDiscount,
+                finalPrice: bestTotal,
+                totalSavings: totalSavings,
+                pricePerItem: bestTotal / quantity,
+                message: message
+            };
+
+        } catch (error) {
+            console.error('Error in calculateQuantityPrice:', error);
+            throw new Error(`Failed to calculate quantity price: ${error.message}`);
+        }
+    }
+
+    async getProductsWithQuantityOffers(subcategoryId, limit = 10) {
+        const subcategory = await prisma.subcategory.findUnique({
+        where: { id: subcategoryId },
+        include: {
+            quantityPrices: {
+            where: { isActive: true },
+            orderBy: { quantity: 'asc' }
+            }
+        }
+        });
+
+        if (!subcategory) {
+        throw new Error('Subcategory not found');
+        }
+
+        // Get all active products in this subcategory
+        const products = await prisma.product.findMany({
+        where: {
+            subcategoryId,
+            status: 'ACTIVE'
+        },
+        include: {
+            category: {
+            select: {
+                id: true,
+                name: true,
+                image: true
+            }
+            },
+            subcategory: {
+            select: {
+                id: true,
+                name: true,
+                image: true
+            }
+            },
+            variants: {
+            include: {
+                variantImages: {
+                where: { isPrimary: true },
+                take: 1
+                }
+            }
+            },
+            ratings: {
+            where: {
+                isApproved: true
+            },
+            select: {
+                rating: true
+            }
+            }
+        },
+        take: limit
+        });
+
+        // Add quantity pricing info to each product
+        const productsWithOffers = products.map(product => {
+        const ratings = product.ratings;
+        const avgRating = ratings.length > 0 
+            ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+            : 0;
+
+        return {
+            ...product,
+            avgRating: Math.round(avgRating * 10) / 10,
+            totalRatings: ratings.length,
+            quantityOffers: subcategory.quantityPrices,
+            hasQuantityPricing: subcategory.quantityPrices.length > 0
+        };
+        });
+
+        return {
+        subcategory: {
+            id: subcategory.id,
+            name: subcategory.name,
+            quantityOffers: subcategory.quantityPrices
+        },
+        products: productsWithOffers
+        };
+    }
+
     // Get product by ID - IMPROVED
     async getProductById(productId, includeVariants = true) {
         // Validate input
         if (!productId || typeof productId !== 'string') {
-            throw new Error('Valid product ID is required');
+        throw new Error('Valid product ID is required');
         }
 
         const include = {
-            category: {
+        category: {
+            select: {
+            id: true,
+            name: true,
+            image: true
+            }
+        },
+        subcategory: {
+            include: { // CHANGED: Include quantityPrices
+            quantityPrices: {
+                where: { isActive: true },
+                orderBy: { quantity: 'asc' }
+            }
+            }
+        },
+        productDetails: true,
+        ratings: {
+            where: {
+            isApproved: true
+            },
+            include: {
+            user: {
                 select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            subcategory: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            productDetails: true,
-            ratings: {
-                where: {
-                    isApproved: true
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            avatar: true
-                        }
-                    }
-                },
-                orderBy: {
-                    createdAt: 'desc'
-                }
-            },
-            variants: {
-                include: {
-                    variantImages: {
-                        orderBy: {
-                            isPrimary: 'desc'
-                        }
-                    }
+                id: true,
+                name: true,
+                avatar: true
                 }
             }
+            },
+            orderBy: {
+            createdAt: 'desc'
+            }
+        },
+        variants: {
+            include: {
+            variantImages: {
+                orderBy: {
+                isPrimary: 'desc'
+                }
+            }
+            }
+        }
         };
         
         const product = await prisma.product.findUnique({
-            where: { id: productId },
-            include
+        where: { id: productId },
+        include
         });
         
         if (!product) {
-            logger.warn(`Product not found with ID: ${productId}`);
-            return null;
+        logger.warn(`Product not found with ID: ${productId}`);
+        return null;
         }
         
         // Calculate average rating
         const ratings = product.ratings;
         const avgRating = ratings.length > 0 
-            ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-            : 0;
+        ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+        : 0;
         
         return {
-            ...product,
-            avgRating: Math.round(avgRating * 10) / 10,
-            totalRatings: ratings.length
+        ...product,
+        avgRating: Math.round(avgRating * 10) / 10,
+        totalRatings: ratings.length,
+        hasQuantityPricing: product.subcategory?.quantityPrices?.length > 0
         };
     }
 
     // Get product by product code - IMPROVED
     async getProductByCode(productCode, includeVariants = true) {
         const include = {
-            category: {
+        category: {
+            select: {
+            id: true,
+            name: true,
+            image: true
+            }
+        },
+        subcategory: {
+            include: { // CHANGED: Include quantityPrices
+            quantityPrices: {
+                where: { isActive: true },
+                orderBy: { quantity: 'asc' }
+            }
+            }
+        },
+        productDetails: true,
+        ratings: {
+            where: {
+            isApproved: true
+            },
+            include: {
+            user: {
                 select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            subcategory: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            productDetails: true,
-            ratings: {
-                where: {
-                    isApproved: true
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            avatar: true
-                        }
-                    }
-                }
-            },
-            // ALWAYS include variants with their images
-            variants: {
-                include: {
-                    variantImages: {
-                        orderBy: {
-                            isPrimary: 'desc'
-                        }
-                    }
+                id: true,
+                name: true,
+                avatar: true
                 }
             }
+            }
+        },
+        variants: {
+            include: {
+            variantImages: {
+                orderBy: {
+                isPrimary: 'desc'
+                }
+            }
+            }
+        }
         };
         
         const product = await prisma.product.findUnique({
-            where: { productCode },
-            include
+        where: { productCode },
+        include
         });
         
         if (!product) {
-            throw new Error('Product not found');
+        throw new Error('Product not found');
         }
         
         // Calculate average rating
         const ratings = product.ratings;
         const avgRating = ratings.length > 0 
-            ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-            : 0;
+        ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+        : 0;
         
         return {
-            ...product,
-            avgRating: Math.round(avgRating * 10) / 10,
-            totalRatings: ratings.length
+        ...product,
+        avgRating: Math.round(avgRating * 10) / 10,
+        totalRatings: ratings.length,
+        hasQuantityPricing: product.subcategory?.quantityPrices?.length > 0
+        };
+    }
+
+    async getSubcategoriesWithQuantityPricing() {
+        return await prisma.subcategory.findMany({
+        where: {
+            quantityPrices: {
+            some: {
+                isActive: true
+            }
+            }
+        },
+        include: {
+            category: {
+            select: {
+                id: true,
+                name: true
+            }
+            },
+            quantityPrices: {
+            where: { isActive: true },
+            orderBy: { quantity: 'asc' }
+            },
+            _count: {
+            select: {
+                products: {
+                where: { status: 'ACTIVE' }
+                }
+            }
+            }
+        }
+        });
+    }
+    
+    async calculateCartPrices(cartItems) {
+        const calculatedItems = await Promise.all(
+        cartItems.map(async (item) => {
+            try {
+            const priceCalculation = await this.calculateQuantityPrice(
+                item.productId,
+                item.quantity
+            );
+            
+            return {
+                ...item,
+                priceCalculation,
+                finalPrice: priceCalculation.totalPrice
+            };
+            } catch (error) {
+            logger.error(`Error calculating price for product ${item.productId}:`, error);
+            
+            // Fallback to normal price calculation
+            const product = await prisma.product.findUnique({
+                where: { id: item.productId },
+                select: {
+                normalPrice: true,
+                offerPrice: true,
+                name: true
+                }
+            });
+            
+            const unitPrice = product?.offerPrice || product?.normalPrice || 0;
+            const totalPrice = unitPrice * item.quantity;
+            
+            return {
+                ...item,
+                priceCalculation: {
+                totalPrice,
+                effectiveUnitPrice: unitPrice,
+                savings: 0,
+                hasQuantityPricing: false,
+                error: error.message
+                },
+                finalPrice: totalPrice
+            };
+            }
+        })
+        );
+
+        const subtotal = calculatedItems.reduce((sum, item) => sum + item.finalPrice, 0);
+        const totalSavings = calculatedItems.reduce((sum, item) => sum + (item.priceCalculation.savings || 0), 0);
+
+        return {
+        items: calculatedItems,
+        subtotal,
+        totalSavings,
+        total: subtotal,
+        hasQuantityDiscounts: totalSavings > 0
         };
     }
     
@@ -342,7 +630,7 @@ class ProductService {
             // Upload variant images if provided for this color
             if (colorImages.length > 0) {
                 try {
-                    const uploadResults = await s3UploadService.uploadMultipleImages(
+                    const uploadResults = await S3UploadService.uploadMultipleImages(
                         colorImages,
                         `products/${productCode}/variants/${color}`
                     );
@@ -502,6 +790,7 @@ class ProductService {
         return imagesByColor;
     }
 
+
     async updateProduct(productId, updateData, files = [], variantColors = []) {
         
         const product = await prisma.product.findUnique({
@@ -635,7 +924,7 @@ class ProductService {
                 if (colorImages.length > 0) {
                     // Upload new variant images if provided
                     try {
-                        const uploadResults = await s3UploadService.uploadMultipleImages(
+                        const uploadResults = await S3UploadService.uploadMultipleImages(
                             colorImages,
                             `products/${product.productCode}/variants/${color}`
                         );
@@ -775,7 +1064,7 @@ class ProductService {
             for (const variantImage of variant.variantImages) {
                 if (variantImage.imagePublicId) {
                     try {
-                        await s3UploadService.deleteImage(variantImage.imagePublicId);
+                        await S3UploadService.deleteImage(variantImage.imagePublicId);
                     } catch (error) {
                         logger.error('Failed to delete variant image from S3:', error);
                     }
@@ -1619,100 +1908,101 @@ class ProductService {
     }
 
     // Get related products
-async getRelatedProducts({ category, exclude, limit = 10 }) {
-    try {
-        logger.info(`Fetching related products - Category: ${category}, Exclude: ${exclude}, Limit: ${limit}`);
-        
-        // Validate inputs
-        if (!category || !exclude) {
-            throw new Error('Category and exclude parameters are required');
-        }
+    async getRelatedProducts({ category, exclude, limit = 10 }) {
+        try {
+            logger.info(`Fetching related products - Category: ${category}, Exclude: ${exclude}, Limit: ${limit}`);
+            
+            // Validate inputs
+            if (!category || !exclude) {
+                throw new Error('Category and exclude parameters are required');
+            }
 
-        const where = {
-            category: {
-                name: {
-                    equals: category,
-                    mode: 'insensitive'
-                }
-            },
-            id: {
-                not: exclude
-            },
-            status: 'ACTIVE' // Only show active products
-        };
-
-        const include = {
-            category: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            subcategory: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true
-                }
-            },
-            productDetails: true,
-            ratings: {
-                where: {
-                    isApproved: true
-                },
-                select: {
-                    rating: true
-                }
-            },
-            variants: {
-                where: {
-                    stock: {
-                        gt: 0 // Only include variants with stock
+            const where = {
+                category: {
+                    name: {
+                        equals: category,
+                        mode: 'insensitive'
                     }
                 },
-                include: {
-                    variantImages: {
-                        orderBy: {
-                            isPrimary: 'desc'
+                id: {
+                    not: exclude
+                },
+                status: 'ACTIVE' // Only show active products
+            };
+
+            const include = {
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true
+                    }
+                },
+                productDetails: true,
+                ratings: {
+                    where: {
+                        isApproved: true
+                    },
+                    select: {
+                        rating: true
+                    }
+                },
+                variants: {
+                    where: {
+                        stock: {
+                            gt: 0 // Only include variants with stock
+                        }
+                    },
+                    include: {
+                        variantImages: {
+                            orderBy: {
+                                isPrimary: 'desc'
+                            }
                         }
                     }
                 }
-            }
-        };
-
-        const relatedProducts = await prisma.product.findMany({
-            where,
-            take: parseInt(limit),
-            include,
-            orderBy: {
-                createdAt: 'desc' // Show newest first
-            }
-        });
-
-        logger.info(`Found ${relatedProducts.length} related products`);
-
-        // Calculate average ratings and format response
-        const formattedProducts = relatedProducts.map(product => {
-            const ratings = product.ratings;
-            const avgRating = ratings.length > 0 
-                ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
-                : 0;
-
-            return {
-                ...product,
-                avgRating: Math.round(avgRating * 10) / 10,
-                totalRatings: ratings.length
             };
-        });
 
-        return formattedProducts;
-        
-    } catch (error) {
-        logger.error('Error in getRelatedProducts:', error);
-        throw error;
-    }
-}
+            const relatedProducts = await prisma.product.findMany({
+                where,
+                take: parseInt(limit),
+                include,
+                orderBy: {
+                    createdAt: 'desc' // Show newest first
+                }
+            });
+
+            logger.info(`Found ${relatedProducts.length} related products`);
+
+            // Calculate average ratings and format response
+            const formattedProducts = relatedProducts.map(product => {
+                const ratings = product.ratings;
+                const avgRating = ratings.length > 0 
+                    ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length 
+                    : 0;
+
+                return {
+                    ...product,
+                    avgRating: Math.round(avgRating * 10) / 10,
+                    totalRatings: ratings.length
+                };
+            });
+
+            return formattedProducts;
+            
+        } catch (error) {
+            logger.error('Error in getRelatedProducts:', error);
+            throw error;
+        }
+    } 
+
     // Add this method to your ProductService class
     async toggleProductStatus(productId, status) {
     const product = await prisma.product.findUnique({

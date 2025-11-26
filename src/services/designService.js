@@ -1,18 +1,11 @@
 // services/designService.js
 import prisma from '../config/database.js';
-import s3UploadService from './s3UploadService.js';
 import logger from '../utils/logger.js';
 
 class DesignService {
   // Create design
     async createDesign(designData, userId, sessionId) {
-    console.log('🔍 DESIGN SERVICE - createDesign called:', {
-        customizationId: designData.customizationId,
-        designDataKeys: Object.keys(designData.designData || {}),
-        previewImageLength: designData.previewImage?.length,
-        userId: userId || 'anonymous',
-        sessionId: sessionId || 'no-session'
-    });
+
 
     const { 
         customizationId, 
@@ -43,7 +36,6 @@ class DesignService {
         throw new Error('Preview image must be a valid data URL');
     }
 
-    console.log('✅ Basic validation passed');
 
     try {
         // Validate customization exists and is active
@@ -58,7 +50,6 @@ class DesignService {
         throw new Error(`Customization not found or inactive: ${customizationId}`);
         }
 
-        console.log('✅ Customization validation passed:', customization.id);
 
         // Prepare data for database - handle both authenticated and anonymous users
         const designDataForDb = {
@@ -71,12 +62,7 @@ class DesignService {
         status: 'DRAFT'
         };
 
-        console.log('📦 Creating design with data:', {
-        customizationId: designDataForDb.customizationId,
-        userId: designDataForDb.userId,
-        sessionId: designDataForDb.sessionId,
-        layersCount: designJson.layers.length
-        });
+
 
         const design = await prisma.customDesign.create({
         data: designDataForDb,
@@ -89,7 +75,6 @@ class DesignService {
         }
         });
         
-        console.log('✅ Design created successfully:', design.id);
         return design;
         
     } catch (error) {
@@ -287,7 +272,6 @@ class DesignService {
   
   // Validate design data structure
   validateDesignData(designData, customization) {
-    console.log('🔍 Validating design data:', designData);
     
     if (!designData || typeof designData !== 'object') {
       console.error('❌ Design data is not an object');
@@ -314,7 +298,6 @@ class DesignService {
       }
     }
     
-    console.log('✅ Design data validation passed');
     return true;
   }
   

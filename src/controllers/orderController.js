@@ -5,8 +5,27 @@ import { asyncHandler } from '../utils/helpers.js';
 import logger from '../utils/logger.js';
 
 
+// Calculate order totals with quantity pricing
+export const calculateOrderTotals = asyncHandler(async (req, res) => {
+  const { orderItems, couponCode } = req.body;
+  
+  if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Order items are required'
+    });
+  }
+  
+  const totals = await orderService.calculateOrderTotals(orderItems, couponCode);
+  
+  res.status(200).json({
+    success: true,
+    data: totals
+  });
+});
 
-// Initiate Razorpay payment (creates Razorpay order, not our order)
+
+// Initiate Razorpay payment with quantity pricing
 export const initiatePayment = asyncHandler(async (req, res) => {
   const { orderData } = req.body;
   orderData.userId = req.user.id;
@@ -16,11 +35,15 @@ export const initiatePayment = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Payment initiated successfully',
-    data: result
+    data: {
+      ...result,
+      quantitySavings: result.tempOrderData.totals.quantitySavings,
+      hasQuantityDiscounts: result.tempOrderData.totals.hasQuantityDiscounts
+    }
   });
 });
 
-// Verify payment and create actual order
+
 export const verifyPaymentAndCreateOrder = asyncHandler(async (req, res) => {
   const {
     razorpay_order_id,
@@ -44,30 +67,93 @@ export const verifyPaymentAndCreateOrder = asyncHandler(async (req, res) => {
   res.status(201).json({
     success: true,
     message: 'Order created successfully',
-    data: order
+    data: order // The order now includes quantitySavings and hasQuantityDiscounts directly
   });
 });
 
+// Create COD order with quantity pricing
+export const createCODOrder = asyncHandler(async (req, res) => {
+  const { orderData } = req.body;
+  orderData.userId = req.user.id;
 
-export const createPaymentOrder = asyncHandler(async (req, res) => {
-  const { amount, currency = 'INR' } = req.body;
+  const order = await orderService.createCODOrder(orderData);
   
-  if (!amount || amount <= 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Valid amount is required'
-    });
-  }
+  res.status(201).json({
+    success: true,
+    message: 'COD order created successfully',
+    data: order // The order now includes quantitySavings and hasQuantityDiscounts directly
+  });
+});
 
-  const order = await razorpayService.createOrder(amount, currency);
+// Get order with quantity discount details
+export const getOrderById = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  
+  const order = await orderService.getOrderById(orderId);
+  
+  // Parse quantity discount details from notes
+  const notes = JSON.parse(order.notes || '{}');
   
   res.status(200).json({
     success: true,
-    data: order
+    data: {
+      ...order,
+      quantitySavings: notes.quantitySavings || 0,
+      hasQuantityDiscounts: notes.hasQuantityDiscounts || false,
+      quantityDiscountBreakdown: notes.quantityDiscountBreakdown || []
+    }
   });
 });
 
+// Get order by order number with quantity discount details
+export const getOrderByOrderNumber = asyncHandler(async (req, res) => {
+  const { orderNumber } = req.params;
+  
+  const order = await orderService.getOrderByOrderNumber(orderNumber);
+  
+  // Parse quantity discount details from notes
+  const notes = JSON.parse(order.notes || '{}');
+  
+  res.status(200).json({
+    success: true,
+    data: {
+      ...order,
+      quantitySavings: notes.quantitySavings || 0,
+      hasQuantityDiscounts: notes.hasQuantityDiscounts || false,
+      quantityDiscountBreakdown: notes.quantityDiscountBreakdown || []
+    }
+  });
+});
 
+// Get user orders with quantity discount details
+export const getUserOrders = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, status } = req.query;
+  const userId = req.user.id;
+  
+  const result = await orderService.getUserOrders(userId, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    status
+  });
+  
+  // Add quantity discount details to each order
+  const ordersWithQuantityDetails = result.orders.map(order => {
+    const notes = JSON.parse(order.notes || '{}');
+    return {
+      ...order,
+      quantitySavings: notes.quantitySavings || 0,
+      hasQuantityDiscounts: notes.hasQuantityDiscounts || false
+    };
+  });
+  
+  res.status(200).json({
+    success: true,
+    data: {
+      ...result,
+      orders: ordersWithQuantityDetails
+    }
+  });
+});
 
 export const getAllOrders = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, status, userId, paymentStatus } = req.query;
@@ -86,27 +172,6 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   });
 });
 
-export const getOrderById = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
-  
-  const order = await orderService.getOrderById(orderId);
-  
-  res.status(200).json({
-    success: true,
-    data: order
-  });
-});
-
-export const getOrderByOrderNumber = asyncHandler(async (req, res) => {
-  const { orderNumber } = req.params;
-  
-  const order = await orderService.getOrderByOrderNumber(orderNumber);
-  
-  res.status(200).json({
-    success: true,
-    data: order
-  });
-});
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
@@ -159,21 +224,7 @@ export const processRefund = asyncHandler(async (req, res) => {
   });
 });
 
-export const getUserOrders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, status } = req.query;
-  const userId = req.user.id;
-  
-  const result = await orderService.getUserOrders(userId, {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    status
-  });
-  
-  res.status(200).json({
-    success: true,
-    data: result
-  });
-});
+
 
 export const getOrderStats = asyncHandler(async (req, res) => {
   const stats = await orderService.getOrderStats();
@@ -185,23 +236,7 @@ export const getOrderStats = asyncHandler(async (req, res) => {
 });
 
 
-export const calculateOrderTotals = asyncHandler(async (req, res) => {
-  const { orderItems, couponCode } = req.body;
-  
-  if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Order items are required'
-    });
-  }
-  
-  const totals = await orderService.calculateOrderTotals(orderItems, couponCode);
-  
-  res.status(200).json({
-    success: true,
-    data: totals
-  });
-});
+
 
 export const handlePaymentCallback = asyncHandler(async (req, res) => {
   const callbackData = req.body;
@@ -252,19 +287,6 @@ export const checkPaymentStatus = asyncHandler(async (req, res) => {
   });
 });
 
-
-export const createCODOrder = asyncHandler(async (req, res) => {
-  const { orderData } = req.body;
-  orderData.userId = req.user.id;
-
-  const order = await orderService.createCODOrder(orderData);
-  
-  res.status(201).json({
-    success: true,
-    message: 'COD order created successfully',
-    data: order
-  });
-});
 
 
 

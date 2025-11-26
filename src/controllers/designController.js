@@ -5,20 +5,6 @@ import logger from '../utils/logger.js';
 
 // Create design
 export const createDesign = asyncHandler(async (req, res) => {
-  console.log('🎯 CREATE DESIGN REQUEST RECEIVED:', {
-    body: {
-      customizationId: req.body.customizationId,
-      designData: {
-        layersCount: req.body.designData?.layers?.length,
-        canvasSize: req.body.designData?.canvasSize,
-        version: req.body.designData?.version
-      },
-      previewImageLength: req.body.previewImage?.length,
-    },
-    user: req.user?.id,
-    cookies: req.cookies, // Log cookies to see what's available
-    headers: req.headers
-  });
 
   const designData = req.body;
   const userId = req.user?.id;
@@ -29,11 +15,7 @@ export const createDesign = asyncHandler(async (req, res) => {
                    req.headers['x-session-id'] || 
                    `anon_${Date.now()}`;
   
-  console.log('🔐 Session info:', {
-    cookies: req.cookies,
-    sessionId,
-    userId
-  });
+
   
   try {
     const design = await designService.createDesign(designData, userId, sessionId);

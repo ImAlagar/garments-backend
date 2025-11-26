@@ -29,7 +29,12 @@ import {
   toggleNewArrival,
   toggleFeatured,
   autoUpdateMerchandising,
-  getRelatedProducts
+  getRelatedProducts,
+  // ✅ ADD THESE NEW IMPORTS
+  calculateQuantityPrice,
+  getProductsWithQuantityOffers,
+  calculateCartPrices,
+  getAllSubcategoriesWithPricing
 } from '../controllers/productController.js';
 import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
@@ -96,7 +101,13 @@ const handleVariantImagesUpload = (req, res, next) => {
 router.get('/', getAllProducts);
 router.get('/search', searchProducts);
 router.get('/code/:productCode', getProductByCode);
-router.get('/related', getRelatedProducts); // ← ADD THIS LINE
+router.get('/related', getRelatedProducts);
+
+// ✅ ADD THESE NEW PUBLIC ROUTES FOR QUANTITY PRICING
+router.post('/:productId/calculate-quantity-price', calculateQuantityPrice);
+router.get('/subcategory/:subcategoryId/quantity-offers', getProductsWithQuantityOffers);
+router.post('/calculate-cart-prices', calculateCartPrices);
+router.get('/subcategories/with-pricing', getAllSubcategoriesWithPricing);
 
 router.get('/:productId', getProductById);
 

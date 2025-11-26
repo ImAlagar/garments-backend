@@ -104,19 +104,36 @@ model Category {
 }
 
 model Subcategory {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  image       String?
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  image         String?
   imagePublicId String?
-  isActive    Boolean   @default(true)
-  categoryId  String 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  category    Category  @relation(fields: [categoryId], references: [id])
-  products    Product[]
+  isActive      Boolean   @default(true)
+  categoryId    String 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  category      Category  @relation(fields: [categoryId], references: [id])
+  products      Product[]
+  quantityPrices SubcategoryQuantityPrice[] // ADD THIS LINE
 
   @@map("subcategories")
+}
+
+model SubcategoryQuantityPrice {
+  id            String   @id @default(cuid())
+  subcategoryId String
+  quantity      Int      // 2, 3, 4, etc.
+  priceType     PriceType @default(PERCENTAGE) // PERCENTAGE or FIXED_AMOUNT
+  value         Float    // 10 (percentage) or 50 (fixed amount)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([subcategoryId, quantity])
+  @@map("subcategory_quantity_prices")
 }
 
 model ProductDetail {
@@ -250,7 +267,7 @@ model Contact {
 model Order {
   id               String        @id @default(cuid())
   orderNumber      String        @unique
-  userId           String
+  userId           String?       // Change to optional
   name             String
   email            String
   phone            String
@@ -277,7 +294,7 @@ model Order {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   orderItems       OrderItem[]
-  user             User          @relation(fields: [userId], references: [id])
+  user             User?         @relation(fields: [userId], references: [id], onDelete: SetNull) // Make optional
   coupon           Coupon?       @relation(fields: [couponId], references: [id])
 
   trackingNumber   String?
@@ -457,6 +474,11 @@ enum ContactStatus {
 }
 
 enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PriceType {
   PERCENTAGE
   FIXED_AMOUNT
 }

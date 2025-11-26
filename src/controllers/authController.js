@@ -265,6 +265,101 @@ export const logout = asyncHandler(async (req, res) => {
   });
 });
 
+// Add to controllers/authController.js
+
+export const adminForgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Admin email is required'
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid admin email address'
+    });
+  }
+
+  const result = await authService.adminForgotPassword(email);
+  
+  res.status(200).json({
+    success: result.success,
+    message: result.message
+  });
+});
+
+export const adminResetPassword = asyncHandler(async (req, res) => {
+  const { token, adminId, password, confirmPassword } = req.body;
+
+  if (!token || !adminId || !password || !confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'Token, admin ID, password, and confirm password are required'
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'Passwords do not match'
+    });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must be at least 8 characters long'
+    });
+  }
+
+  // Validate password strength
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    });
+  }
+
+  const result = await authService.adminResetPassword(token, adminId, password);
+  
+  res.status(200).json({
+    success: result.success,
+    message: result.message
+  });
+});
+
+export const validateAdminResetToken = asyncHandler(async (req, res) => {
+  const { token, adminId } = req.query;
+
+  if (!token || !adminId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Token and admin ID are required'
+    });
+  }
+
+  const result = await authService.validateAdminResetToken(token, adminId);
+  
+  if (!result.isValid) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid or expired admin reset token'
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Valid admin reset token',
+    admin: result.admin
+  });
+});
+
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 

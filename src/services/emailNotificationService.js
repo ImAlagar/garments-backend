@@ -237,6 +237,47 @@ class EmailNotificationService {
   }
 
 
+  async sendAdminPasswordReset(adminData, resetUrl) {
+  try {
+    const template = emailTemplates.adminPasswordReset(adminData, resetUrl);
+    
+    const result = await emailService.sendEmail({
+      to: adminData.email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      from: `"Hanger Garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+    });
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Admin password reset email failed:', error.message);
+    throw error;
+  }
+}
+
+async sendAdminPasswordChangedConfirmation(adminData) {
+  try {
+    const template = emailTemplates.adminPasswordChangedConfirmation(adminData);
+    
+    const result = await emailService.sendEmail({
+      to: adminData.email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      from: `"Hanger Garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+    });
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Admin password changed confirmation failed:', error.message);
+    // Don't throw error for confirmation email failure
+  }
+}
+
+
   async sendOrderConfirmationCustomer(orderData) {
     try {
       const template = emailTemplates.orderConfirmationCustomer(orderData);
@@ -326,18 +367,9 @@ class EmailNotificationService {
 
   async sendOrderNotifications(orderData) {
       try {
-          console.log('\n📧 EMAIL DEBUG - Data received by email service:');
-          console.log('Order Number:', orderData.orderNumber);
-          console.log('Order Items Count:', orderData.orderItems?.length);
-          
+
           if (orderData.orderItems) {
               orderData.orderItems.forEach((item, index) => {
-                  console.log(`\n📦 Email Item ${index + 1}:`);
-                  console.log('  Product Name:', item.product?.name);
-                  console.log('  Has Images:', !!item.product?.images);
-                  console.log('  Images Count:', item.product?.images?.length || 0);
-                  console.log('  Images Array:', item.product?.images);
-                  console.log('  Image URL:', item.product?.images?.[0]?.imageUrl);
               });
           }
 

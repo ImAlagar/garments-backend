@@ -73,13 +73,10 @@ class CouponService {
   }
 
   // services/couponService.js
-// services/couponService.js
 async getAvailableCoupons(subtotal = 0) {
   const currentDate = new Date();
   
-  console.log('=== DEBUG: getAvailableCoupons ===');
-  console.log('Subtotal received:', subtotal);
-  console.log('Current date:', currentDate);
+ 
   
   // Simple query first to test
   const coupons = await prisma.coupon.findMany({
@@ -90,25 +87,19 @@ async getAvailableCoupons(subtotal = 0) {
     }
   });
 
-  console.log('Found coupons before filtering:', coupons.length);
-  console.log('All coupons:', coupons);
+
 
   // Filter usage limit and min amount in JavaScript
   const filteredCoupons = coupons.filter(coupon => {
     const hasUsageLeft = !coupon.usageLimit || coupon.usedCount < coupon.usageLimit;
     const meetsMinAmount = !coupon.minOrderAmount || subtotal >= coupon.minOrderAmount;
     
-    console.log(`Coupon ${coupon.code}:`);
-    console.log(`- Has usage left: ${hasUsageLeft} (${coupon.usedCount}/${coupon.usageLimit})`);
-    console.log(`- Meets min amount: ${meetsMinAmount} (subtotal: ${subtotal}, min: ${coupon.minOrderAmount})`);
-    console.log(`- Passes filter: ${hasUsageLeft && meetsMinAmount}`);
+
     
     return hasUsageLeft && meetsMinAmount;
   });
 
-  console.log('Filtered coupons count:', filteredCoupons.length);
-  console.log('Filtered coupons:', filteredCoupons);
-  console.log('=== END DEBUG ===');
+
 
   return filteredCoupons;
 }

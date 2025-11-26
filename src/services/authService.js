@@ -502,6 +502,198 @@ async register(userData, files = []) {
     return true;
   }
 
+
+  // Add to services/authService.js
+
+async adminForgotPassword(email) {
+  try {
+    const admin = await prisma.user.findFirst({
+      where: { 
+        email,
+        role: 'ADMIN'
+      }
+    });
+
+    if (!admin) {
+      logger.log(`Admin password reset requested for: ${email} (admin not found)`);
+      // Return success even if admin not found for security
+      return { 
+        success: true, 
+        message: 'If an admin account with that email exists, a reset link has been sent.' 
+      };
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Set expiry to 1 hour
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Save reset token to database
+    await prisma.user.update({
+      where: { id: admin.id },
+      data: {
+        resetToken: resetTokenHash,
+        resetTokenExpiry
+      }
+    });
+
+    // Create admin-specific reset URL
+    const resetUrl = `${process.env.FRONTEND_URL}/admin/reset-password?token=${resetToken}&adminId=${admin.id}`;
+
+    // Send admin password reset email
+    await emailNotificationService.sendAdminPasswordReset({
+      name: admin.name,
+      email: admin.email
+    }, resetUrl);
+
+    logger.info('Admin password reset email sent', {
+      adminId: admin.id,
+      adminEmail: admin.email
+    });
+
+    return {
+      success: true,
+      message: 'If an admin account with that email exists, a reset link has been sent.'
+    };
+
+  } catch (error) {
+    console.error('❌ Admin forgot password error:', error);
+    logger.error('Admin forgot password failed', {
+      email,
+      error: error.message
+    });
+    throw new Error('Failed to process admin password reset request');
+  }
+}
+
+async adminResetPassword(token, adminId, newPassword) {
+  try {
+    if (!token || !adminId || !newPassword) {
+      throw new Error('Token, admin ID, and new password are required');
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+
+    // Validate password strength for admin
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    if (!passwordRegex.test(newPassword)) {
+      throw new Error('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+    }
+
+    // Hash the provided token to compare with stored hash
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find admin with valid reset token
+    const admin = await prisma.user.findFirst({
+      where: {
+        id: adminId,
+        role: 'ADMIN',
+        resetToken: resetTokenHash,
+        resetTokenExpiry: {
+          gt: new Date()
+        }
+      }
+    });
+
+    if (!admin) {
+      throw new Error('Invalid or expired admin reset token');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password and clear reset token
+    await prisma.user.update({
+      where: { id: admin.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+        updatedAt: new Date()
+      }
+    });
+
+    // Send admin password changed confirmation
+    await emailNotificationService.sendAdminPasswordChangedConfirmation({
+      name: admin.name,
+      email: admin.email
+    });
+
+    logger.info('Admin password reset successful', {
+      adminId: admin.id,
+      adminEmail: admin.email
+    });
+
+    return {
+      success: true,
+      message: 'Admin password has been reset successfully. You can now login with your new password.'
+    };
+
+  } catch (error) {
+    console.error('❌ Admin reset password error:', error);
+    logger.error('Admin reset password failed', {
+      adminId,
+      error: error.message
+    });
+    throw error;
+  }
+}
+
+async validateAdminResetToken(token, adminId) {
+  try {
+    if (!token || !adminId) {
+      return { isValid: false, admin: null };
+    }
+
+    // Hash the provided token to compare with stored hash
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find admin with valid reset token
+    const admin = await prisma.user.findFirst({
+      where: {
+        id: adminId,
+        role: 'ADMIN',
+        resetToken: resetTokenHash,
+        resetTokenExpiry: {
+          gt: new Date()
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        avatar: true
+      }
+    });
+
+    return {
+      isValid: !!admin,
+      admin: admin || null
+    };
+  } catch (error) {
+    console.error('Validate admin reset token error:', error);
+    logger.error('Admin reset token validation failed', {
+      adminId,
+      error: error.message
+    });
+    return { isValid: false, admin: null };
+  }
+}
+
   async forgotPassword(email) {
     try {
       const user = await prisma.user.findUnique({

@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 async function addProductImages() {
   try {
-    console.log('🔄 Starting to add product images...');
 
     // Get all products
     const products = await prisma.product.findMany({
@@ -13,16 +12,13 @@ async function addProductImages() {
       }
     });
 
-    console.log(`📦 Found ${products.length} total products`);
 
     const productsWithoutImages = products.filter(product => 
       product.images.length === 0
     );
 
-    console.log(`❌ Found ${productsWithoutImages.length} products without images`);
 
     if (productsWithoutImages.length === 0) {
-      console.log('✅ All products already have images!');
       return;
     }
 
@@ -44,7 +40,6 @@ async function addProductImages() {
           }
         });
 
-        console.log(`✅ Added image to: ${product.name}`);
         successCount++;
       } catch (error) {
         console.error(`❌ Failed to add image to ${product.name}:`, error.message);
@@ -52,30 +47,23 @@ async function addProductImages() {
       }
     }
 
-    console.log(`\n🎉 Summary:`);
-    console.log(`✅ Successfully added images to: ${successCount} products`);
-    console.log(`❌ Failed to add images to: ${errorCount} products`);
-    console.log(`📊 Total processed: ${productsWithoutImages.length} products`);
 
   } catch (error) {
     console.error('💥 Script failed:', error);
   } finally {
     // Properly disconnect Prisma
     await prisma.$disconnect();
-    console.log('🔌 Database connection closed properly');
     process.exit(0); // Exit cleanly
   }
 }
 
 // Handle script termination
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Script interrupted by user');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Script terminated');
   await prisma.$disconnect();
   process.exit(0);
 });

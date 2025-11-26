@@ -11,7 +11,10 @@ import {
   approveWholesaler,
   getPendingWholesalers,
   validateResetToken,
-  forgotPasswordWholesaler
+  forgotPasswordWholesaler,
+  adminForgotPassword,
+  adminResetPassword,
+  validateAdminResetToken
 } from '../controllers/authController.js';
 import { auth, authorize } from '../middleware/auth.js';
 import multer from 'multer';
@@ -32,6 +35,9 @@ router.post('/reset-password', resetPassword);
 router.get('/validate-reset-token', validateResetToken); // Add this route
 router.post('/forgot-password-wholesaler', forgotPasswordWholesaler);
 
+router.post('/admin/forgot-password', adminForgotPassword);
+router.post('/admin/reset-password', adminResetPassword);
+router.get('/admin/validate-reset-token', validateAdminResetToken);
 
 // Protected routes
 router.post('/logout', auth, logout);

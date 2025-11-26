@@ -673,13 +673,125 @@ export const getRelatedProducts = asyncHandler(async (req, res) => {
       });
   });
 
-// Auto update merchandising flags (Admin only - can be called via cron job)
-export const autoUpdateMerchandising = asyncHandler(async (req, res) => {
-  await productService.autoMarkNewArrivals();
-  await productService.autoUpdateBestSellers();
-  
-  res.status(200).json({
-    success: true,
-    message: 'Merchandising flags updated automatically'
+  // Auto update merchandising flags (Admin only - can be called via cron job)
+  export const autoUpdateMerchandising = asyncHandler(async (req, res) => {
+    await productService.autoMarkNewArrivals();
+    await productService.autoUpdateBestSellers();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Merchandising flags updated automatically'
+    });
   });
+
+
+// Calculate price for specific quantity
+export const calculateQuantityPrice = asyncHandler(async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { quantity } = req.body;
+
+
+        // Validate input
+        if (!productId || !productId.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product ID is required'
+            });
+        }
+
+        if (!quantity || quantity < 1) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid quantity (minimum 1) is required'
+            });
+        }
+
+        const numericQuantity = parseInt(quantity);
+        if (isNaN(numericQuantity)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Quantity must be a valid number'
+            });
+        }
+
+        // Calculate the price
+        const priceCalculation = await productService.calculateQuantityPrice(
+            productId.trim(), // Trim any whitespace
+            numericQuantity
+        );
+
+        res.status(200).json({
+            success: true,
+            data: priceCalculation
+        });
+
+    } catch (error) {
+        console.error('Error in calculateQuantityPrice controller:', error);
+        
+        if (error.message.includes('Product not found')) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (error.message.includes('Valid product ID')) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to calculate quantity price',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 });
+
+  // Get products with quantity offers in a subcategory
+  export const getProductsWithQuantityOffers = asyncHandler(async (req, res) => {
+    const { subcategoryId } = req.params;
+    const { limit = 10 } = req.query;
+
+    const products = await productService.getProductsWithQuantityOffers(
+      subcategoryId,
+      parseInt(limit)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: products
+    });
+  });
+
+  // Calculate prices for cart items
+  export const calculateCartPrices = asyncHandler(async (req, res) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Items array is required'
+      });
+    }
+
+    const cartCalculation = await productService.calculateCartPrices(items);
+
+    res.status(200).json({
+      success: true,
+      data: cartCalculation
+    });
+  });
+
+  // Get all subcategories with quantity pricing
+  export const getAllSubcategoriesWithPricing = asyncHandler(async (req, res) => {
+    const subcategories = await productService.getSubcategoriesWithQuantityPricing();
+
+    res.status(200).json({
+      success: true,
+      data: subcategories
+    });
+  });
