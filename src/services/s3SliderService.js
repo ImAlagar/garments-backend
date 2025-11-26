@@ -1,5 +1,5 @@
 // services/s3SliderService.js
-import S3UploadService from './s3UploadService.js';
+import S3UploadService from './S3UploadService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 class S3SliderService {

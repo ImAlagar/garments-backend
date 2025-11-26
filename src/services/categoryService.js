@@ -1,6 +1,6 @@
 // services/categoryService.js
 import prisma from '../config/database.js';
-import s3UploadService from './s3UploadService.js';
+import s3UploadService from './S3UploadService.js';
 import logger from '../utils/logger.js';
 
 class CategoryService {
