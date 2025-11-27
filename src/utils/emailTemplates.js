@@ -1,150 +1,304 @@
 export const emailTemplates = {
 
     contactNotification: (contactData) => {
+
+
         const escapeHtml = (text) => {
-        if (!text) return '';
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         const formatMessage = (message) => {
-        if (!message) return 'No message provided';
-        return escapeHtml(message).replace(/\n/g, '<br>');
+            if (!message) return 'No message provided';
+            return escapeHtml(message).replace(/\n/g, '<br>');
         };
 
         const currentDate = new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
 
+        // Improved user type detection
+        const getUserType = () => {
+            // Check multiple possible fields for user identification
+            if (contactData.userId) {
+                return 'Registered User';
+            }
+            if (contactData.user && contactData.user.id) {
+                return 'Registered User';
+            }
+            if (contactData.userId === null || contactData.userId === undefined) {
+                return 'Guest';
+            }
+            // If userId exists but might be falsy (0, empty string, etc.)
+            return contactData.userId ? 'Registered User' : 'Guest';
+        };
+
+        const userType = getUserType();
+
         return {
-        subject: `New Contact Form Submission - ${contactData.name || 'Unknown User'}`,
-        html: `
-    <!DOCTYPE html>
-    <html lang="en">
+            subject: `Website Inquiry: ${contactData.name || 'New Message'} - Hanger Garments`,
+            
+            html: `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="format-detection" content="telephone=no">
+        <meta name="subject" content="Contact Form Submission">
         <title>New Contact Form Submission</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-            .header p { font-size: 14px; opacity: 0.9; }
-            .content { padding: 30px; }
-            .alert-badge { background: #e8f5e8; color: #2d5e2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #2d5e2d; }
-            .contact-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
-            .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-            .info-label { font-weight: 600; color: #495057; min-width: 120px; }
-            .info-value { color: #212529; flex: 1; }
-            .message-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
-            .message-label { font-weight: 600; color: #856404; margin-bottom: 8px; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-            .action-buttons { margin-top: 24px; text-align: center; }
-            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
-            .btn-outline { background: transparent; border: 1px solid #2d5e2d; color: #2d5e2d; }
-            @media (max-width: 600px) {
-                .container { border-radius: 0; }
-                .content { padding: 20px; }
-                .info-item { flex-direction: column; }
-                .info-label { margin-bottom: 4px; }
+        <style type="text/css">
+            /* Your existing CSS styles remain the same */
+            body { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                -webkit-text-size-adjust: 100%; 
+                -ms-text-size-adjust: 100%; 
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.6;
+                color: #333333;
+                background-color: #f6f6f6;
+            }
+            
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background: #ffffff;
+                border: 1px solid #e9ecef;
+            }
+            
+            .header {
+                background: #2d5e2d;
+                padding: 25px 20px;
+                text-align: center;
+                color: #ffffff;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+                font-weight: bold;
+                margin: 0 0 8px 0;
+                color: #ffffff;
+            }
+            
+            .header p {
+                font-size: 14px;
+                margin: 0;
+                opacity: 0.9;
+            }
+            
+            .content {
+                padding: 25px;
+            }
+            
+            .alert-section {
+                background: #f8f9fa;
+                border-left: 4px solid #2d5e2d;
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .contact-info {
+                background: #ffffff;
+                border: 1px solid #e9ecef;
+                border-radius: 4px;
+                padding: 20px;
+                margin: 20px 0;
+            }
+            
+            .info-row {
+                display: block;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #f1f1f1;
+            }
+            
+            .info-row:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+            
+            .info-label {
+                font-weight: bold;
+                color: #495057;
+                display: inline-block;
+                width: 120px;
+            }
+            
+            .info-value {
+                color: #212529;
+            }
+            
+            .message-section {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 4px;
+                padding: 18px;
+                margin: 20px 0;
+            }
+            
+            .message-label {
+                font-weight: bold;
+                color: #856404;
+                margin-bottom: 8px;
+                display: block;
+            }
+            
+            .footer {
+                background: #f8f9fa;
+                padding: 20px;
+                text-align: center;
+                color: #6c757d;
+                font-size: 12px;
+                border-top: 1px solid #e9ecef;
+            }
+            
+            .action-buttons {
+                text-align: center;
+                margin: 25px 0 15px 0;
+            }
+            
+            .btn {
+                display: inline-block;
+                padding: 10px 20px;
+                margin: 0 5px;
+                background: #2d5e2d;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 14px;
+                border: none;
+            }
+            
+            /* Mobile styles */
+            @media only screen and (max-width: 480px) {
+                .container {
+                    width: 100% !important;
+                }
+                
+                .content {
+                    padding: 15px !important;
+                }
+                
+                .info-label {
+                    width: 100px !important;
+                }
+                
+                .btn {
+                    display: block;
+                    margin: 5px 0 !important;
+                    text-align: center;
+                }
             }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>📩 New Contact Form Submission</h1>
+                <h1>Contact Form Submission</h1>
                 <p>Hanger Garments Website</p>
             </div>
             
             <div class="content">
-                <div class="alert-badge">
-                    <strong>Action Required:</strong> A new contact form submission has been received and requires your attention.
+                <div class="alert-section">
+                    A new contact form submission has been received on the website.
                 </div>
                 
                 <div class="contact-info">
-                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">👤 Contact Details</h3>
+                    <h3 style="color: #2d5e2d; margin: 0 0 15px 0;">Contact Details</h3>
                     
-                    <div class="info-item">
+                    <div class="info-row">
                         <span class="info-label">Full Name:</span>
                         <span class="info-value">${escapeHtml(contactData.name) || 'Not provided'}</span>
                     </div>
                     
-                    <div class="info-item">
+                    <div class="info-row">
                         <span class="info-label">Email Address:</span>
                         <span class="info-value">
-                            <a href="mailto:${contactData.email}" style="color: #2d5e2d; text-decoration: none;">
+                            <a href="mailto:${contactData.email}" style="color: #2d5e2d;">
                                 ${contactData.email}
                             </a>
                         </span>
                     </div>
                     
-                    <div class="info-item">
+                    <div class="info-row">
                         <span class="info-label">Phone Number:</span>
                         <span class="info-value">${contactData.phone ? escapeHtml(contactData.phone) : 'Not provided'}</span>
                     </div>
                     
-                    <div class="info-item">
+                    <div class="info-row">
+                        <span class="info-label">User Type:</span>
+                        <span class="info-value">${userType}</span>
+                    </div>
+                    
+                    ${contactData.userId ? `
+                    <div class="info-row">
+                        <span class="info-label">User ID:</span>
+                        <span class="info-value">${contactData.userId}</span>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="info-row">
                         <span class="info-label">Submission Time:</span>
                         <span class="info-value">${currentDate}</span>
                     </div>
                 </div>
                 
                 <div class="message-section">
-                    <div class="message-label">📝 Message Content:</div>
+                    <span class="message-label">Message Content:</span>
                     <div style="color: #856404; line-height: 1.5;">
                         ${formatMessage(contactData.message)}
                     </div>
                 </div>
                 
                 <div class="action-buttons">
-                    <a href="mailto:${contactData.email}" class="btn">✉️ Reply to ${contactData.name?.split(' ')[0] || 'Customer'}</a>
-                    <a href="tel:${contactData.phone}" class="btn btn-outline" style="${!contactData.phone ? 'display: none;' : ''}">📞 Call Customer</a>
+                    <a href="mailto:${contactData.email}" class="btn">Reply to Customer</a>
+                    ${contactData.phone ? `<a href="tel:${contactData.phone}" class="btn">Call Customer</a>` : ''}
                 </div>
             </div>
             
             <div class="footer">
-                <p>This is an automated notification from Hanger Garments Contact System</p>
-                <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
+                <p>This is an automated notification from Hanger Garments</p>
+                <p style="margin-top: 8px;">Please do not reply to this email.</p>
             </div>
         </div>
     </body>
     </html>
-        `,
-        text: `
-    NEW CONTACT FORM SUBMISSION - Hanger Garments
+            `,
+            
+            text: `
+    NEW CONTACT FORM SUBMISSION
 
     A new contact form submission has been received:
 
     CONTACT DETAILS:
-    ---------------
     Name: ${contactData.name || 'Not provided'}
     Email: ${contactData.email}
     Phone: ${contactData.phone || 'Not provided'}
-    Time: ${currentDate}
+    User Type: ${userType}
+    ${contactData.userId ? `User ID: ${contactData.userId}\n` : ''}Time: ${currentDate}
 
     MESSAGE:
-    --------
     ${contactData.message || 'No message provided'}
 
-    Please respond to this inquiry promptly.
+    Please respond to this inquiry.
 
     This is an automated notification from Hanger Garments.
-        `.trim()
+            `.trim()
         };
     },
+
 
     contactAutoReply: (contactData) => ({
         subject: 'Thank You for Contacting Hanger Garments',
@@ -277,7 +431,7 @@ export const emailTemplates = {
             <div class="footer">
                 <p><strong>Hanger Garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
-                <p>Email: support@${domain} | Phone: +91 98765 43210</p>
+                <p>Email: contact@${domain} | Phone: +91 88833 85888</p>
                 <p>
                     <a href="${frontendUrl}/preferences" style="color: #666666; text-decoration: none;">Update Preferences</a> | 
                     <a href="${frontendUrl}/unsubscribe" style="color: #666666; text-decoration: none;">Unsubscribe</a>
@@ -316,8 +470,8 @@ export const emailTemplates = {
     TIP: Complete your profile to get personalized recommendations and faster checkout.
 
     Need help? Contact us:
-    Email: support@${domain}
-    Phone: +91 98765 43210
+    Email: contact@${domain}
+    Phone: +91 88833 85888
 
     Update your preferences: ${frontendUrl}/preferences
     Unsubscribe: ${frontendUrl}/unsubscribe
@@ -333,7 +487,7 @@ export const emailTemplates = {
 
    passwordReset: (userData, resetUrl) => {
     const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-    const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+    const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
     const expiryTime = '1 hour';
     
     return {
@@ -449,7 +603,7 @@ Nourishing Lives Naturally
 
     passwordChangedConfirmation: (userData) => {
         const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-        const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+        const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
         const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -559,260 +713,260 @@ Nourishing Lives Naturally
 
     // Add these templates to your emailTemplates.js file
 
-adminPasswordReset: (adminData, resetUrl) => {
-  const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-  const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
-  const expiryTime = '1 hour';
-  
-  return {
-    subject: '🔐 Admin Password Reset Request - Hanger Garments',
-    html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Password Reset - Hanger Garments</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .content { padding: 30px; }
-        .alert-badge { background: #fee2e2; color: #dc2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #dc2626; }
-        .reset-section { text-align: center; margin: 30px 0; }
-        .reset-button { display: inline-block; padding: 14px 32px; background: #dc2626; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 20px 0; }
-        .info-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        .security-note { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; color: #92400e; }
-        .admin-badge { background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-left: 10px; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔐 Admin Password Reset</h1>
-            <p>Hanger Garments Administrator Portal</p>
-        </div>
-        
-        <div class="content">
-            <div class="alert-badge">
-                <strong>Security Alert:</strong> A password reset was requested for your admin account.
+    adminPasswordReset: (adminData, resetUrl) => {
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
+    const expiryTime = '1 hour';
+    
+    return {
+        subject: '🔐 Admin Password Reset Request - Hanger Garments',
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Password Reset - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .alert-badge { background: #fee2e2; color: #dc2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #dc2626; }
+            .reset-section { text-align: center; margin: 30px 0; }
+            .reset-button { display: inline-block; padding: 14px 32px; background: #dc2626; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 20px 0; }
+            .info-box { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .security-note { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; color: #92400e; }
+            .admin-badge { background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-left: 10px; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🔐 Admin Password Reset</h1>
+                <p>Hanger Garments Administrator Portal</p>
             </div>
             
-            <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
-            
-            <p>We received a request to reset your password for the Hanger Garments <strong>Administrator Portal</strong>. If you didn't make this request, please contact the super administrator immediately.</p>
-            
-            <div class="reset-section">
-                <p>To reset your admin password, click the button below:</p>
-                <a href="${resetUrl}" class="reset-button">Reset Admin Password</a>
-                <p style="margin-top: 10px; font-size: 14px; color: #666;">
-                    Or copy and paste this link in your browser:<br>
-                    <span style="word-break: break-all; color: #dc2626;">${resetUrl}</span>
+            <div class="content">
+                <div class="alert-badge">
+                    <strong>Security Alert:</strong> A password reset was requested for your admin account.
+                </div>
+                
+                <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
+                
+                <p>We received a request to reset your password for the Hanger Garments <strong>Administrator Portal</strong>. If you didn't make this request, please contact the super administrator immediately.</p>
+                
+                <div class="reset-section">
+                    <p>To reset your admin password, click the button below:</p>
+                    <a href="${resetUrl}" class="reset-button">Reset Admin Password</a>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Or copy and paste this link in your browser:<br>
+                        <span style="word-break: break-all; color: #dc2626;">${resetUrl}</span>
+                    </p>
+                </div>
+                
+                <div class="security-note">
+                    <strong>⚠️ Critical Security Information:</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>This admin reset link will expire in <strong>${expiryTime}</strong></li>
+                        <li><strong>DO NOT</strong> share this link with anyone</li>
+                        <li>This provides access to sensitive admin functions</li>
+                        <li>Monitor your account for any suspicious activity</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h3 style="color: #495057; margin-bottom: 10px;">🛡️ Admin Security</h3>
+                    <p style="margin: 5px 0;">If you're having issues or suspect unauthorized access:</p>
+                    <p style="margin: 5px 0;">
+                        <strong>Contact Super Admin:</strong> 
+                        <a href="mailto:${supportEmail}" style="color: #dc2626; text-decoration: none;">${supportEmail}</a>
+                    </p>
+                    <p style="margin: 5px 0;"><strong>Response Priority:</strong> Immediate attention</p>
+                </div>
+                
+                <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                    <strong>Note:</strong> This reset is for admin access only and provides elevated privileges to the system.
                 </p>
             </div>
             
-            <div class="security-note">
-                <strong>⚠️ Critical Security Information:</strong>
-                <ul style="margin: 10px 0 0 20px;">
-                    <li>This admin reset link will expire in <strong>${expiryTime}</strong></li>
-                    <li><strong>DO NOT</strong> share this link with anyone</li>
-                    <li>This provides access to sensitive admin functions</li>
-                    <li>Monitor your account for any suspicious activity</li>
-                </ul>
-            </div>
-            
-            <div class="info-box">
-                <h3 style="color: #495057; margin-bottom: 10px;">🛡️ Admin Security</h3>
-                <p style="margin: 5px 0;">If you're having issues or suspect unauthorized access:</p>
-                <p style="margin: 5px 0;">
-                    <strong>Contact Super Admin:</strong> 
-                    <a href="mailto:${supportEmail}" style="color: #dc2626; text-decoration: none;">${supportEmail}</a>
-                </p>
-                <p style="margin: 5px 0;"><strong>Response Priority:</strong> Immediate attention</p>
-            </div>
-            
-            <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                <strong>Note:</strong> This reset is for admin access only and provides elevated privileges to the system.
-            </p>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated security email for Hanger Garments Administrators</p>
-            <p style="margin-top: 8px;">
-                <strong>Hanger Garments</strong><br>
-                Administrator Portal - Secure Access
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-    `,
-    text: `
-ADMIN PASSWORD RESET REQUEST - Hanger Garments
-
-Hello ${adminData.name} (ADMIN),
-
-We received a request to reset your password for the Hanger Garments Administrator Portal.
-
-To reset your admin password, visit this link:
-${resetUrl}
-
-CRITICAL SECURITY INFORMATION:
-- This admin reset link will expire in 1 hour
-- DO NOT share this link with anyone
-- This provides access to sensitive admin functions
-- Monitor your account for any suspicious activity
-
-If you didn't request this reset, contact the super administrator immediately.
-
-Contact Super Admin: ${supportEmail}
-Response Priority: Immediate attention
-
-Note: This reset is for admin access only and provides elevated privileges to the system.
-
-This is an automated security email for Hanger Garments Administrators.
-
-Hanger Garments
-Administrator Portal - Secure Access
-    `.trim()
-  };
-},
-
-adminPasswordChangedConfirmation: (adminData) => {
-  const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-  const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
-  const timestamp = new Date().toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short'
-  });
-  
-  return {
-    subject: '✅ Admin Password Changed Successfully - Hanger Garments',
-    html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Password Changed - Hanger Garments</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .header { background: linear(135deg, #059669 0%, #047857 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-        .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-        .content { padding: 30px; }
-        .success-badge { background: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #059669; }
-        .security-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-        .admin-badge { background: #059669; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-left: 10px; }
-        .critical-alert { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; color: #92400e; }
-        @media (max-width: 600px) {
-            .container { border-radius: 0; }
-            .content { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>✅ Admin Password Changed</h1>
-            <p>Hanger Garments Administrator Portal</p>
-        </div>
-        
-        <div class="content">
-            <div class="success-badge">
-                <strong>Success:</strong> Your admin password has been updated successfully.
-            </div>
-            
-            <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
-            
-            <p>This email confirms that your Hanger Garments <strong>Administrator Portal</strong> password was changed on <strong>${timestamp}</strong>.</p>
-            
-            <div class="security-info">
-                <h3 style="color: #495057; margin-bottom: 15px;">🔒 Admin Security Update</h3>
-                <ul style="margin-left: 20px;">
-                    <li>Your new admin password is now active</li>
-                    <li>You'll need to use this new password for future admin logins</li>
-                    <li>All existing admin sessions remain active</li>
-                    <li>Regular user accounts are not affected by this change</li>
-                </ul>
-            </div>
-            
-            <div class="critical-alert">
-                <p style="margin: 0; color: #92400e;">
-                    <strong>🚨 Security Alert - Unauthorized Change?</strong><br>
-                    If you didn't change your admin password, this could indicate a security breach. 
-                    <strong>Contact the super administrator immediately</strong> at 
-                    <a href="mailto:${supportEmail}" style="color: #92400e; text-decoration: underline; font-weight: bold;">${supportEmail}</a>
+            <div class="footer">
+                <p>This is an automated security email for Hanger Garments Administrators</p>
+                <p style="margin-top: 8px;">
+                    <strong>Hanger Garments</strong><br>
+                    Administrator Portal - Secure Access
                 </p>
             </div>
-            
-            <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 20px 0;">
-                <h4 style="color: #1e40af; margin-bottom: 10px;">📋 Next Steps Recommended:</h4>
-                <ul style="margin-left: 20px; color: #374151;">
-                    <li>Review recent admin activity logs</li>
-                    <li>Verify no unauthorized changes were made</li>
-                    <li>Update any stored credentials</li>
-                </ul>
+        </div>
+    </body>
+    </html>
+        `,
+        text: `
+    ADMIN PASSWORD RESET REQUEST - Hanger Garments
+
+    Hello ${adminData.name} (ADMIN),
+
+    We received a request to reset your password for the Hanger Garments Administrator Portal.
+
+    To reset your admin password, visit this link:
+    ${resetUrl}
+
+    CRITICAL SECURITY INFORMATION:
+    - This admin reset link will expire in 1 hour
+    - DO NOT share this link with anyone
+    - This provides access to sensitive admin functions
+    - Monitor your account for any suspicious activity
+
+    If you didn't request this reset, contact the super administrator immediately.
+
+    Contact Super Admin: ${supportEmail}
+    Response Priority: Immediate attention
+
+    Note: This reset is for admin access only and provides elevated privileges to the system.
+
+    This is an automated security email for Hanger Garments Administrators.
+
+    Hanger Garments
+    Administrator Portal - Secure Access
+        `.trim()
+    };
+    },
+
+    adminPasswordChangedConfirmation: (adminData) => {
+    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
+    const timestamp = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    });
+    
+    return {
+        subject: '✅ Admin Password Changed Successfully - Hanger Garments',
+        html: `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Password Changed - Hanger Garments</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear(135deg, #059669 0%, #047857 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
+            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+            .content { padding: 30px; }
+            .success-badge { background: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #059669; }
+            .security-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
+            .admin-badge { background: #059669; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-left: 10px; }
+            .critical-alert { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; color: #92400e; }
+            @media (max-width: 600px) {
+                .container { border-radius: 0; }
+                .content { padding: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>✅ Admin Password Changed</h1>
+                <p>Hanger Garments Administrator Portal</p>
             </div>
             
-            <p>Thank you for helping us maintain the security of our administrator systems.</p>
+            <div class="content">
+                <div class="success-badge">
+                    <strong>Success:</strong> Your admin password has been updated successfully.
+                </div>
+                
+                <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
+                
+                <p>This email confirms that your Hanger Garments <strong>Administrator Portal</strong> password was changed on <strong>${timestamp}</strong>.</p>
+                
+                <div class="security-info">
+                    <h3 style="color: #495057; margin-bottom: 15px;">🔒 Admin Security Update</h3>
+                    <ul style="margin-left: 20px;">
+                        <li>Your new admin password is now active</li>
+                        <li>You'll need to use this new password for future admin logins</li>
+                        <li>All existing admin sessions remain active</li>
+                        <li>Regular user accounts are not affected by this change</li>
+                    </ul>
+                </div>
+                
+                <div class="critical-alert">
+                    <p style="margin: 0; color: #92400e;">
+                        <strong>🚨 Security Alert - Unauthorized Change?</strong><br>
+                        If you didn't change your admin password, this could indicate a security breach. 
+                        <strong>Contact the super administrator immediately</strong> at 
+                        <a href="mailto:${supportEmail}" style="color: #92400e; text-decoration: underline; font-weight: bold;">${supportEmail}</a>
+                    </p>
+                </div>
+                
+                <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                    <h4 style="color: #1e40af; margin-bottom: 10px;">📋 Next Steps Recommended:</h4>
+                    <ul style="margin-left: 20px; color: #374151;">
+                        <li>Review recent admin activity logs</li>
+                        <li>Verify no unauthorized changes were made</li>
+                        <li>Update any stored credentials</li>
+                    </ul>
+                </div>
+                
+                <p>Thank you for helping us maintain the security of our administrator systems.</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated security notification for Hanger Garments Administrators</p>
+                <p style="margin-top: 8px;">
+                    <strong>Hanger Garments</strong><br>
+                    Administrator Portal - Security First
+                </p>
+            </div>
         </div>
-        
-        <div class="footer">
-            <p>This is an automated security notification for Hanger Garments Administrators</p>
-            <p style="margin-top: 8px;">
-                <strong>Hanger Garments</strong><br>
-                Administrator Portal - Security First
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-    `,
-    text: `
-ADMIN PASSWORD CHANGED SUCCESSFULLY - Hanger Garments
+    </body>
+    </html>
+        `,
+        text: `
+    ADMIN PASSWORD CHANGED SUCCESSFULLY - Hanger Garments
 
-Hello ${adminData.name} (ADMIN),
+    Hello ${adminData.name} (ADMIN),
 
-This email confirms that your Hanger Garments Administrator Portal password was changed on ${timestamp}.
+    This email confirms that your Hanger Garments Administrator Portal password was changed on ${timestamp}.
 
-ADMIN SECURITY UPDATE:
-- Your new admin password is now active
-- You'll need to use this new password for future admin logins
-- All existing admin sessions remain active
-- Regular user accounts are not affected by this change
+    ADMIN SECURITY UPDATE:
+    - Your new admin password is now active
+    - You'll need to use this new password for future admin logins
+    - All existing admin sessions remain active
+    - Regular user accounts are not affected by this change
 
-🚨 SECURITY ALERT - UNAUTHORIZED CHANGE?
-If you didn't change your admin password, this could indicate a security breach. 
-Contact the super administrator immediately at ${supportEmail}
+    🚨 SECURITY ALERT - UNAUTHORIZED CHANGE?
+    If you didn't change your admin password, this could indicate a security breach. 
+    Contact the super administrator immediately at ${supportEmail}
 
-NEXT STEPS RECOMMENDED:
-- Review recent admin activity logs
-- Verify no unauthorized changes were made
-- Update any stored credentials
+    NEXT STEPS RECOMMENDED:
+    - Review recent admin activity logs
+    - Verify no unauthorized changes were made
+    - Update any stored credentials
 
-Thank you for helping us maintain the security of our administrator systems.
+    Thank you for helping us maintain the security of our administrator systems.
 
-This is an automated security notification for Hanger Garments Administrators.
+    This is an automated security notification for Hanger Garments Administrators.
 
-Hanger Garments
-Administrator Portal - Security First
-    `.trim()
-  };
-},
+    Hanger Garments
+    Administrator Portal - Security First
+        `.trim()
+    };
+    },
 
     wholesalerApprovalNotification: (wholesalerData) => {
         const escapeHtml = (text) => {
@@ -1179,158 +1333,8 @@ Administrator Portal - Security First
     }),
 
 
-    // Add to your existing emailTemplates object
-    contactNotification: (contactData) => {
-    const escapeHtml = (text) => {
-        if (!text) return '';
-        return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    };
 
-    const formatMessage = (message) => {
-        if (!message) return 'No message provided';
-        return escapeHtml(message).replace(/\n/g, '<br>');
-    };
 
-    const currentDate = new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-    });
-
-    return {
-        subject: `New Contact Form Submission - ${contactData.name || 'Unknown User'}`,
-        html: `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>New Contact Form Submission</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
-            .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-            .header { background: linear(135deg, #2d5e2d 0%, #3a7c3a 100%); padding: 30px 20px; text-align: center; color: #ffffff; }
-            .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-            .header p { font-size: 14px; opacity: 0.9; }
-            .content { padding: 30px; }
-            .alert-badge { background: #e8f5e8; color: #2d5e2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #2d5e2d; }
-            .contact-info { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .info-item { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef; }
-            .info-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-            .info-label { font-weight: 600; color: #495057; min-width: 120px; }
-            .info-value { color: #212529; flex: 1; }
-            .message-section { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 24px 0; }
-            .message-label { font-weight: 600; color: #856404; margin-bottom: 8px; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; border-top: 1px solid #e9ecef; }
-            .action-buttons { margin-top: 24px; text-align: center; }
-            .btn { display: inline-block; padding: 10px 20px; margin: 0 8px; background: #2d5e2d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
-            .btn-outline { background: transparent; border: 1px solid #2d5e2d; color: #2d5e2d; }
-            @media (max-width: 600px) {
-                .container { border-radius: 0; }
-                .content { padding: 20px; }
-                .info-item { flex-direction: column; }
-                .info-label { margin-bottom: 4px; }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>📩 New Contact Form Submission</h1>
-                <p>Hanger Garments Website</p>
-            </div>
-            
-            <div class="content">
-                <div class="alert-badge">
-                    <strong>Action Required:</strong> A new contact form submission has been received and requires your attention.
-                </div>
-                
-                <div class="contact-info">
-                    <h3 style="color: #2d5e2d; margin-bottom: 16px;">👤 Contact Details</h3>
-                    
-                    <div class="info-item">
-                        <span class="info-label">Full Name:</span>
-                        <span class="info-value">${escapeHtml(contactData.name) || 'Not provided'}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">Email Address:</span>
-                        <span class="info-value">
-                            <a href="mailto:${contactData.email}" style="color: #2d5e2d; text-decoration: none;">
-                                ${contactData.email}
-                            </a>
-                        </span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">Phone Number:</span>
-                        <span class="info-value">${contactData.phone ? escapeHtml(contactData.phone) : 'Not provided'}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">User Account:</span>
-                        <span class="info-value">${contactData.userId ? 'Registered User' : 'Guest'}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">Submission Time:</span>
-                        <span class="info-value">${currentDate}</span>
-                    </div>
-                </div>
-                
-                <div class="message-section">
-                    <div class="message-label">📝 Message Content:</div>
-                    <div style="color: #856404; line-height: 1.5;">
-                        ${formatMessage(contactData.message)}
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <a href="mailto:${contactData.email}" class="btn">✉️ Reply to ${contactData.name?.split(' ')[0] || 'Customer'}</a>
-                    <a href="tel:${contactData.phone}" class="btn btn-outline" style="${!contactData.phone ? 'display: none;' : ''}">📞 Call Customer</a>
-                </div>
-            </div>
-            
-            <div class="footer">
-                <p>This is an automated notification from Hanger Garments Contact System</p>
-                <p style="margin-top: 8px;">Please do not reply to this email. Use the reply button above to respond to the customer.</p>
-            </div>
-        </div>
-    </body>
-    </html>
-        `,
-        text: `
-    NEW CONTACT FORM SUBMISSION - Hanger Garments
-
-    A new contact form submission has been received:
-
-    CONTACT DETAILS:
-    ---------------
-    Name: ${contactData.name || 'Not provided'}
-    Email: ${contactData.email}
-    Phone: ${contactData.phone || 'Not provided'}
-    User Type: ${contactData.userId ? 'Registered User' : 'Guest'}
-    Time: ${currentDate}
-
-    MESSAGE:
-    --------
-    ${contactData.message || 'No message provided'}
-
-    Please respond to this inquiry promptly.
-
-    This is an automated notification from Hanger Garments.
-        `.trim()
-    };
-    },
 
     contactAutoReply: (contactData) => ({
     subject: 'Thank You for Contacting Hanger Garments',
@@ -1376,7 +1380,7 @@ Administrator Portal - Security First
                 <p>Reference ID: ${contactData.id}<br>
                 Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}</p>
                 
-                <p>For urgent inquiries, please call us at +91 98765 43210.</p>
+                <p>For urgent inquiries, please call us at +91 88833 85888.</p>
                 
                 <p>Best regards,<br>
                 <strong>Customer Support Team</strong><br>
@@ -1404,7 +1408,7 @@ Administrator Portal - Security First
     Reference ID: ${contactData.id}
     Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}
 
-    For urgent inquiries, please call us at +91 98765 43210.
+    For urgent inquiries, please call us at +91 88833 85888.
 
     Best regards,
     Customer Support Team
@@ -1412,7 +1416,7 @@ Administrator Portal - Security First
     `.trim()
     }),
 
-        // Add these order email templates to your existing emailTemplates object
+    // Add these order email templates to your existing emailTemplates object
     orderConfirmationCustomer: (orderData) => {
         const orderDate = new Date(orderData.createdAt).toLocaleString('en-US', {
             year: 'numeric',
@@ -1423,36 +1427,76 @@ Administrator Portal - Security First
         });
 
         const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-        const supportEmail = process.env.SUPPORT_EMAIL || `support@${domain}`;
+        const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
         const trackingUrl = orderData.trackingUrl || '#';
 
-        // Helper function to get product image
-        const getProductImage = (item) => {
-            const product = item.product || {};
-            const variant = item.productVariant || {};
-            
-            // First priority: Variant images
-            if (variant.variantImages && variant.variantImages.length > 0 && variant.variantImages[0].imageUrl) {
-                return variant.variantImages[0].imageUrl;
-            }
-            
-            // Second priority: Product images
-            if (product.images && product.images.length > 0 && product.images[0].imageUrl) {
-                return product.images[0].imageUrl;
-            }
-            
-            // Fallback: Placeholder
-            const productInitials = product.name.substring(0, 2).toUpperCase() || 'HG';
-            return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
-        };
+        // Enhanced helper function to get product image with all options
+            const getProductImage = (item, orderCustomImages = []) => {
+                const product = item.product || {};
+                const variant = item.productVariant || {};
+                
+
+                // First priority: Custom order images
+                const itemCustomImages = orderCustomImages.filter(customImg => {
+                    const filename = customImg.filename || '';
+                    return filename.includes(`item-${item.id}`) || 
+                        filename.includes(`product-${item.productId}`) ||
+                        filename.includes(`variant-${item.productVariantId}`) ||
+                        (orderCustomImages.length === 1 && !filename.includes('item-') && !filename.includes('product-'));
+                });
+                
+                if (itemCustomImages.length > 0 && itemCustomImages[0].imageUrl) {
+                    return itemCustomImages[0].imageUrl;
+                }
+                
+                // Second priority: Variant images (with proper null checks)
+                if (variant?.variantImages && Array.isArray(variant.variantImages) && variant.variantImages.length > 0) {
+                    const validVariantImage = variant.variantImages.find(img => img && img.imageUrl);
+                    if (validVariantImage?.imageUrl) {
+                        return validVariantImage.imageUrl;
+                    }
+                    
+                    // If no valid image found but array exists, try first item
+                    const firstVariantImage = variant.variantImages[0];
+                    if (firstVariantImage?.imageUrl) {
+                        return firstVariantImage.imageUrl;
+                    }
+                }
+                
+                // Third priority: Product images
+                if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+                    const validProductImage = product.images.find(img => img && img.imageUrl);
+                    if (validProductImage?.imageUrl) {
+                        return validProductImage.imageUrl;
+                    }
+                }
+                
+                // Final fallback: Placeholder
+                const productInitials = product.name?.substring(0, 2).toUpperCase() || 'HG';
+                return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
+            };
 
         // Pre-process order items with images
         const orderItemsWithImages = orderData.orderItems ? orderData.orderItems.map(item => {
+            const displayImage = getProductImage(item, orderData.customImages || []);
+            
+            // Check if this item has custom images
+            const hasCustomImage = orderData.customImages && orderData.customImages.some(customImg => {
+                const filename = customImg.filename || '';
+                return filename.includes(`item-${item.id}`) || 
+                    filename.includes(`product-${item.productId}`) ||
+                    filename.includes(`variant-${item.productVariantId}`);
+            });
+
             return {
                 ...item,
-                displayImage: getProductImage(item)
+                displayImage: displayImage,
+                hasCustomImage: hasCustomImage
             };
         }) : [];
+
+        // Check if order has custom images
+        const hasCustomImages = orderData.customImages && orderData.customImages.length > 0;
 
         return {
             subject: `Order Confirmed - #${orderData.orderNumber} - Hanger Garments`,
@@ -1464,7 +1508,6 @@ Administrator Portal - Security First
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Order Confirmation - Hanger Garments</title>
         <style>
-            /* Reset & Base Styles */
             * { 
                 margin: 0; 
                 padding: 0; 
@@ -1475,40 +1518,28 @@ Administrator Portal - Security First
                 line-height: 1.6; 
                 color: #333333; 
                 background: #f5f5f7; 
-                padding: 0; 
+                padding: 20px 0; 
             }
             .container { 
-                max-width: 600px; 
+                max-width: 650px; 
                 margin: 0 auto; 
                 background: #ffffff; 
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
             
-            /* Header - Gradient like getOrderConfirmationEmail */
             .header { 
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                 padding: 40px 30px; 
                 text-align: center; 
                 color: #ffffff; 
-                border-radius: 10px 10px 0 0;
-            }
-            .header h1 { 
-                font-size: 28px; 
-                font-weight: 700; 
-                margin-bottom: 8px; 
-            }
-            .header p { 
-                font-size: 16px; 
-                opacity: 0.9; 
             }
             
-            /* Content */
             .content { 
                 padding: 40px 30px; 
-                border-radius: 0 0 10px 10px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             }
             
-            /* Success Badge - Updated colors */
             .success-badge { 
                 background: #d1fae5; 
                 color: #065f46; 
@@ -1520,20 +1551,29 @@ Administrator Portal - Security First
                 align-items: center;
                 gap: 12px;
             }
-            .success-badge::before {
-                content: "✓";
-                font-size: 20px;
-                font-weight: bold;
-            }
             
-            /* Order Summary */
-            .order-summary { 
+            .order-overview { 
                 background: #f8f9fa; 
                 border-radius: 12px; 
                 padding: 25px; 
                 margin: 25px 0; 
-                border: 1px solid #ddd;
+                border: 1px solid #e2e8f0;
             }
+            
+            .overview-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-top: 15px;
+            }
+            
+            .overview-item {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                border-left: 4px solid #667eea;
+            }
+            
             .section-title { 
                 color: #667eea; 
                 margin-bottom: 20px; 
@@ -1544,10 +1584,10 @@ Administrator Portal - Security First
                 gap: 10px;
             }
             
-            /* Order Items - Updated design */
             .order-items { 
                 margin: 30px 0; 
             }
+            
             .order-item { 
                 display: flex; 
                 align-items: flex-start; 
@@ -1555,9 +1595,7 @@ Administrator Portal - Security First
                 border-bottom: 1px solid #eee; 
                 gap: 20px; 
             }
-            .order-item:last-child { 
-                border-bottom: none; 
-            }
+            
             .item-image { 
                 flex-shrink: 0; 
                 width: 80px; 
@@ -1566,16 +1604,64 @@ Administrator Portal - Security First
                 overflow: hidden; 
                 background: #f8fafc; 
                 border: 1px solid #f0f0f0; 
+                position: relative;
             }
+            
             .item-image img { 
                 width: 100%; 
                 height: 100%; 
                 object-fit: cover; 
                 display: block; 
             }
+            
+            .custom-image-badge {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                background: #667eea;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            
             .item-details { 
                 flex: 1; 
             }
+            
+            .product-name {
+                font-weight: 600;
+                color: #1a202c;
+                margin-bottom: 6px;
+                font-size: 16px;
+            }
+            
+            .product-variant {
+                color: #718096;
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+            
+            .product-quantity {
+                color: #4a5568;
+                font-size: 14px;
+            }
+            
+            .custom-image-note {
+                color: #667eea;
+                font-size: 12px;
+                font-weight: 600;
+                margin-top: 4px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            
             .item-price { 
                 flex-shrink: 0; 
                 text-align: right; 
@@ -1584,120 +1670,137 @@ Administrator Portal - Security First
                 color: #667eea; 
                 font-size: 16px;
             }
-            .product-name { 
-                font-weight: 600; 
-                color: #1a202c; 
-                margin-bottom: 6px; 
-                font-size: 16px;
-            }
-            .product-variant { 
-                color: #718096; 
-                font-size: 14px; 
-                margin-bottom: 6px; 
-            }
-            .product-quantity { 
-                color: #4a5568; 
-                font-size: 14px; 
+            
+            /* Custom Images Section */
+            .custom-images-section {
+                background: #f0f9ff;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 25px 0;
+                border: 1px solid #bae6fd;
             }
             
-            /* Amount Breakdown - Updated colors */
-            .amount-breakdown { 
-                background: #f8f9fa; 
-                border-radius: 12px; 
-                padding: 25px; 
-                margin: 25px 0; 
-                border: 1px solid #ddd;
+            .custom-images-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
             }
-            .breakdown-row { 
-                display: flex; 
-                justify-content: space-between; 
-                padding: 12px 0; 
+            
+            .custom-image-item {
+                text-align: center;
+            }
+            
+            .custom-image {
+                width: 120px;
+                height: 120px;
+                border-radius: 8px;
+                object-fit: cover;
+                border: 2px solid #667eea;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            
+            .custom-image-label {
+                font-size: 12px;
+                color: #666;
+                margin-top: 8px;
+                word-break: break-word;
+                font-weight: 500;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 6px 12px;
+                background: #28a745;
+                color: white;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .button {
+                display: inline-block;
+                padding: 14px 28px;
+                background: #28a745;
+                color: white;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: 600;
+                margin: 20px 0;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+
+            .button:hover {
+                background: #218838;
+                transform: translateY(-2px);
+            }
+
+            .info-card {
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 20px 0;
+                border: 1px solid #e2e8f0;
+            }
+
+            .amount-breakdown {
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 25px 0;
+                border: 1px solid #e2e8f0;
+            }
+
+            .breakdown-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 0;
                 border-bottom: 1px solid #e2e8f0;
             }
-            .breakdown-row:last-child {
-                border-bottom: none;
-            }
-            .breakdown-total { 
-                border-top: 2px solid #667eea; 
-                font-weight: bold; 
-                font-size: 18px; 
+
+            .breakdown-total {
+                border-top: 2px solid #667eea;
+                font-weight: bold;
+                font-size: 18px;
                 color: #1a202c;
                 padding-top: 16px;
                 margin-top: 8px;
             }
-            
-            /* Info Cards */
-            .info-card { 
-                background: #f8f9fa; 
-                border-radius: 12px; 
-                padding: 25px; 
-                margin: 25px 0; 
-                border: 1px solid #ddd;
-            }
-            
-            /* Support Section */
-            .support-section { 
-                background: #eff6ff; 
-                border-radius: 12px; 
-                padding: 25px; 
-                margin: 25px 0; 
+
+            .support-section {
+                background: #eff6ff;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 25px 0;
                 border: 1px solid #bfdbfe;
             }
-            
-            /* Button - Updated to match getOrderConfirmationEmail */
-            .button { 
-                display: inline-block; 
-                padding: 14px 28px; 
-                background: #28a745; 
-                color: white !important; 
-                text-decoration: none; 
-                border-radius: 6px; 
-                font-weight: 600; 
-                font-size: 16px; 
-                margin: 25px auto; 
-                text-align: center; 
-                transition: all 0.3s ease; 
-            }
-            .button:hover { 
-                background: #218838; 
-                transform: translateY(-2px); 
-                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); 
+
+            .footer {
+                margin-top: 30px;
+                padding: 20px;
+                background: #f8f9fa;
+                text-align: center;
+                font-size: 12px;
+                color: #6c757d;
+                border-top: 1px solid #e2e8f0;
             }
             
-            /* Footer */
-            .footer { 
-                margin-top: 30px; 
-                padding: 20px; 
-                background: #f8f9fa; 
-                text-align: center; 
-                font-size: 12px; 
-                color: #6c757d; 
-                border-radius: 8px; 
-            }
-            
-            /* Status Badge */
-            .status-badge { 
-                display: inline-block; 
-                padding: 6px 16px; 
-                background: #28a745; 
-                color: white; 
-                border-radius: 20px; 
-                font-size: 12px; 
-                font-weight: 600; 
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            
-            /* Mobile Responsive */
             @media (max-width: 600px) {
-                .container { 
-                    border-radius: 0; 
+                body {
+                    padding: 10px;
+                }
+                .container {
+                    border-radius: 8px;
                 }
                 .content { 
                     padding: 25px 20px; 
                 }
                 .header {
                     padding: 30px 20px;
+                }
+                .overview-grid {
+                    grid-template-columns: 1fr;
                 }
                 .order-item { 
                     flex-direction: column; 
@@ -1708,73 +1811,84 @@ Administrator Portal - Security First
                     text-align: left; 
                     margin-top: 8px; 
                 }
-                .item-image { 
-                    width: 70px; 
-                    height: 70px; 
+                .custom-images-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
                 }
-                .info-card, .support-section, .order-summary, .amount-breakdown {
-                    padding: 20px;
-                }
-                .button {
-                    display: block !important;
-                    width: 100% !important;
-                    text-align: center;
-                    margin: 20px 0 !important;
-                    padding: 16px 20px !important;
+                .custom-image {
+                    width: 100px;
+                    height: 100px;
                 }
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <!-- Header with gradient -->
             <div class="header">
                 <h1>🎉 Order Confirmed!</h1>
                 <p>Thank you for shopping with Hanger Garments</p>
             </div>
             
-            <!-- Content -->
             <div class="content">
-                <!-- Success Message -->
                 <div class="success-badge">
                     <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed and is being processed.
                 </div>
                 
-                <!-- Greeting -->
                 <p style="margin-bottom: 25px; font-size: 16px; color: #4a5568;">
                     Hello <strong style="color: #667eea;">${orderData.name}</strong>,<br>
                     Thank you for choosing Hanger Garments! We're preparing your order and will notify you once it's shipped.
                 </p>
                 
-                <!-- Order Summary -->
-                <div class="order-summary">
+                <!-- Order Overview -->
+                <div class="order-overview">
                     <div class="section-title">
-                        <span>📦</span> Order Summary
+                        <span>📊</span> Order Overview
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
+                    <div class="overview-grid">
+                        <div class="overview-item">
                             <strong style="color: #718096; font-size: 14px;">Order Number</strong>
-                            <p style="color: #1a202c; font-weight: 600;">${orderData.orderNumber}</p>
+                            <p style="color: #1a202c; font-weight: 600; font-size: 18px;">${orderData.orderNumber}</p>
                         </div>
-                        <div>
+                        <div class="overview-item">
                             <strong style="color: #718096; font-size: 14px;">Order Date</strong>
                             <p style="color: #1a202c; font-weight: 600;">${orderDate}</p>
                         </div>
-                        <div>
+                        <div class="overview-item">
                             <strong style="color: #718096; font-size: 14px;">Status</strong>
                             <p><span class="status-badge">${orderData.status}</span></p>
                         </div>
-                        <div>
+                        <div class="overview-item">
                             <strong style="color: #718096; font-size: 14px;">Total Amount</strong>
-                            <p style="color: #667eea; font-weight: 700; font-size: 18px;">₹${orderData.totalAmount?.toFixed(2) || '0.00'}</p>
+                            <p style="color: #667eea; font-weight: 700; font-size: 20px;">₹${orderData.totalAmount?.toFixed(2) || '0.00'}</p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Custom Images Section -->
+                ${hasCustomImages ? `
+                <div class="custom-images-section">
+                    <div class="section-title">
+                        <span>🖼️</span> Your Custom Images
+                    </div>
+                    <p style="color: #4a5568; margin-bottom: 15px; line-height: 1.6;">
+                        We've received your custom images and will use them to create your personalized order. 
+                        Below are the images you've provided:
+                    </p>
+                    <div class="custom-images-grid">
+                        ${orderData.customImages.map((image, index) => `
+                        <div class="custom-image-item">
+                            <img src="${image.imageUrl}" alt="Custom Image ${index + 1}" class="custom-image" 
+                                onerror="this.src='https://via.placeholder.com/120x120/667eea/ffffff?text=Image+${index + 1}'" />
+                            <div class="custom-image-label">${image.filename || `Custom Image ${index + 1}`}</div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <!-- Order Items -->
                 <div class="order-items">
                     <div class="section-title">
-                        <span>🛒</span> Order Items
+                        <span>📦</span> Order Items
                     </div>
                     ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
                         const product = item.product || {};
@@ -1784,12 +1898,15 @@ Administrator Portal - Security First
                         return `
                         <div class="order-item">
                             <div class="item-image">
-                                <img src="${productImage}" alt="${productName}" />
+                                <img src="${productImage}" alt="${productName}" 
+                                    onerror="this.src='https://via.placeholder.com/80x80/2d5e2d/ffffff?text=HG'" />
+                                ${item.hasCustomImage ? '<div class="custom-image-badge" title="Custom Image Applied">🎨</div>' : ''}
                             </div>
                             <div class="item-details">
                                 <div class="product-name">${productName}</div>
                                 ${item.productVariant ? `<div class="product-variant">${item.productVariant.color} - ${item.productVariant.size}</div>` : ''}
                                 <div class="product-quantity">Quantity: ${item.quantity} × ₹${item.price}</div>
+                                ${item.hasCustomImage ? '<div class="custom-image-note"><span>🎨</span> Custom image will be applied</div>' : ''}
                             </div>
                             <div class="item-price">
                                 ₹${(item.quantity * item.price).toFixed(2)}
@@ -1830,32 +1947,51 @@ Administrator Portal - Security First
                     </div>
                 </div>
 
-                <!-- Shipping & Payment Info -->
+                <!-- Customer Information -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
-                    <!-- Shipping Address -->
+                    <div class="info-card">
+                        <div class="section-title">
+                            <span>👤</span> Customer Information
+                        </div>
+                        <div style="color: #4a5568; line-height: 1.6;">
+                            <strong>${orderData.name}</strong><br>
+                            📧 ${orderData.email}<br>
+                            📞 ${orderData.phone}
+                        </div>
+                    </div>
+
                     <div class="info-card">
                         <div class="section-title">
                             <span>🏠</span> Shipping Address
                         </div>
                         <p style="color: #4a5568; line-height: 1.6;">
-                            <strong>${orderData.name}</strong><br>
                             ${orderData.address}<br>
-                            ${orderData.city}, ${orderData.state} - ${orderData.pincode}<br>
-                            📞 ${orderData.phone}<br>
-                            ✉️ ${orderData.email}
+                            ${orderData.city}, ${orderData.state}<br>
+                            📍 ${orderData.pincode}
                         </p>
                     </div>
+                </div>
 
-                    <!-- Payment Information -->
-                    <div class="info-card">
-                        <div class="section-title">
-                            <span>💳</span> Payment Information
+                <!-- Payment Information -->
+                <div class="info-card">
+                    <div class="section-title">
+                        <span>💳</span> Payment Information
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Payment Method</strong>
+                            <p style="color: #1a202c; font-weight: 600;">${orderData.paymentMethod}</p>
                         </div>
-                        <p style="color: #4a5568; line-height: 1.6;">
-                            <strong>Payment Method:</strong> ${orderData.paymentMethod}<br>
-                            <strong>Payment Status:</strong> <span class="status-badge">${orderData.paymentStatus}</span><br>
-                            ${orderData.razorpayPaymentId ? `<strong>Payment ID:</strong> ${orderData.razorpayPaymentId}` : ''}
-                        </p>
+                        <div>
+                            <strong style="color: #718096; font-size: 14px;">Payment Status</strong>
+                            <p><span class="status-badge">${orderData.paymentStatus}</span></p>
+                        </div>
+                        ${orderData.razorpayPaymentId ? `
+                        <div style="grid-column: 1 / -1;">
+                            <strong style="color: #718096; font-size: 14px;">Payment ID</strong>
+                            <p style="color: #4a5568; font-family: monospace; font-size: 13px;">${orderData.razorpayPaymentId}</p>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -1865,52 +2001,76 @@ Administrator Portal - Security First
                     <div class="section-title">
                         <span>🚚</span> Tracking Information
                     </div>
-                    <p style="color: #4a5568; line-height: 1.6;">
-                        <strong>Tracking Number:</strong> ${orderData.trackingNumber}<br>
-                        <strong>Carrier:</strong> ${orderData.carrier}<br>
-                        ${orderData.trackingUrl ? `<strong>Track Your Order:</strong> <a href="${trackingUrl}" style="color: #667eea; text-decoration: none; font-weight: 600;">Click here to track</a><br>` : ''}
-                        ${orderData.estimatedDelivery ? `<strong>Estimated Delivery:</strong> ${new Date(orderData.estimatedDelivery).toLocaleDateString()}` : ''}
-                    </p>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: #718096;">Tracking Number</strong>
+                            <span style="color: #1a202c; font-weight: 600;">${orderData.trackingNumber}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: #718096;">Carrier</strong>
+                            <span style="color: #1a202c;">${orderData.carrier}</span>
+                        </div>
+                        ${orderData.estimatedDelivery ? `
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: #718096;">Estimated Delivery</strong>
+                            <span style="color: #1a202c;">${new Date(orderData.estimatedDelivery).toLocaleDateString()}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ${orderData.trackingUrl ? `
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="${trackingUrl}" class="button" style="display: inline-block;">
+                            📦 Track Your Order
+                        </a>
+                    </div>
+                    ` : ''}
                 </div>
-                ` : ''}
-
+                ` : `
                 <!-- Track Order Button -->
                 <div style="text-align: center; width: 100%;">
-                    <a href="${trackingUrl}" class="button" style="display: inline-block; padding: 14px 28px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; margin: 25px auto; text-align: center;">
-                        Track Your Order
+                    <a href="${trackingUrl}" class="button">
+                        📦 Track Your Order
                     </a>
                 </div>
+                `}
 
                 <!-- Support Section -->
                 <div class="support-section">
                     <div class="section-title">
                         <span>📞</span> Need Help?
                     </div>
-                    <p style="color: #4a5568; margin-bottom: 15px;">
-                        If you have any questions about your order, our support team is here to help.
+                    <p style="color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
+                        If you have any questions about your order or need assistance, our support team is here to help you.
                     </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <strong style="color: #667eea;">Email Support</strong>
-                            <p><a href="mailto:${supportEmail}" style="color: #667eea; text-decoration: none;">${supportEmail}</a></p>
+                            <strong style="color: #667eea; display: block; margin-bottom: 8px;">Email Support</strong>
+                            <a href="mailto:${supportEmail}" style="color: #667eea; text-decoration: none; font-weight: 500;">${supportEmail}</a>
                         </div>
                         <div>
-                            <strong style="color: #667eea;">Phone Support</strong>
-                            <p>+91 98765 43210</p>
+                            <strong style="color: #667eea; display: block; margin-bottom: 8px;">Phone Support</strong>
+                            <p style="color: #4a5568; font-weight: 500;">+91 88833 85888</p>
                         </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-radius: 8px;">
+                        <p style="color: #4a5568; font-size: 14px; margin: 0;">
+                            <strong>Business Hours:</strong> Monday - Saturday, 9:00 AM - 6:00 PM
+                        </p>
                     </div>
                 </div>
 
-                <p style="margin-top: 30px; text-align: center; color: #4a5568;">
-                    With love,<br><strong>Hanger Garments Team 🤍</strong>
+                <p style="margin-top: 30px; text-align: center; color: #4a5568; line-height: 1.6;">
+                    Thank you for trusting us with your order. We're committed to making your experience wonderful!<br>
+                    With love,<br>
+                    <strong style="color: #667eea; font-size: 18px;">Hanger Garments Team 🤍</strong>
                 </p>
             </div>
             
-            <!-- Footer -->
             <div class="footer">
                 <p>© ${new Date().getFullYear()} Hanger Garments. All rights reserved.</p>
-                <p>Need help? Contact us at 
-                    <a href="mailto:${supportEmail}" style="color: #6c757d;">${supportEmail}</a>
+                <p>Nourishing Lives Naturally • <a href="https://${domain}" style="color: #6c757d;">${domain}</a></p>
+                <p style="margin-top: 10px; font-size: 11px; color: #8c959f;">
+                    This is an automated email. Please do not reply to this message.
                 </p>
             </div>
         </div>
@@ -1924,18 +2084,33 @@ Administrator Portal - Security First
 
     Thank you for your order! We're excited to let you know that we've received your order #${orderData.orderNumber} and it is now being processed.
 
-    ORDER SUMMARY:
-    -------------
+    ORDER OVERVIEW:
+    ---------------
     Order Number: ${orderData.orderNumber}
     Order Date: ${orderDate}
     Status: ${orderData.status}
     Total Amount: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
 
+    ${hasCustomImages ? `
+    CUSTOM IMAGES:
+    --------------
+    We've received ${orderData.customImages.length} custom image(s) for your order:
+    ${orderData.customImages.map((img, index) => `${index + 1}. ${img.filename || 'Custom Image'}`).join('\n')}
+    ` : ''}
+
     ORDER ITEMS:
-    ------------
-    ${orderData.orderItems && orderData.orderItems.map(item => 
-    `• ${item.product?.name || 'Product'}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''} - ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-    ).join('\n') || 'No items'}
+    -----------
+    ${orderData.orderItems && orderData.orderItems.map(item => {
+        const hasCustomImage = orderData.customImages && orderData.customImages.some(customImg => {
+            const filename = customImg.filename || '';
+            return filename.includes(`item-${item.id}`) || 
+                filename.includes(`product-${item.productId}`) ||
+                filename.includes(`variant-${item.productVariantId}`);
+        });
+        
+        return `• ${item.product?.name || 'Product'}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}${hasCustomImage ? ' [CUSTOM IMAGE]' : ''}
+    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`;
+    }).join('\n') || 'No items'}
 
     AMOUNT BREAKDOWN:
     -----------------
@@ -1943,13 +2118,16 @@ Administrator Portal - Security First
     ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost?.toFixed(2) || '0.00'}
     Total: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
 
+    CUSTOMER INFORMATION:
+    --------------------
+    Name: ${orderData.name}
+    Email: ${orderData.email}
+    Phone: ${orderData.phone}
+
     SHIPPING ADDRESS:
     -----------------
-    ${orderData.name}
     ${orderData.address}
     ${orderData.city}, ${orderData.state} - ${orderData.pincode}
-    Phone: ${orderData.phone}
-    Email: ${orderData.email}
 
     PAYMENT INFORMATION:
     -------------------
@@ -1965,15 +2143,21 @@ Administrator Portal - Security First
     ${orderData.trackingUrl ? `Track Your Order: ${trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
     ` : ''}
 
-    Need help? Contact our support team:
+    NEED HELP?
+    ----------
     Email: ${supportEmail}
-    Phone: +91 98765 43210
+    Phone: +91 88833 85888
+    Business Hours: Monday - Saturday, 9:00 AM - 8:00 PM
 
-    Thank you for choosing Hanger Garments!
+    Thank you for choosing Hanger Garments! We're committed to making your experience wonderful.
+
+    With love,
+    Hanger Garments Team
 
     --
     Hanger Garments
     Nourishing Lives Naturally
+    https://${domain}
             `.trim()
         };
     },
@@ -1990,36 +2174,69 @@ Administrator Portal - Security First
         const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
         const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
 
-        // Helper function for admin email
-        const getProductImage = (item) => {
-            const product = item.product || {};
-            const variant = item.productVariant || {};
-            
-            // First priority: Variant images
-            if (variant.variantImages && variant.variantImages.length > 0 && variant.variantImages[0].imageUrl) {
-                return variant.variantImages[0].imageUrl;
-            }
-            
-            // Second priority: Product images
-            if (product.images && product.images.length > 0 && product.images[0].imageUrl) {
-                return product.images[0].imageUrl;
-            }
-            
-            // Fallback: Placeholder
-            const productInitials = product.name.substring(0, 2).toUpperCase() || 'HG';
-            return `https://via.placeholder.com/300x300/dc3545/ffffff?text=${productInitials}`;
-        };
+        // Enhanced helper function for admin email
+            const getProductImage = (item, orderCustomImages = []) => {
+                const product = item.product || {};
+                const variant = item.productVariant || {};
+                
+
+
+                // First priority: Custom order images
+                const itemCustomImages = orderCustomImages.filter(customImg => {
+                    const filename = customImg.filename || '';
+                    return filename.includes(`item-${item.id}`) || 
+                        filename.includes(`product-${item.productId}`) ||
+                        filename.includes(`variant-${item.productVariantId}`) ||
+                        (orderCustomImages.length === 1 && !filename.includes('item-') && !filename.includes('product-'));
+                });
+                
+                if (itemCustomImages.length > 0 && itemCustomImages[0].imageUrl) {
+                    return itemCustomImages[0].imageUrl;
+                }
+                
+                // Second priority: Variant images (check if they exist and have URLs)
+                if (variant && variant.variantImages && variant.variantImages.length > 0) {
+                    const validVariantImage = variant.variantImages.find(img => img && img.imageUrl);
+                    if (validVariantImage && validVariantImage.imageUrl) {
+                        return validVariantImage.imageUrl;
+                    }
+                }
+                
+                // Third priority: Product images (check if they exist and have URLs)
+                if (product && product.images && product.images.length > 0) {
+                    const validProductImage = product.images.find(img => img && img.imageUrl);
+                    if (validProductImage && validProductImage.imageUrl) {
+                        return validProductImage.imageUrl;
+                    }
+                }
+                
+                // Fallback: Use first variant image if available, otherwise placeholder
+                if (variant && variant.variantImages && variant.variantImages.length > 0) {
+                    const firstVariantImage = variant.variantImages[0];
+                    if (firstVariantImage && firstVariantImage.imageUrl) {
+                        return firstVariantImage.imageUrl;
+                    }
+                }
+                
+                // Final fallback: Placeholder
+                const productInitials = product.name?.substring(0, 2).toUpperCase() || 'HG';
+                return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
+            };
 
         // Pre-process order items with images
         const orderItemsWithImages = orderData.orderItems ? orderData.orderItems.map(item => {
             return {
                 ...item,
-                displayImage: getProductImage(item)
+                displayImage: getProductImage(item, orderData.customImages || [])
             };
         }) : [];
 
+        // Check if order has custom images
+        const hasCustomImages = orderData.customImages && orderData.customImages.length > 0;
+
         return {
-            subject: `🛒 New Order - #${orderData.orderNumber} - ₹${orderData.totalAmount.toFixed(2)}`,
+            // Fixed subject line - removed emoji to prevent spam
+            subject: `Order Notification: #${orderData.orderNumber} - Hanger Garments`,
             html: `
     <!DOCTYPE html>
     <html lang="en">
@@ -2028,7 +2245,6 @@ Administrator Portal - Security First
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>New Order Notification - Hanger Garments</title>
         <style>
-            /* Reset & Base Styles */
             * { 
                 margin: 0; 
                 padding: 0; 
@@ -2039,36 +2255,27 @@ Administrator Portal - Security First
                 line-height: 1.6; 
                 color: #333333; 
                 background: #f5f5f7; 
-                padding: 0; 
+                padding: 20px 0; 
             }
             .container { 
                 max-width: 700px; 
                 margin: 0 auto; 
                 background: #ffffff; 
+                border-radius: 10px;
+                overflow: hidden;
             }
             
-            /* Header - Gradient like customer email */
             .header { 
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                 padding: 40px 30px; 
                 text-align: center; 
                 color: #ffffff; 
-                border-radius: 10px 10px 0 0;
-            }
-            .header h1 { 
-                font-size: 28px; 
-                font-weight: 700; 
-                margin-bottom: 8px; 
             }
             
-            /* Content */
             .content { 
                 padding: 40px 30px; 
-                border-radius: 0 0 10px 10px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             }
             
-            /* Alert Badge - Updated colors */
             .alert-badge { 
                 background: #ffe6e6; 
                 color: #dc3545; 
@@ -2080,12 +2287,7 @@ Administrator Portal - Security First
                 align-items: center;
                 gap: 12px;
             }
-            .alert-badge::before {
-                content: "⚠️";
-                font-size: 18px;
-            }
             
-            /* Overview Grid */
             .overview-grid { 
                 display: grid; 
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -2100,7 +2302,6 @@ Administrator Portal - Security First
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             
-            /* Order Items */
             .order-items { 
                 margin: 30px 0; 
             }
@@ -2122,12 +2323,27 @@ Administrator Portal - Security First
                 overflow: hidden; 
                 background: #f8fafc; 
                 border: 1px solid #f0f0f0; 
+                position: relative;
             }
             .item-image img { 
                 width: 100%; 
                 height: 100%; 
                 object-fit: cover; 
                 display: block; 
+            }
+            .custom-image-badge {
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                background: #dc3545;
+                color: white;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             .item-details { 
                 flex: 1; 
@@ -2141,7 +2357,6 @@ Administrator Portal - Security First
                 font-size: 16px;
             }
             
-            /* Section Titles */
             .section-title { 
                 color: #667eea; 
                 margin-bottom: 20px; 
@@ -2152,16 +2367,14 @@ Administrator Portal - Security First
                 gap: 10px;
             }
             
-            /* Info Cards */
             .info-card { 
                 background: #f8f9fa; 
                 border-radius: 12px; 
                 padding: 25px; 
                 margin: 25px 0; 
-                border: 1px solid #ddd;
+                border: 1px solid #e2e8f0;
             }
             
-            /* Action Buttons */
             .action-buttons { 
                 margin-top: 30px; 
                 text-align: center; 
@@ -2183,7 +2396,6 @@ Administrator Portal - Security First
             .btn:hover {
                 background: #218838;
                 transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
             }
             .btn-outline { 
                 background: transparent; 
@@ -2195,7 +2407,6 @@ Administrator Portal - Security First
                 color: white;
             }
             
-            /* Next Steps */
             .next-steps { 
                 background: #fff3cd; 
                 border: 1px solid #ffeaa7; 
@@ -2204,7 +2415,6 @@ Administrator Portal - Security First
                 margin: 30px 0; 
             }
             
-            /* Footer */
             .footer { 
                 margin-top: 30px; 
                 padding: 20px; 
@@ -2212,26 +2422,55 @@ Administrator Portal - Security First
                 text-align: center; 
                 font-size: 12px; 
                 color: #6c757d; 
-                border-radius: 8px; 
             }
             
-            /* Status Badge */
             .status-badge { 
                 display: inline-block; 
-                padding: 6px 16px; 
+                padding: 6px 12px; 
                 background: #28a745; 
                 color: white; 
                 border-radius: 20px; 
                 font-size: 12px; 
                 font-weight: 600; 
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
             }
             
-            /* Mobile Responsive */
+            .custom-images-section {
+                background: #fff3cd;
+                border-radius: 12px;
+                padding: 25px;
+                margin: 25px 0;
+                border: 1px solid #ffeaa7;
+            }
+            
+            .custom-images-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+            
+            .custom-image-item {
+                text-align: center;
+            }
+            
+            .custom-image {
+                width: 80px;
+                height: 80px;
+                border-radius: 8px;
+                object-fit: cover;
+                border: 2px solid #dc3545;
+            }
+            
+            .custom-image-label {
+                font-size: 11px;
+                color: #666;
+                margin-top: 5px;
+                word-break: break-word;
+            }
+            
             @media (max-width: 600px) {
-                .container { 
-                    border-radius: 0; 
+                body {
+                    padding: 10px;
                 }
                 .content { 
                     padding: 25px 20px; 
@@ -2256,24 +2495,21 @@ Administrator Portal - Security First
                 }
                 .btn {
                     text-align: center;
-                    display: block !important;
-                    width: 100% !important;
-                    margin: 5px 0 !important;
+                    display: block;
+                    width: 100%;
+                    margin: 5px 0;
                 }
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <!-- Header with gradient -->
             <div class="header">
-                <h1>🛒 New Order Received</h1>
+                <h1>New Order Received</h1>
                 <p>Order #${orderData.orderNumber} - Requires Processing</p>
             </div>
             
-            <!-- Content -->
             <div class="content">
-                <!-- Alert -->
                 <div class="alert-badge">
                     <strong>New Order Alert:</strong> A new order has been placed and requires immediate processing.
                 </div>
@@ -2334,6 +2570,26 @@ Administrator Portal - Security First
                     </div>
                 </div>
 
+                <!-- Custom Images Section for Admin -->
+                ${hasCustomImages ? `
+                <div class="custom-images-section">
+                    <div class="section-title">
+                        <span>🖼️</span> Customer Custom Images
+                    </div>
+                    <p style="color: #856404; margin-bottom: 15px;">
+                        <strong>Note:</strong> Customer has provided ${orderData.customImages.length} custom image(s) for this order.
+                    </p>
+                    <div class="custom-images-grid">
+                        ${orderData.customImages.map((image, index) => `
+                        <div class="custom-image-item">
+                            <img src="${image.imageUrl}" alt="Custom Image ${index + 1}" class="custom-image" />
+                            <div class="custom-image-label">${image.filename || `Image ${index + 1}`}</div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <!-- Order Items -->
                 <div class="order-items">
                     <div class="section-title">
@@ -2341,15 +2597,24 @@ Administrator Portal - Security First
                     </div>
                     ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
                         const product = item.product || {};
+                        const hasCustomImage = orderData.customImages && orderData.customImages.some(customImg => {
+                            const filename = customImg.filename || '';
+                            return filename.includes(`item-${item.id}`) || 
+                                filename.includes(`product-${item.productId}`) ||
+                                filename.includes(`variant-${item.productVariantId}`);
+                        });
+                        
                         return `
                         <div class="order-item">
                             <div class="item-image">
                                 <img src="${item.displayImage}" alt="${product.name}" />
+                                ${hasCustomImage ? '<div class="custom-image-badge" title="Has Custom Image">C</div>' : ''}
                             </div>
                             <div class="item-details">
                                 <div style="font-weight: 600; color: #667eea; margin-bottom: 6px; font-size: 16px;">${product.name}</div>
                                 ${item.productVariant ? `<div style="color: #718096; font-size: 14px; margin-bottom: 6px;">${item.productVariant.color} - ${item.productVariant.size}</div>` : ''}
                                 <div style="color: #4a5568; font-size: 14px;">Quantity: ${item.quantity} × ₹${item.price}</div>
+                                ${hasCustomImage ? '<div style="color: #dc3545; font-size: 12px; font-weight: 600; margin-top: 4px;">📷 Custom Image Provided</div>' : ''}
                             </div>
                             <div class="item-price">
                                 ₹${(item.quantity * item.price).toFixed(2)}
@@ -2405,7 +2670,7 @@ Administrator Portal - Security First
                     </div>
                     <ol style="color: #856404; margin-left: 20px; line-height: 1.8;">
                         <li>Review order details and verify payment status</li>
-                        <li>Prepare items for shipping and update inventory</li>
+                        <li>${hasCustomImages ? 'Check custom images and prepare accordingly' : 'Prepare items for shipping and update inventory'}</li>
                         <li>Update order status when shipped</li>
                         <li>Add tracking information to the order</li>
                         <li>Notify customer when order is delivered</li>
@@ -2413,7 +2678,6 @@ Administrator Portal - Security First
                 </div>
             </div>
             
-            <!-- Footer -->
             <div class="footer">
                 <p>© ${new Date().getFullYear()} Hanger Garments. All rights reserved.</p>
                 <p>This is an automated order notification from Hanger Garments Order Management System.</p>
@@ -2443,12 +2707,25 @@ Administrator Portal - Security First
     Address: ${orderData.address}, ${orderData.city}, ${orderData.state} - ${orderData.pincode}
     ${orderData.user ? `Customer ID: ${orderData.user.id}\n` : ''}
 
+    ${hasCustomImages ? `
+    CUSTOM IMAGES:
+    Customer has provided ${orderData.customImages.length} custom image(s):
+    ${orderData.customImages.map((img, index) => `${index + 1}. ${img.filename || 'Custom Image'}`).join('\n')}
+    ` : ''}
+
     ORDER ITEMS:
     -----------
-    ${orderData.orderItems && orderData.orderItems.map(item => 
-    `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}
-    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`
-    ).join('\n') || 'No items'}
+    ${orderData.orderItems && orderData.orderItems.map(item => {
+        const hasCustomImage = orderData.customImages && orderData.customImages.some(customImg => {
+            const filename = customImg.filename || '';
+            return filename.includes(`item-${item.id}`) || 
+                filename.includes(`product-${item.productId}`) ||
+                filename.includes(`variant-${item.productVariantId}`);
+        });
+        
+        return `• ${item.product.name}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}${hasCustomImage ? ' [CUSTOM IMAGE]' : ''}
+    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`;
+    }).join('\n') || 'No items'}
 
     ORDER SUMMARY:
     -------------
@@ -2459,7 +2736,7 @@ Administrator Portal - Security First
     NEXT STEPS:
     ----------
     1. Review order details and verify payment
-    2. Prepare items for shipping
+    2. ${hasCustomImages ? 'Check custom images and prepare accordingly' : 'Prepare items for shipping'}
     3. Update order status when shipped
     4. Add tracking information
     5. Notify customer when delivered

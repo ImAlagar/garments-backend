@@ -363,13 +363,17 @@ class OrderService {
                 }
               }
             },
-            productVariant: {
+        productVariant: {
+          include: {
+            variantImages: {  // Add this
               select: {
-                id: true,
-                color: true,
-                size: true
+                imageUrl: true,
+                color: true
               }
             }
+          }
+        }
+
           }
         },
         customImages: true,
@@ -692,7 +696,6 @@ class OrderService {
             product: {
               include: {
                 images: {
-                  take: 1,
                   select: {
                     imageUrl: true
                   }
@@ -712,7 +715,13 @@ class OrderService {
               }
           }
         },
-        customImages: true, // Include custom images
+        customImages: {
+          select: {
+            imageUrl: true,
+            imageKey: true,
+            filename: true
+          }
+        },
         user: {
           select: {
             id: true,
@@ -736,6 +745,7 @@ class OrderService {
     
     return order;
   }
+
 
   async getOrderByOrderNumber(orderNumber) {
     const order = await prisma.order.findUnique({
