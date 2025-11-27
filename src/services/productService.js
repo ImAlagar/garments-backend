@@ -699,6 +699,7 @@ class ProductService {
                 wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : null,
                 categoryId,
                 subcategoryId: subcategoryId || null,
+                isCustomizable: true, // ✅ Always mark as customizable
                 productDetails: {
                     create: productDetailsData
                 },
@@ -2286,7 +2287,7 @@ class ProductService {
     }
 
     // Get new arrivals (UPDATED: Using the flag)
-        async getNewArrivals(limit = 8) {
+    async getNewArrivals(limit = 8) {
             const products = await prisma.product.findMany({
                 where: {
                     status: 'ACTIVE',
@@ -2346,7 +2347,8 @@ class ProductService {
             });
 
             return productsWithRatings;
-        }
+    }
+
     // Get featured products
     async getFeaturedProducts(limit = 8) {
         const products = await prisma.product.findMany({

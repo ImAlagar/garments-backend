@@ -553,21 +553,5 @@ class CustomizationService {
   }
 }
 
-// Run this once to initialize all products as customizable
-async function initializeAllProductsAsCustomizable() {
-  try {
-    const service = new CustomizationService();
-    const result = await service.ensureAllProductsHaveCustomization();
-    logger.info('✅ All products are now customizable!', result);
-    
-    const activationResult = await service.activateAllCustomizations();
-    logger.info('✅ All customizations activated!', activationResult);
-  } catch (error) {
-    logger.error('Error initializing customizable products:', error);
-  }
-}
-
-// Call this function once
-initializeAllProductsAsCustomizable();
 
 export default new CustomizationService();
