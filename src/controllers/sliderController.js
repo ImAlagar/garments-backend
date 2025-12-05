@@ -156,7 +156,7 @@ export const deleteSlider = asyncHandler(async (req, res) => {
   
   try {
     // First delete images from S3
-    await S3SliderService.deleteSliderImages(sliderId);
+    await s3SliderService.deleteSliderImages(sliderId);
     
     // Then delete slider from database
     await sliderService.deleteSlider(sliderId);
