@@ -208,108 +208,108 @@ class OrderService {
     };
   }
 
-async initiateRazorpayPayment(orderData) {
-  try {
-    const {
-      userId,
-      name,
-      email,
-      phone,
-      address,
-      city,
-      state,
-      pincode,
-      orderItems,
-      couponCode,
-      customImages = [],
-      preferredCourier = '',
-      courierInstructions = ''
-    } = orderData;
+  async initiateRazorpayPayment(orderData) {
+    try {
+      const {
+        userId,
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+        orderItems,
+        couponCode,
+        customImages = [],
+        preferredCourier = '',
+        courierInstructions = ''
+      } = orderData;
 
-    // Validate required fields
-    const requiredFields = { name, email, phone, address, city, state, pincode };
-    const missingFields = Object.entries(requiredFields)
-      .filter(([key, value]) => !value)
-      .map(([key]) => key);
+      // Validate required fields
+      const requiredFields = { name, email, phone, address, city, state, pincode };
+      const missingFields = Object.entries(requiredFields)
+        .filter(([key, value]) => !value)
+        .map(([key]) => key);
 
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-    }
-
-    // Validate order items
-    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
-      throw new Error('Order must contain at least one item');
-    }
-
-    // Calculate totals with quantity pricing
-    logger.info('Calculating order totals...');
-    const totals = await this.calculateOrderTotals(orderItems, couponCode);
-    
-    // Validate total amount
-    if (!totals.totalAmount || totals.totalAmount <= 0) {
-      throw new Error(`Invalid total amount: ${totals.totalAmount}`);
-    }
-
-    logger.info('Order totals calculated:', {
-      subtotal: totals.subtotal,
-      discount: totals.couponDiscount,
-      shippingCost: totals.shippingCost,
-      totalAmount: totals.totalAmount,
-      preferredCourier
-    });
-
-    // Create Razorpay order
-    logger.info(`Creating Razorpay order for amount: ₹${totals.totalAmount}`);
-    const razorpayOrder = await razorpayService.createOrder(
-      totals.totalAmount,
-      'INR'
-    );
-
-    if (!razorpayOrder || !razorpayOrder.id) {
-      throw new Error('Failed to create Razorpay order - no order ID returned');
-    }
-
-    // Store temporary order data
-    const tempOrderData = {
-      userId,
-      name,
-      email,
-      phone,
-      address,
-      city,
-      state,
-      pincode,
-      orderItems,
-      couponCode,
-      customImages,
-      preferredCourier,
-      courierInstructions,
-      totals,
-      razorpayOrderId: razorpayOrder.id
-    };
-
-    logger.info(`Razorpay order initiated successfully. Order ID: ${razorpayOrder.id}, Courier: ${preferredCourier || 'Not specified'}`);
-
-    return {
-      razorpayOrder,
-      tempOrderData: {
-        ...tempOrderData,
-        orderNumber: this.generateOrderNumber()
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
-    };
-  } catch (error) {
-    logger.error('Failed to initiate Razorpay payment:', {
-      error: error.message,
-      stack: error.stack,
-      orderData: {
-        userId: orderData.userId,
-        email: orderData.email,
-        itemCount: orderData.orderItems?.length || 0
+
+      // Validate order items
+      if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+        throw new Error('Order must contain at least one item');
       }
-    });
-    throw error;
+
+      // Calculate totals with quantity pricing
+      logger.info('Calculating order totals...');
+      const totals = await this.calculateOrderTotals(orderItems, couponCode);
+      
+      // Validate total amount
+      if (!totals.totalAmount || totals.totalAmount <= 0) {
+        throw new Error(`Invalid total amount: ${totals.totalAmount}`);
+      }
+
+      logger.info('Order totals calculated:', {
+        subtotal: totals.subtotal,
+        discount: totals.couponDiscount,
+        shippingCost: totals.shippingCost,
+        totalAmount: totals.totalAmount,
+        preferredCourier
+      });
+
+      // Create Razorpay order
+      logger.info(`Creating Razorpay order for amount: ₹${totals.totalAmount}`);
+      const razorpayOrder = await razorpayService.createOrder(
+        totals.totalAmount,
+        'INR'
+      );
+
+      if (!razorpayOrder || !razorpayOrder.id) {
+        throw new Error('Failed to create Razorpay order - no order ID returned');
+      }
+
+      // Store temporary order data
+      const tempOrderData = {
+        userId,
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        pincode,
+        orderItems,
+        couponCode,
+        customImages,
+        preferredCourier,
+        courierInstructions,
+        totals,
+        razorpayOrderId: razorpayOrder.id
+      };
+
+      logger.info(`Razorpay order initiated successfully. Order ID: ${razorpayOrder.id}, Courier: ${preferredCourier || 'Not specified'}`);
+
+      return {
+        razorpayOrder,
+        tempOrderData: {
+          ...tempOrderData,
+          orderNumber: this.generateOrderNumber()
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to initiate Razorpay payment:', {
+        error: error.message,
+        stack: error.stack,
+        orderData: {
+          userId: orderData.userId,
+          email: orderData.email,
+          itemCount: orderData.orderItems?.length || 0
+        }
+      });
+      throw error;
+    }
   }
-}
 
   async verifyAndCreateOrder(paymentData) {
     const {

@@ -256,7 +256,7 @@ async register(userData, files = []) {
     });
 
     await twilioClient.messages.create({
-      body: `HangerGarments: Your OTP is ${otp}. Do not share. Valid for 10 minutes.`,
+      body: `TiruppurGarments: Your OTP is ${otp}. Do not share. Valid for 10 minutes.`,
       to: phoneNumber,
       from: process.env.TWILIO_PHONE_NUMBER
     });

@@ -22,7 +22,7 @@ class EmailService {
   async sendEmail({ to, subject, html, text, from }) {
     try {
       const mailOptions = {
-        from: from || `"Hanger Garments" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+        from: from || `"Tiruppur Garments" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
         to: Array.isArray(to) ? to.join(', ') : to,
         subject: this.cleanSubject(subject),
         html: html,
@@ -34,7 +34,7 @@ class EmailService {
           'X-Priority': '3',
           'X-MSMail-Priority': 'Normal',
           'Importance': 'Normal',
-          'X-Mailer': 'Hanger Garments Mailer 1.0',
+          'X-Mailer': 'Tiruppur Garments Mailer 1.0',
           'List-Unsubscribe': `<mailto:${process.env.SMTP_UNSUBSCRIBE || process.env.SMTP_FROM}>`,
           'Precedence': 'bulk',
         },
