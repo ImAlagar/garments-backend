@@ -303,9 +303,11 @@ model Order {
   estimatedDelivery DateTime?
   shippedAt       DateTime?
   deliveredAt     DateTime?
+  preferredCourier     String?   // e.g., "professional", "delhivery", "others"
+  courierInstructions String?   // Additional instructions for courier
   
   trackingHistory TrackingHistory[]
-
+  
   @@map("orders")
 }
 

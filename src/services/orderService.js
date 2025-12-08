@@ -208,7 +208,8 @@ class OrderService {
     };
   }
 
-  async initiateRazorpayPayment(orderData) {
+async initiateRazorpayPayment(orderData) {
+  try {
     const {
       userId,
       name,
@@ -220,22 +221,53 @@ class OrderService {
       pincode,
       orderItems,
       couponCode,
-      customImages = []
+      customImages = [],
+      preferredCourier = '',
+      courierInstructions = ''
     } = orderData;
 
     // Validate required fields
-    if (!name || !email || !phone || !address || !city || !state || !pincode) {
-      throw new Error('All shipping information fields are required');
+    const requiredFields = { name, email, phone, address, city, state, pincode };
+    const missingFields = Object.entries(requiredFields)
+      .filter(([key, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+
+    // Validate order items
+    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+      throw new Error('Order must contain at least one item');
     }
 
     // Calculate totals with quantity pricing
+    logger.info('Calculating order totals...');
     const totals = await this.calculateOrderTotals(orderItems, couponCode);
+    
+    // Validate total amount
+    if (!totals.totalAmount || totals.totalAmount <= 0) {
+      throw new Error(`Invalid total amount: ${totals.totalAmount}`);
+    }
+
+    logger.info('Order totals calculated:', {
+      subtotal: totals.subtotal,
+      discount: totals.couponDiscount,
+      shippingCost: totals.shippingCost,
+      totalAmount: totals.totalAmount,
+      preferredCourier
+    });
 
     // Create Razorpay order
+    logger.info(`Creating Razorpay order for amount: ₹${totals.totalAmount}`);
     const razorpayOrder = await razorpayService.createOrder(
       totals.totalAmount,
       'INR'
     );
+
+    if (!razorpayOrder || !razorpayOrder.id) {
+      throw new Error('Failed to create Razorpay order - no order ID returned');
+    }
 
     // Store temporary order data
     const tempOrderData = {
@@ -250,11 +282,13 @@ class OrderService {
       orderItems,
       couponCode,
       customImages,
+      preferredCourier,
+      courierInstructions,
       totals,
       razorpayOrderId: razorpayOrder.id
     };
 
-    logger.info(`Razorpay order initiated with quantity discounts. Savings: ₹${totals.quantitySavings}`);
+    logger.info(`Razorpay order initiated successfully. Order ID: ${razorpayOrder.id}, Courier: ${preferredCourier || 'Not specified'}`);
 
     return {
       razorpayOrder,
@@ -263,7 +297,19 @@ class OrderService {
         orderNumber: this.generateOrderNumber()
       }
     };
+  } catch (error) {
+    logger.error('Failed to initiate Razorpay payment:', {
+      error: error.message,
+      stack: error.stack,
+      orderData: {
+        userId: orderData.userId,
+        email: orderData.email,
+        itemCount: orderData.orderItems?.length || 0
+      }
+    });
+    throw error;
   }
+}
 
   async verifyAndCreateOrder(paymentData) {
     const {
@@ -315,6 +361,11 @@ class OrderService {
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
+      
+      // Add courier preferences
+      preferredCourier: orderData.preferredCourier || null,
+      courierInstructions: orderData.courierInstructions || null,
+      
       // FIXED: Use coupon relation instead of couponId
       ...(totals.coupon && {
         coupon: {
@@ -363,17 +414,16 @@ class OrderService {
                 }
               }
             },
-        productVariant: {
-          include: {
-            variantImages: {  // Add this
-              select: {
-                imageUrl: true,
-                color: true
+            productVariant: {
+              include: {
+                variantImages: {
+                  select: {
+                    imageUrl: true,
+                    color: true
+                  }
+                }
               }
             }
-          }
-        }
-
           }
         },
         customImages: true,
@@ -437,6 +487,7 @@ class OrderService {
     };
   }
 
+
   async createCODOrder(orderData) {
     const {
       userId,
@@ -449,7 +500,9 @@ class OrderService {
       pincode,
       orderItems,
       couponCode,
-      customImages = []
+      customImages = [],
+      preferredCourier,  // Add this
+      courierInstructions  // Add this
     } = orderData;
 
     // Validate required fields
@@ -482,6 +535,11 @@ class OrderService {
       shippingCost: totals.shippingCost,
       paymentStatus: 'PENDING',
       paymentMethod: 'COD',
+      
+      // Add courier preferences
+      preferredCourier: preferredCourier || null,
+      courierInstructions: courierInstructions || null,
+      
       // FIXED: Use coupon relation instead of couponId
       ...(totals.coupon && {
         coupon: {
