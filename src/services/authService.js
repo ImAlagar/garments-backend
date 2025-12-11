@@ -234,36 +234,117 @@ async register(userData, files = []) {
     };
   }
 
-  async sendOTP(phoneNumber) {
-    const user = await prisma.user.findFirst({ where: { phone: phoneNumber } });
 
-    // 🛑 OTP already active → don't send again
-    if (user.otpExpiry && user.otpExpiry > new Date()) {
-      throw new Error("OTP already sent. Please wait until it expires.");
+async sendOTP(phoneNumber) {
+  // Clean phone number
+  const cleanPhoneNumber = phoneNumber.replace(/\D/g, '').slice(-10);
+  
+  // Format for Twilio
+  const twilioPhoneNumber = `+91${cleanPhoneNumber}`;
+  
+
+  // Find user with maximum attempt check
+  const user = await prisma.user.findFirst({ 
+    where: { 
+      phone: {
+        endsWith: cleanPhoneNumber
+      }
+    },
+    select: {
+      id: true,
+      phone: true,
+      otpAttempts: true,
+      otpExpiry: true,
+      isActive: true,
+      role: true,
+      isApproved: true
     }
+  });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpSecret = await bcrypt.hash(otp, 10);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min validity
+  if (!user) {
+    throw new Error('User not found');
+  }
 
+  // Check if account is active
+  if (!user.isActive) {
+    throw new Error('Account is deactivated');
+  }
+
+  // Check if wholesaler is approved
+  if (user.role === 'WHOLESALER' && !user.isApproved) {
+    throw new Error('Your account is pending admin approval');
+  }
+
+  // Check maximum attempts (5 attempts)
+  if (user.otpAttempts >= 5) {
+    // Check if OTP is expired, if yes reset attempts
+    if (user.otpExpiry && user.otpExpiry < new Date()) {
+      // Reset attempts as OTP expired
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          otpAttempts: 0,
+          otpSecret: null,
+          otpExpiry: null
+        }
+      });
+    } else {
+      throw new Error('Maximum OTP attempts reached. Please try again after 10 minutes.');
+    }
+  }
+
+  // Check if OTP already active and not expired
+  if (user.otpExpiry && user.otpExpiry > new Date()) {
+    const timeLeft = Math.ceil((user.otpExpiry - new Date()) / 1000);
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    
+    throw new Error(`OTP already sent. Please wait ${minutes}m ${seconds}s before requesting new OTP.`);
+  }
+
+  // Generate new OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpSecret = await bcrypt.hash(otp, 10);
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  try {
+    
+    const message = await twilioClient.messages.create({
+      body: `tiruppurGarments: Your OTP is ${otp}. Do not share. Valid for 10 minutes.`,
+      to: twilioPhoneNumber,
+      from: process.env.TWILIO_PHONE_NUMBER
+    });
+
+    
+    // Save OTP and reset attempts counter
     await prisma.user.update({
       where: { id: user.id },
       data: {
         otpSecret,
         otpExpiry,
-        otpAttempts: 0 // reset attempts on new OTP
+        otpAttempts: 0 // Reset attempts on new OTP
       }
     });
 
-    await twilioClient.messages.create({
-      body: `TiruppurGarments: Your OTP is ${otp}. Do not share. Valid for 10 minutes.`,
-      to: phoneNumber,
-      from: process.env.TWILIO_PHONE_NUMBER
+    return { 
+      success: true,
+      requiresOTP: true, 
+      message: "OTP sent successfully",
+      otpExpiry: otpExpiry.toISOString()
+    };
+    
+  } catch (error) {
+    console.error('Twilio Error Details:', {
+      message: error.message,
+      code: error.code,
+      moreInfo: error.moreInfo,
+      status: error.status
     });
-
-    return { requiresOTP: true, message: "OTP sent successfully" };
+    
+    // Don't clear OTP on failure, just don't save it
+    throw new Error(`Failed to send OTP: ${error.message}. Please try again.`);
   }
-
+}
   async verifyOTP(phoneNumber, otp) {
     const user = await prisma.user.findFirst({
       where: {
