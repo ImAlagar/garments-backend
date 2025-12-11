@@ -989,7 +989,7 @@ Nourishing Lives Naturally
         });
 
         return {
-        subject: `New Wholesaler Application - ${wholesalerData.businessName || 'Unknown Business'}`,
+        subject: `New Wholesaler Application - ${wholesalerData.name || 'Unknown Business'}`,
         html: `
     <!DOCTYPE html>
     <html lang="en">
@@ -1041,12 +1041,12 @@ Nourishing Lives Naturally
                     
                     <div class="info-item">
                         <span class="info-label">Business Name:</span>
-                        <span class="info-value">${escapeHtml(wholesalerData.businessName) || 'Not provided'}</span>
+                        <span class="info-value">${escapeHtml(wholesalerData.businessType) || 'Not provided'}</span>
                     </div>
                     
                     <div class="info-item">
                         <span class="info-label">Contact Person:</span>
-                        <span class="info-value">${escapeHtml(wholesalerData.contactPerson) || 'Not provided'}</span>
+                        <span class="info-value">${escapeHtml(wholesalerData.name) || 'Not provided'}</span>
                     </div>
                     
                     <div class="info-item">
@@ -1110,7 +1110,7 @@ Nourishing Lives Naturally
                 </div>
                 
                 <div class="action-buttons">
-                    <a href="mailto:${wholesalerData.email}" class="btn">✉️ Contact ${wholesalerData.contactPerson?.split(' ')[0] || 'Applicant'}</a>
+                    <a href="mailto:${wholesalerData.email}" class="btn">✉️ Contact ${wholesalerData.name?.split(' ')[0] || 'Applicant'}</a>
                     <a href="tel:${wholesalerData.phone}" class="btn btn-outline" style="${!wholesalerData.phone ? 'display: none;' : ''}">📞 Call Business</a>
                 </div>
             </div>
@@ -1130,8 +1130,8 @@ Nourishing Lives Naturally
 
     BUSINESS DETAILS:
     -----------------
-    Business Name: ${wholesalerData.businessName || 'Not provided'}
-    Contact Person: ${wholesalerData.contactPerson || 'Not provided'}
+    Business Name: ${wholesalerData.businessType || 'Not provided'}
+    Contact Person: ${wholesalerData.name || 'Not provided'}
     Email: ${wholesalerData.email}
     Phone: ${wholesalerData.phone || 'Not provided'}
     Business Type: ${wholesalerData.businessType || 'Not specified'}
@@ -1182,7 +1182,7 @@ Nourishing Lives Naturally
                 <h1>Wholesaler Application Received</h1>
             </div>
             <div class="content">
-                <p>Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},</p>
+                <p>Dear ${wholesalerData.name || 'Valued Business Partner'},</p>
                 
                 <p>Thank you for your interest in becoming a wholesale partner with Tiruppur Garments!</p>
                 
@@ -1207,7 +1207,7 @@ Nourishing Lives Naturally
                     </div>
                 </div>
                 
-                <p><strong>Business Name:</strong> ${wholesalerData.businessName}</p>
+                <p><strong>Business Name:</strong> ${wholesalerData.businessType}</p>
                 <p><strong>Application Date:</strong> ${new Date().toLocaleDateString()}</p>
                 
                 <p>If you have any questions, please don't hesitate to contact our wholesale team.</p>
@@ -1223,7 +1223,7 @@ Nourishing Lives Naturally
         text: `
     Wholesaler Application Received - Tiruppur Garments
 
-    Dear ${wholesalerData.contactPerson || 'Valued Business Partner'},
+    Dear ${wholesalerData.name || 'Valued Business Partner'},
 
     Thank you for your interest in becoming a wholesale partner with Tiruppur Garments!
 
@@ -1238,7 +1238,7 @@ Nourishing Lives Naturally
 
     APPLICATION DETAILS:
     -------------------
-    Business Name: ${wholesalerData.businessName}
+    Business Name: ${wholesalerData.businessType}
     Application Date: ${new Date().toLocaleDateString()}
 
     If you have any questions, please don't hesitate to contact our wholesale team.
@@ -1269,9 +1269,9 @@ Nourishing Lives Naturally
                 <h1>🎉 Welcome to Our Wholesale Family!</h1>
             </div>
             <div class="content">
-                <p>Dear ${wholesalerData.contactPerson},</p>
+                <p>Dear ${wholesalerData.name},</p>
                 
-                <p>We are delighted to inform you that your wholesaler application for <strong>${wholesalerData.businessName}</strong> has been approved!</p>
+                <p>We are delighted to inform you that your wholesaler application  has been approved!</p>
                 
                 <div class="next-steps">
                     <h3>Next Steps to Get Started:</h3>
@@ -1284,8 +1284,7 @@ Nourishing Lives Naturally
                 </div>
                 
                 <p><strong>Your Wholesale Account Details:</strong></p>
-                <p>Business: ${wholesalerData.businessName}<br>
-                Contact: ${wholesalerData.contactPerson}<br>
+                Contact: ${wholesalerData.name}<br>
                 Email: ${wholesalerData.email}<br>
                 Account Type: Wholesale Partner</p>
                 
@@ -1304,9 +1303,9 @@ Nourishing Lives Naturally
         text: `
     Wholesaler Application Approved - Welcome to Tiruppur Garments!
 
-    Dear ${wholesalerData.contactPerson},
+    Dear ${wholesalerData.name},
 
-    We are delighted to inform you that your wholesaler application for ${wholesalerData.businessName} has been approved!
+    We are delighted to inform you that your wholesaler application  has been approved!
 
     NEXT STEPS TO GET STARTED:
     -------------------------
@@ -1317,8 +1316,7 @@ Nourishing Lives Naturally
 
     YOUR WHOLESALE ACCOUNT DETAILS:
     ------------------------------
-    Business: ${wholesalerData.businessName}
-    Contact: ${wholesalerData.contactPerson}
+    Contact: ${wholesalerData.name}
     Email: ${wholesalerData.email}
     Account Type: Wholesale Partner
 
@@ -1331,9 +1329,6 @@ Nourishing Lives Naturally
     Tiruppur Garments
         `.trim()
     }),
-
-
-
 
 
     contactAutoReply: (contactData) => ({
