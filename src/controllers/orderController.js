@@ -27,20 +27,34 @@ export const calculateOrderTotals = asyncHandler(async (req, res) => {
 
 // Initiate Razorpay payment with quantity pricing
 export const initiatePayment = asyncHandler(async (req, res) => {
-  const { orderData } = req.body;
-  orderData.userId = req.user.id;
+    const { orderData } = req.body;
+    orderData.userId = req.user.id;
+    
+    // Check if user is wholesale from request user
+    const isWholesaleUser = req.user.role === 'WHOLESALER';
+    orderData.isWholesaleUser = isWholesaleUser;
+    orderData.userType = req.user.role || 'CUSTOMER';
 
-  const result = await orderService.initiateRazorpayPayment(orderData);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Payment initiated successfully',
-    data: {
-      ...result,
-      quantitySavings: result.tempOrderData.totals.quantitySavings,
-      hasQuantityDiscounts: result.tempOrderData.totals.hasQuantityDiscounts
-    }
-  });
+    logger.info('Initiating payment for user:', {
+        userId: req.user.id,
+        role: req.user.role,
+        isWholesaleUser,
+        orderItemCount: orderData.orderItems?.length || 0
+    });
+
+    const result = await orderService.initiateRazorpayPayment(orderData);
+    
+    res.status(200).json({
+        success: true,
+        message: 'Payment initiated successfully',
+        data: {
+            ...result,
+            quantitySavings: result.tempOrderData.totals.quantitySavings,
+            hasQuantityDiscounts: result.tempOrderData.totals.hasQuantityDiscounts,
+            isWholesalePricing: result.tempOrderData.totals.isWholesalePricing,
+            wholesaleUser: result.tempOrderData.isWholesaleUser
+        }
+    });
 });
 
 

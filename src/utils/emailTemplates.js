@@ -344,7 +344,7 @@ export const emailTemplates = {
 
     welcomeEmail: (userData) => {
     const currentYear = new Date().getFullYear();
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
     const frontendUrl = process.env.FRONTEND_URL || `https://${domain}`;
     
     return {
@@ -431,7 +431,8 @@ export const emailTemplates = {
             <div class="footer">
                 <p><strong>Tiruppur Garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
-                <p>Email: contact@${domain} | Phone: +91 88833 85888</p>
+                <p>Email: contact@${domain} | Phone: +91  96774 11007
+</p>
                 <p>
                     <a href="${frontendUrl}/preferences" style="color: #666666; text-decoration: none;">Update Preferences</a> | 
                     <a href="${frontendUrl}/unsubscribe" style="color: #666666; text-decoration: none;">Unsubscribe</a>
@@ -471,7 +472,8 @@ export const emailTemplates = {
 
     Need help? Contact us:
     Email: contact@${domain}
-    Phone: +91 88833 85888
+    Phone: +91  96774 11007
+
 
     Update your preferences: ${frontendUrl}/preferences
     Unsubscribe: ${frontendUrl}/unsubscribe
@@ -486,7 +488,7 @@ export const emailTemplates = {
     },
 
    passwordReset: (userData, resetUrl) => {
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
     const expiryTime = '1 hour';
     
@@ -602,7 +604,7 @@ Nourishing Lives Naturally
     },
 
     passwordChangedConfirmation: (userData) => {
-        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+        const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
         const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
         const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',
@@ -714,7 +716,7 @@ Nourishing Lives Naturally
     // Add these templates to your emailTemplates.js file
 
     adminPasswordReset: (adminData, resetUrl) => {
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
     const expiryTime = '1 hour';
     
@@ -840,7 +842,7 @@ Nourishing Lives Naturally
     },
 
     adminPasswordChangedConfirmation: (adminData) => {
-    const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+    const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
     const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
     const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',
@@ -1375,7 +1377,8 @@ Nourishing Lives Naturally
                 <p>Reference ID: ${contactData.id}<br>
                 Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}</p>
                 
-                <p>For urgent inquiries, please call us at +91 88833 85888.</p>
+                <p>For urgent inquiries, please call us at +91  96774 11007
+.</p>
                 
                 <p>Best regards,<br>
                 <strong>Customer Support Team</strong><br>
@@ -1403,7 +1406,8 @@ Nourishing Lives Naturally
     Reference ID: ${contactData.id}
     Submitted: ${new Date(contactData.createdAt).toLocaleDateString()}
 
-    For urgent inquiries, please call us at +91 88833 85888.
+    For urgent inquiries, please call us at +91  96774 11007
+.
 
     Best regards,
     Customer Support Team
@@ -1421,57 +1425,104 @@ Nourishing Lives Naturally
             minute: '2-digit'
         });
 
-        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
-        const supportEmail = process.env.SUPPORT_EMAIL || `contact@${domain}`;
+        const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
+        const supportEmail = process.env.SUPPORT_EMAIL || `admin@${domain}`;
         const trackingUrl = orderData.trackingUrl || '#';
+        
+        // Check if it's wholesale pricing - Use user role from order data
+        const userRole = orderData.user?.role;
+        const isWholesalePricing = userRole === 'WHOLESALER';
 
-        // Enhanced helper function to get product image with all options
-            const getProductImage = (item, orderCustomImages = []) => {
-                const product = item.product || {};
-                const variant = item.productVariant || {};
-                
+        // Helper function to calculate item price based on user role
+        const calculateItemPrice = (item) => {
+            if (isWholesalePricing && item.product?.wholesalePrice) {
+                return item.product.wholesalePrice;
+            }
+            return item.price || item.product?.offerPrice || 0;
+        };
 
-                // First priority: Custom order images
-                const itemCustomImages = orderCustomImages.filter(customImg => {
-                    const filename = customImg.filename || '';
-                    return filename.includes(`item-${item.id}`) || 
-                        filename.includes(`product-${item.productId}`) ||
-                        filename.includes(`variant-${item.productVariantId}`) ||
-                        (orderCustomImages.length === 1 && !filename.includes('item-') && !filename.includes('product-'));
-                });
-                
-                if (itemCustomImages.length > 0 && itemCustomImages[0].imageUrl) {
-                    return itemCustomImages[0].imageUrl;
-                }
-                
-                // Second priority: Variant images (with proper null checks)
-                if (variant?.variantImages && Array.isArray(variant.variantImages) && variant.variantImages.length > 0) {
-                    const validVariantImage = variant.variantImages.find(img => img && img.imageUrl);
-                    if (validVariantImage?.imageUrl) {
-                        return validVariantImage.imageUrl;
-                    }
+        // Helper function to calculate item total
+        const calculateItemTotal = (item) => {
+            const itemPrice = calculateItemPrice(item);
+            return itemPrice * (item.quantity || 1);
+        };
+
+        // Calculate order totals
+        const calculateOrderTotals = () => {
+            let subtotal = 0;
+            let regularSubtotal = 0;
+            
+            if (orderData.orderItems) {
+                orderData.orderItems.forEach(item => {
+                    // Actual paid price
+                    const actualPrice = calculateItemPrice(item);
+                    const actualTotal = calculateItemTotal(item);
+                    subtotal += actualTotal;
                     
-                    // If no valid image found but array exists, try first item
-                    const firstVariantImage = variant.variantImages[0];
-                    if (firstVariantImage?.imageUrl) {
-                        return firstVariantImage.imageUrl;
-                    }
-                }
-                
-                // Third priority: Product images
-                if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
-                    const validProductImage = product.images.find(img => img && img.imageUrl);
-                    if (validProductImage?.imageUrl) {
-                        return validProductImage.imageUrl;
-                    }
-                }
-                
-                // Final fallback: Placeholder
-                const productInitials = product.name?.substring(0, 2).toUpperCase() || 'HG';
-                return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
+                    // Regular price for comparison
+                    const regularPrice = item.price || item.product?.offerPrice || 0;
+                    const regularTotal = regularPrice * (item.quantity || 1);
+                    regularSubtotal += regularTotal;
+                });
+            }
+            
+            return {
+                subtotal: subtotal,
+                regularSubtotal: regularSubtotal,
+                discount: orderData.discount || 0,
+                shippingCost: orderData.shippingCost || 0,
+                totalAmount: orderData.totalAmount || 0,
+                savings: regularSubtotal - subtotal
             };
+        };
 
-        // Pre-process order items with images
+        const totals = calculateOrderTotals();
+        
+        // Helper function to get product image
+        const getProductImage = (item, orderCustomImages = []) => {
+            const product = item.product || {};
+            const variant = item.productVariant || {};
+
+            // First priority: Custom order images
+            const itemCustomImages = orderCustomImages.filter(customImg => {
+                const filename = customImg.filename || '';
+                return filename.includes(`item-${item.id}`) || 
+                    filename.includes(`product-${item.productId}`) ||
+                    filename.includes(`variant-${item.productVariantId}`) ||
+                    (orderCustomImages.length === 1 && !filename.includes('item-') && !filename.includes('product-'));
+            });
+            
+            if (itemCustomImages.length > 0 && itemCustomImages[0].imageUrl) {
+                return itemCustomImages[0].imageUrl;
+            }
+            
+            // Second priority: Variant images
+            if (variant?.variantImages && Array.isArray(variant.variantImages) && variant.variantImages.length > 0) {
+                const validVariantImage = variant.variantImages.find(img => img && img.imageUrl);
+                if (validVariantImage?.imageUrl) {
+                    return validVariantImage.imageUrl;
+                }
+                
+                const firstVariantImage = variant.variantImages[0];
+                if (firstVariantImage?.imageUrl) {
+                    return firstVariantImage.imageUrl;
+                }
+            }
+            
+            // Third priority: Product images
+            if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+                const validProductImage = product.images.find(img => img && img.imageUrl);
+                if (validProductImage?.imageUrl) {
+                    return validProductImage.imageUrl;
+                }
+            }
+            
+            // Final fallback: Placeholder
+            const productInitials = product.name?.substring(0, 2).toUpperCase() || 'HG';
+            return `https://via.placeholder.com/300x300/2d5e2d/ffffff?text=${productInitials}`;
+        };
+
+        // Pre-process order items with correct pricing
         const orderItemsWithImages = orderData.orderItems ? orderData.orderItems.map(item => {
             const displayImage = getProductImage(item, orderData.customImages || []);
             
@@ -1483,10 +1534,24 @@ Nourishing Lives Naturally
                     filename.includes(`variant-${item.productVariantId}`);
             });
 
+            // Calculate prices based on user role
+            const itemPrice = calculateItemPrice(item);
+            const itemTotal = calculateItemTotal(item);
+            const regularPrice = item.price || item.product?.offerPrice || 0;
+            const regularTotal = regularPrice * (item.quantity || 1);
+            const isWholesaleItem = isWholesalePricing && item.product?.wholesalePrice && itemPrice === item.product.wholesalePrice;
+            const itemSavings = regularTotal - itemTotal;
+            
             return {
                 ...item,
                 displayImage: displayImage,
-                hasCustomImage: hasCustomImage
+                hasCustomImage: hasCustomImage,
+                itemPrice: itemPrice,
+                itemTotal: itemTotal,
+                regularPrice: regularPrice,
+                regularTotal: regularTotal,
+                isWholesaleItem: isWholesaleItem,
+                itemSavings: itemSavings
             };
         }) : [];
 
@@ -1542,9 +1607,6 @@ Nourishing Lives Naturally
                 border-radius: 12px; 
                 margin-bottom: 30px; 
                 border-left: 4px solid #10b981;
-                display: flex;
-                align-items: center;
-                gap: 12px;
             }
             
             .order-overview { 
@@ -1574,9 +1636,6 @@ Nourishing Lives Naturally
                 margin-bottom: 20px; 
                 font-size: 20px;
                 font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 10px;
             }
             
             .order-items { 
@@ -1599,7 +1658,6 @@ Nourishing Lives Naturally
                 overflow: hidden; 
                 background: #f8fafc; 
                 border: 1px solid #f0f0f0; 
-                position: relative;
             }
             
             .item-image img { 
@@ -1607,22 +1665,6 @@ Nourishing Lives Naturally
                 height: 100%; 
                 object-fit: cover; 
                 display: block; 
-            }
-            
-            .custom-image-badge {
-                position: absolute;
-                top: -8px;
-                right: -8px;
-                background: #667eea;
-                color: white;
-                border-radius: 50%;
-                width: 20px;
-                height: 20px;
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             }
             
             .item-details { 
@@ -1647,62 +1689,22 @@ Nourishing Lives Naturally
                 font-size: 14px;
             }
             
-            .custom-image-note {
-                color: #667eea;
-                font-size: 12px;
-                font-weight: 600;
-                margin-top: 4px;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-            
             .item-price { 
                 flex-shrink: 0; 
                 text-align: right; 
                 min-width: 100px; 
                 font-weight: 700; 
-                color: #667eea; 
                 font-size: 16px;
             }
             
-            /* Custom Images Section */
-            .custom-images-section {
-                background: #f0f9ff;
-                border-radius: 12px;
-                padding: 25px;
-                margin: 25px 0;
-                border: 1px solid #bae6fd;
+            .wholesale-price {
+                color: #f97316;
             }
             
-            .custom-images-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 15px;
-                margin-top: 15px;
+            .regular-price {
+                color: #667eea;
             }
             
-            .custom-image-item {
-                text-align: center;
-            }
-            
-            .custom-image {
-                width: 120px;
-                height: 120px;
-                border-radius: 8px;
-                object-fit: cover;
-                border: 2px solid #667eea;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-            
-            .custom-image-label {
-                font-size: 12px;
-                color: #666;
-                margin-top: 8px;
-                word-break: break-word;
-                font-weight: 500;
-            }
-
             .status-badge {
                 display: inline-block;
                 padding: 6px 12px;
@@ -1712,33 +1714,18 @@ Nourishing Lives Naturally
                 font-size: 12px;
                 font-weight: 600;
             }
-
-            .button {
+            
+            .wholesale-badge {
                 display: inline-block;
-                padding: 14px 28px;
-                background: #28a745;
+                background: #f97316;
                 color: white;
-                text-decoration: none;
-                border-radius: 6px;
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
                 font-weight: 600;
-                margin: 20px 0;
-                text-align: center;
-                transition: all 0.3s ease;
+                margin-left: 10px;
             }
-
-            .button:hover {
-                background: #218838;
-                transform: translateY(-2px);
-            }
-
-            .info-card {
-                background: #f8f9fa;
-                border-radius: 12px;
-                padding: 25px;
-                margin: 20px 0;
-                border: 1px solid #e2e8f0;
-            }
-
+            
             .amount-breakdown {
                 background: #f8f9fa;
                 border-radius: 12px;
@@ -1746,14 +1733,14 @@ Nourishing Lives Naturally
                 margin: 25px 0;
                 border: 1px solid #e2e8f0;
             }
-
+            
             .breakdown-row {
                 display: flex;
                 justify-content: space-between;
                 padding: 12px 0;
                 border-bottom: 1px solid #e2e8f0;
             }
-
+            
             .breakdown-total {
                 border-top: 2px solid #667eea;
                 font-weight: bold;
@@ -1762,7 +1749,7 @@ Nourishing Lives Naturally
                 padding-top: 16px;
                 margin-top: 8px;
             }
-
+            
             .support-section {
                 background: #eff6ff;
                 border-radius: 12px;
@@ -1770,7 +1757,7 @@ Nourishing Lives Naturally
                 margin: 25px 0;
                 border: 1px solid #bfdbfe;
             }
-
+            
             .footer {
                 margin-top: 30px;
                 padding: 20px;
@@ -1779,6 +1766,22 @@ Nourishing Lives Naturally
                 font-size: 12px;
                 color: #6c757d;
                 border-top: 1px solid #e2e8f0;
+            }
+            
+            .savings-badge {
+                background: #10b981;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                margin-left: 8px;
+            }
+            
+            .price-comparison {
+                font-size: 12px;
+                color: #718096;
+                margin-top: 4px;
             }
             
             @media (max-width: 600px) {
@@ -1806,13 +1809,6 @@ Nourishing Lives Naturally
                     text-align: left; 
                     margin-top: 8px; 
                 }
-                .custom-images-grid {
-                    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                }
-                .custom-image {
-                    width: 100px;
-                    height: 100px;
-                }
             }
         </style>
     </head>
@@ -1821,22 +1817,26 @@ Nourishing Lives Naturally
             <div class="header">
                 <h1>🎉 Order Confirmed!</h1>
                 <p>Thank you for shopping with Tiruppur Garments</p>
+                ${isWholesalePricing ? '<div class="wholesale-badge">WHOLESALE ORDER</div>' : ''}
             </div>
             
             <div class="content">
                 <div class="success-badge">
                     <strong>Order Confirmed:</strong> Your order #${orderData.orderNumber} has been successfully placed and is being processed.
+                    ${isWholesalePricing ? '<br><span style="color: #f97316; font-weight: 600;">Wholesale pricing applied to your order</span>' : ''}
+                    ${isWholesalePricing && totals.savings > 0 ? `<br><span style="color: #10b981; font-weight: 600;">Total Savings: ₹${totals.savings.toFixed(2)}</span>` : ''}
                 </div>
                 
                 <p style="margin-bottom: 25px; font-size: 16px; color: #4a5568;">
                     Hello <strong style="color: #667eea;">${orderData.name}</strong>,<br>
                     Thank you for choosing Tiruppur Garments! We're preparing your order and will notify you once it's shipped.
+                    ${userRole === 'WHOLESALER' ? '<br><span style="color: #f97316; font-weight: 600;">Thank you for being a valued wholesale customer!</span>' : ''}
                 </p>
                 
                 <!-- Order Overview -->
                 <div class="order-overview">
                     <div class="section-title">
-                        <span>📊</span> Order Overview
+                        Order Overview
                     </div>
                     <div class="overview-grid">
                         <div class="overview-item">
@@ -1853,37 +1853,22 @@ Nourishing Lives Naturally
                         </div>
                         <div class="overview-item">
                             <strong style="color: #718096; font-size: 14px;">Total Amount</strong>
-                            <p style="color: #667eea; font-weight: 700; font-size: 20px;">₹${orderData.totalAmount?.toFixed(2) || '0.00'}</p>
+                            <p style="color: ${isWholesalePricing ? '#f97316' : '#667eea'}; font-weight: 700; font-size: 20px;">
+                                ₹${totals.totalAmount.toFixed(2)}
+                            </p>
+                            ${isWholesalePricing && totals.savings > 0 ? `
+                            <p style="font-size: 12px; color: #10b981; margin-top: 4px;">
+                                You saved: ₹${totals.savings.toFixed(2)}
+                            </p>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
-
-                <!-- Custom Images Section -->
-                ${hasCustomImages ? `
-                <div class="custom-images-section">
-                    <div class="section-title">
-                        <span>🖼️</span> Your Custom Images
-                    </div>
-                    <p style="color: #4a5568; margin-bottom: 15px; line-height: 1.6;">
-                        We've received your custom images and will use them to create your personalized order. 
-                        Below are the images you've provided:
-                    </p>
-                    <div class="custom-images-grid">
-                        ${orderData.customImages.map((image, index) => `
-                        <div class="custom-image-item">
-                            <img src="${image.imageUrl}" alt="Custom Image ${index + 1}" class="custom-image" 
-                                onerror="this.src='https://via.placeholder.com/120x120/667eea/ffffff?text=Image+${index + 1}'" />
-                            <div class="custom-image-label">${image.filename || `Custom Image ${index + 1}`}</div>
-                        </div>
-                        `).join('')}
-                    </div>
-                </div>
-                ` : ''}
 
                 <!-- Order Items -->
                 <div class="order-items">
                     <div class="section-title">
-                        <span>📦</span> Order Items
+                        Order Items
                     </div>
                     ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
                         const product = item.product || {};
@@ -1895,16 +1880,26 @@ Nourishing Lives Naturally
                             <div class="item-image">
                                 <img src="${productImage}" alt="${productName}" 
                                     onerror="this.src='https://via.placeholder.com/80x80/2d5e2d/ffffff?text=HG'" />
-                                ${item.hasCustomImage ? '<div class="custom-image-badge" title="Custom Image Applied">🎨</div>' : ''}
                             </div>
                             <div class="item-details">
                                 <div class="product-name">${productName}</div>
                                 ${item.productVariant ? `<div class="product-variant">${item.productVariant.color} - ${item.productVariant.size}</div>` : ''}
-                                <div class="product-quantity">Quantity: ${item.quantity} × ₹${item.price}</div>
-                                ${item.hasCustomImage ? '<div class="custom-image-note"><span>🎨</span> Custom image will be applied</div>' : ''}
+                                <div class="product-quantity">
+                                    Quantity: ${item.quantity} × 
+                                    <span class="${item.isWholesaleItem ? 'wholesale-price' : 'regular-price'}" style="font-weight: 600;">
+                                        ₹${item.itemPrice.toFixed(2)}
+                                    </span>
+                                    ${item.isWholesaleItem ? '<span class="savings-badge">Wholesale</span>' : ''}
+                                </div>
+                                ${item.isWholesaleItem && item.itemSavings > 0 ? `
+                                <div class="price-comparison">
+                                    Regular price: <span style="text-decoration: line-through; color: #94a3b8;">₹${item.regularPrice.toFixed(2)}</span>
+                                    <span style="color: #10b981; margin-left: 8px;">Save: ₹${item.itemSavings.toFixed(2)}</span>
+                                </div>
+                                ` : ''}
                             </div>
-                            <div class="item-price">
-                                ₹${(item.quantity * item.price).toFixed(2)}
+                            <div class="item-price" style="${item.isWholesaleItem ? 'color: #f97316;' : 'color: #667eea;'}">
+                                ₹${item.itemTotal.toFixed(2)}
                             </div>
                         </div>
                         `;
@@ -1914,50 +1909,82 @@ Nourishing Lives Naturally
                 <!-- Amount Breakdown -->
                 <div class="amount-breakdown">
                     <div class="section-title">
-                        <span>💰</span> Amount Breakdown
+                        Amount Breakdown
                     </div>
-                    <div class="breakdown-row">
-                        <span>Subtotal:</span>
-                        <span>₹${orderData.subtotal?.toFixed(2) || '0.00'}</span>
-                    </div>
-                    ${orderData.discount > 0 ? `
-                    <div class="breakdown-row" style="color: #28a745;">
-                        <span>Discount:</span>
-                        <span>-₹${orderData.discount.toFixed(2)}</span>
+                    
+                    <!-- Regular Price Total (for wholesale comparison) -->
+                    ${isWholesalePricing && totals.regularSubtotal !== totals.subtotal ? `
+                    <div class="breakdown-row" style="color: #718096;">
+                        <span>Regular Items Total:</span>
+                        <span style="text-decoration: line-through;">₹${totals.regularSubtotal.toFixed(2)}</span>
                     </div>
                     ` : ''}
+                    
+                    <!-- Wholesale Savings -->
+                    ${isWholesalePricing && totals.savings > 0 ? `
+                    <div class="breakdown-row" style="color: #10b981;">
+                        <span>Wholesale Savings:</span>
+                        <span>-₹${totals.savings.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="breakdown-row">
+                        <span>Items Subtotal:</span>
+                        <span style="font-weight: 600;">₹${totals.subtotal.toFixed(2)}</span>
+                    </div>
+                    
+                    ${totals.discount > 0 ? `
+                    <div class="breakdown-row" style="color: #28a745;">
+                        <span>Discount:</span>
+                        <span>-₹${totals.discount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    
                     ${orderData.coupon ? `
                     <div class="breakdown-row">
                         <span>Coupon Applied:</span>
                         <span style="color: #667eea; font-weight: 600;">${orderData.coupon.code}</span>
                     </div>
                     ` : ''}
+                    
                     <div class="breakdown-row">
                         <span>Shipping:</span>
-                        <span>₹${orderData.shippingCost?.toFixed(2) || '0.00'}</span>
+                        <span>FREE</span>
                     </div>
+                    
                     <div class="breakdown-row breakdown-total">
                         <span>Total Amount:</span>
-                        <span>₹${orderData.totalAmount?.toFixed(2) || '0.00'}</span>
+                        <span style="color: ${isWholesalePricing ? '#f97316' : '#1a202c'}; font-weight: 700; font-size: 20px;">
+                            ₹${totals.totalAmount.toFixed(2)}
+                        </span>
                     </div>
+                    
+                    ${isWholesalePricing && totals.savings > 0 ? `
+                    <div style="text-align: center; padding: 12px; background: #d1fae5; border-radius: 8px; margin-top: 15px;">
+                        <span style="color: #065f46; font-weight: 600;">
+                            🎉 Total Savings: ₹${totals.savings.toFixed(2)}
+                        </span>
+                    </div>
+                    ` : ''}
                 </div>
 
                 <!-- Customer Information -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
-                    <div class="info-card">
-                        <div class="section-title">
-                            <span>👤</span> Customer Information
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; border: 1px solid #e2e8f0;">
+                        <div style="color: #667eea; margin-bottom: 20px; font-size: 20px; font-weight: 600;">
+                            Customer Information
                         </div>
                         <div style="color: #4a5568; line-height: 1.6;">
                             <strong>${orderData.name}</strong><br>
                             📧 ${orderData.email}<br>
                             📞 ${orderData.phone}
+                            ${userRole ? `<br><span style="color: ${userRole === 'WHOLESALER' ? '#f97316' : '#667eea'}; font-weight: 600;">${userRole} Account</span>` : ''}
                         </div>
                     </div>
 
-                    <div class="info-card">
-                        <div class="section-title">
-                            <span>🏠</span> Shipping Address
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; border: 1px solid #e2e8f0;">
+                        <div style="color: #667eea; margin-bottom: 20px; font-size: 20px; font-weight: 600;">
+                            Shipping Address
                         </div>
                         <p style="color: #4a5568; line-height: 1.6;">
                             ${orderData.address}<br>
@@ -1968,9 +1995,9 @@ Nourishing Lives Naturally
                 </div>
 
                 <!-- Payment Information -->
-                <div class="info-card">
-                    <div class="section-title">
-                        <span>💳</span> Payment Information
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <div style="color: #667eea; margin-bottom: 20px; font-size: 20px; font-weight: 600;">
+                        Payment Information
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
@@ -1981,58 +2008,19 @@ Nourishing Lives Naturally
                             <strong style="color: #718096; font-size: 14px;">Payment Status</strong>
                             <p><span class="status-badge">${orderData.paymentStatus}</span></p>
                         </div>
-                        ${orderData.razorpayPaymentId ? `
-                        <div style="grid-column: 1 / -1;">
-                            <strong style="color: #718096; font-size: 14px;">Payment ID</strong>
-                            <p style="color: #4a5568; font-family: monospace; font-size: 13px;">${orderData.razorpayPaymentId}</p>
-                        </div>
-                        ` : ''}
                     </div>
                 </div>
 
-                ${orderData.trackingNumber ? `
-                <!-- Tracking Information -->
-                <div class="info-card" style="background: #eff6ff; border-color: #bfdbfe;">
-                    <div class="section-title">
-                        <span>🚚</span> Tracking Information
-                    </div>
-                    <div style="display: grid; gap: 10px;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <strong style="color: #718096;">Tracking Number</strong>
-                            <span style="color: #1a202c; font-weight: 600;">${orderData.trackingNumber}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <strong style="color: #718096;">Carrier</strong>
-                            <span style="color: #1a202c;">${orderData.carrier}</span>
-                        </div>
-                        ${orderData.estimatedDelivery ? `
-                        <div style="display: flex; justify-content: space-between;">
-                            <strong style="color: #718096;">Estimated Delivery</strong>
-                            <span style="color: #1a202c;">${new Date(orderData.estimatedDelivery).toLocaleDateString()}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    ${orderData.trackingUrl ? `
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="${trackingUrl}" class="button" style="display: inline-block;">
-                            📦 Track Your Order
-                        </a>
-                    </div>
-                    ` : ''}
-                </div>
-                ` : `
-                <!-- Track Order Button -->
-                <div style="text-align: center; width: 100%;">
-                    <a href="${trackingUrl}" class="button">
+                <div style="text-align: center; width: 100%; margin: 30px 0;">
+                    <a href="${trackingUrl}" style="display: inline-block; padding: 14px 28px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
                         📦 Track Your Order
                     </a>
                 </div>
-                `}
 
                 <!-- Support Section -->
                 <div class="support-section">
-                    <div class="section-title">
-                        <span>📞</span> Need Help?
+                    <div style="color: #667eea; margin-bottom: 20px; font-size: 20px; font-weight: 600;">
+                        Need Help?
                     </div>
                     <p style="color: #4a5568; margin-bottom: 20px; line-height: 1.6;">
                         If you have any questions about your order or need assistance, our support team is here to help you.
@@ -2044,20 +2032,17 @@ Nourishing Lives Naturally
                         </div>
                         <div>
                             <strong style="color: #667eea; display: block; margin-bottom: 8px;">Phone Support</strong>
-                            <p style="color: #4a5568; font-weight: 500;">+91 88833 85888</p>
+                            <p style="color: #4a5568; font-weight: 500;">+91 96774 11007</p>
                         </div>
-                    </div>
-                    <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-radius: 8px;">
-                        <p style="color: #4a5568; font-size: 14px; margin: 0;">
-                            <strong>Business Hours:</strong> Monday - Saturday, 9:00 AM - 6:00 PM
-                        </p>
                     </div>
                 </div>
 
                 <p style="margin-top: 30px; text-align: center; color: #4a5568; line-height: 1.6;">
-                    Thank you for trusting us with your order. We're committed to making your experience wonderful!<br>
+                    Thank you for shopping with us! We're committed to making your experience wonderful!<br>
                     With love,<br>
-                    <strong style="color: #667eea; font-size: 18px;">Tiruppur Garments Team 🤍</strong>
+                    <strong style="color: #667eea; font-size: 18px;">
+                        Tiruppur Garments Team 🤍
+                    </strong>
                 </p>
             </div>
             
@@ -2074,75 +2059,68 @@ Nourishing Lives Naturally
             `,
             text: `
     ORDER CONFIRMED - Tiruppur Garments
+    ${isWholesalePricing ? '==== WHOLESALE ORDER ====' : ''}
 
     Hello ${orderData.name},
 
     Thank you for your order! We're excited to let you know that we've received your order #${orderData.orderNumber} and it is now being processed.
+    ${userRole === 'WHOLESALER' ? '\nThank you for being a valued wholesale customer!' : ''}
 
     ORDER OVERVIEW:
     ---------------
     Order Number: ${orderData.orderNumber}
     Order Date: ${orderDate}
     Status: ${orderData.status}
-    Total Amount: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
-
-    ${hasCustomImages ? `
-    CUSTOM IMAGES:
-    --------------
-    We've received ${orderData.customImages.length} custom image(s) for your order:
-    ${orderData.customImages.map((img, index) => `${index + 1}. ${img.filename || 'Custom Image'}`).join('\n')}
-    ` : ''}
+    ${userRole ? `Account Type: ${userRole}` : ''}
+    ${isWholesalePricing ? 'Type: WHOLESALE ORDER' : ''}
 
     ORDER ITEMS:
     -----------
-    ${orderData.orderItems && orderData.orderItems.map(item => {
-        const hasCustomImage = orderData.customImages && orderData.customImages.some(customImg => {
-            const filename = customImg.filename || '';
-            return filename.includes(`item-${item.id}`) || 
-                filename.includes(`product-${item.productId}`) ||
-                filename.includes(`variant-${item.productVariantId}`);
-        });
+    ${orderItemsWithImages.length > 0 ? orderItemsWithImages.map(item => {
+        const product = item.product || {};
+        const productName = product.name || 'Product';
+        const variantInfo = item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : '';
         
-        return `• ${item.product?.name || 'Product'}${item.productVariant ? ` (${item.productVariant.color} - ${item.productVariant.size})` : ''}${hasCustomImage ? ' [CUSTOM IMAGE]' : ''}
-    Quantity: ${item.quantity} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}`;
-    }).join('\n') || 'No items'}
+        let itemText = `• ${productName}${variantInfo}
+        Quantity: ${item.quantity} × ₹${item.itemPrice.toFixed(2)} = ₹${item.itemTotal.toFixed(2)}`;
+        
+        if (item.isWholesaleItem) {
+            itemText += ` [Wholesale Price]`;
+            if (item.itemSavings > 0) {
+                itemText += `\n    Regular: ₹${item.regularPrice.toFixed(2)} each (Save: ₹${item.itemSavings.toFixed(2)})`;
+            }
+        }
+        
+        return itemText;
+    }).join('\n\n') : 'No items in order'}
 
     AMOUNT BREAKDOWN:
     -----------------
-    Subtotal: ₹${orderData.subtotal?.toFixed(2) || '0.00'}
-    ${orderData.discount > 0 ? `Discount: -₹${orderData.discount.toFixed(2)}\n` : ''}${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}Shipping: ₹${orderData.shippingCost?.toFixed(2) || '0.00'}
-    Total: ₹${orderData.totalAmount?.toFixed(2) || '0.00'}
+    ${isWholesalePricing && totals.regularSubtotal !== totals.subtotal ? `Regular Items Total: ₹${totals.regularSubtotal.toFixed(2)}\n` : ''}
+    ${isWholesalePricing && totals.savings > 0 ? `Wholesale Savings: -₹${totals.savings.toFixed(2)}\n` : ''}
+    Items Subtotal: ₹${totals.subtotal.toFixed(2)}
+    ${totals.discount > 0 ? `Discount: -₹${totals.discount.toFixed(2)}\n` : ''}
+    ${orderData.coupon ? `Coupon Applied: ${orderData.coupon.code}\n` : ''}
+    Shipping: FREE
+    Total Amount: ₹${totals.totalAmount.toFixed(2)}
+    ${isWholesalePricing && totals.savings > 0 ? `Total Savings: ₹${totals.savings.toFixed(2)}\n` : ''}
 
     CUSTOMER INFORMATION:
     --------------------
     Name: ${orderData.name}
     Email: ${orderData.email}
     Phone: ${orderData.phone}
+    ${userRole ? `Account Type: ${userRole}` : ''}
 
     SHIPPING ADDRESS:
     -----------------
     ${orderData.address}
     ${orderData.city}, ${orderData.state} - ${orderData.pincode}
 
-    PAYMENT INFORMATION:
-    -------------------
-    Payment Method: ${orderData.paymentMethod}
-    Payment Status: ${orderData.paymentStatus}
-    ${orderData.razorpayPaymentId ? `Payment ID: ${orderData.razorpayPaymentId}\n` : ''}
-
-    ${orderData.trackingNumber ? `
-    TRACKING INFORMATION:
-    ---------------------
-    Tracking Number: ${orderData.trackingNumber}
-    Carrier: ${orderData.carrier}
-    ${orderData.trackingUrl ? `Track Your Order: ${trackingUrl}\n` : ''}${orderData.estimatedDelivery ? `Estimated Delivery: ${new Date(orderData.estimatedDelivery).toLocaleDateString()}\n` : ''}
-    ` : ''}
-
     NEED HELP?
     ----------
     Email: ${supportEmail}
-    Phone: +91 88833 85888
-    Business Hours: Monday - Saturday, 9:00 AM - 8:00 PM
+    Phone: +91 96774 11007
 
     Thank you for choosing Tiruppur Garments! We're committed to making your experience wonderful.
 
@@ -2166,7 +2144,7 @@ Nourishing Lives Naturally
             minute: '2-digit'
         });
 
-        const domain = process.env.DOMAIN_NAME || 'hangergarments.com';
+        const domain = process.env.DOMAIN_NAME || 'tiruppurgarments.com';
         const adminUrl = process.env.ADMIN_URL || `https://admin.${domain}`;
 
         // Enhanced helper function for admin email

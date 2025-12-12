@@ -5,488 +5,584 @@ import logger from '../utils/logger.js';
 import razorpayService from './razorpayService.js';
 
 class OrderService {
+
   generateOrderNumber() {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `ORD-${timestamp}-${random}`;
   }
 
-  // Calculate quantity price for a single item
-  async calculateItemQuantityPrice(productId, subcategoryId, basePrice, quantity) {
-    // If no subcategory, return regular pricing
-    if (!subcategoryId) {
-      return {
-        originalPrice: basePrice * quantity,
-        finalPrice: basePrice * quantity,
-        totalSavings: 0,
-        pricePerItem: basePrice,
-        hasDiscount: false
-      };
-    }
-
-    // Get quantity prices for the subcategory
-    const quantityPrices = await prisma.subcategoryQuantityPrice.findMany({
-      where: { 
-        subcategoryId: subcategoryId,
-        isActive: true,
-        quantity: { lte: quantity }
-      },
-      orderBy: { 
-        quantity: 'desc'
-      }
-    });
-
-    let bestTotal = basePrice * quantity;
-    let appliedDiscount = null;
-
-    // Find the best applicable discount
-    for (const priceRule of quantityPrices) {
-      if (quantity >= priceRule.quantity) {
-        let finalPriceForRule = 0;
-
-        if (priceRule.priceType === 'PERCENTAGE') {
-          // Calculate percentage discount
-          finalPriceForRule = (basePrice * quantity) * (1 - priceRule.value / 100);
-        } else {
-          // Fixed amount
-          finalPriceForRule = priceRule.value;
-        }
-
-        // If this rule gives a better price, use it
-        if (finalPriceForRule < bestTotal) {
-          bestTotal = finalPriceForRule;
-          appliedDiscount = {
-            quantity: priceRule.quantity,
-            priceType: priceRule.priceType,
-            value: priceRule.value
+  // Calculate quantity price for a single item - FIXED
+  async calculateItemQuantityPrice(productId, subcategoryId, basePrice, quantity, isWholesaleUser = false) {
+      // If no subcategory, return regular pricing
+      if (!subcategoryId) {
+          return {
+              originalPrice: basePrice * quantity,
+              finalPrice: basePrice * quantity,
+              totalSavings: 0,
+              pricePerItem: basePrice,
+              hasDiscount: false,
+              isWholesalePrice: isWholesaleUser
           };
-        }
-      }
-    }
-
-    const totalSavings = (basePrice * quantity) - bestTotal;
-    
-    return {
-      originalPrice: basePrice * quantity,
-      finalPrice: bestTotal,
-      totalSavings: totalSavings,
-      pricePerItem: bestTotal / quantity,
-      hasDiscount: appliedDiscount !== null,
-      appliedDiscount
-    };
-  }
-
-  // Enhanced order totals calculation with quantity pricing
-  async calculateOrderTotals(orderItems, couponCode = null) {
-    let subtotal = 0;
-    let quantitySavings = 0;
-    
-    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
-      throw new Error('Order items are required and must be a non-empty array');
-    }
-
-    const itemsWithPricing = [];
-
-    // Calculate subtotal with quantity pricing
-    for (const item of orderItems) {
-      if (!item.productId || !item.quantity || item.quantity <= 0) {
-        throw new Error('Invalid order item: productId and quantity are required');
       }
 
-      // Get product details
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: {
-          id: true,
-          name: true,
-          normalPrice: true,
-          offerPrice: true,
-          wholesalePrice: true,
-          status: true,
-          subcategoryId: true
-        }
+      // Get quantity prices for the subcategory
+      const quantityPrices = await prisma.subcategoryQuantityPrice.findMany({
+          where: { 
+              subcategoryId: subcategoryId,
+              isActive: true,
+              quantity: { lte: quantity }
+          },
+          orderBy: { 
+              quantity: 'desc'
+          }
       });
 
-      if (!product) {
-        throw new Error(`Product not found: ${item.productId}`);
-      }
+      let bestTotal = basePrice * quantity;
+      let appliedDiscount = null;
 
-      if (product.status !== 'ACTIVE') {
-        throw new Error(`Product ${product.id} is not available for purchase`);
-      }
+      // Find the best applicable discount
+      for (const priceRule of quantityPrices) {
+          if (quantity >= priceRule.quantity) {
+              let finalPriceForRule = 0;
 
-      // Check variant stock if provided
-      let variant = null;
-      if (item.productVariantId) {
-        variant = await prisma.productVariant.findUnique({
-          where: { id: item.productVariantId },
-          select: { 
-            stock: true
+              if (priceRule.priceType === 'PERCENTAGE') {
+                  // Calculate percentage discount
+                  finalPriceForRule = (basePrice * quantity) * (1 - priceRule.value / 100);
+              } else {
+                  // Fixed amount
+                  finalPriceForRule = priceRule.value;
+              }
+
+              // If this rule gives a better price, use it
+              if (finalPriceForRule < bestTotal) {
+                  bestTotal = finalPriceForRule;
+                  appliedDiscount = {
+                      quantity: priceRule.quantity,
+                      priceType: priceRule.priceType,
+                      value: priceRule.value,
+                      message: priceRule.priceType === 'PERCENTAGE' 
+                          ? `${priceRule.value}% off for ${priceRule.quantity}+ items` 
+                          : `₹${priceRule.value} for ${priceRule.quantity} items`
+                  };
+              }
           }
+      }
+
+      const totalSavings = (basePrice * quantity) - bestTotal;
+      
+      return {
+          originalPrice: basePrice * quantity,
+          finalPrice: bestTotal,
+          totalSavings: totalSavings,
+          pricePerItem: bestTotal / quantity,
+          hasDiscount: appliedDiscount !== null,
+          isWholesalePrice: isWholesaleUser,
+          appliedDiscount
+      };
+  }
+
+  // Enhanced order totals calculation with quantity pricing - FIXED VERSION
+  async calculateOrderTotals(orderItems, couponCode = null, isWholesaleUser = false) {
+      let subtotal = 0;
+      let quantitySavings = 0;
+      
+      if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+          throw new Error('Order items are required and must be a non-empty array');
+      }
+
+      const itemsWithPricing = [];
+
+      // Calculate subtotal with quantity pricing
+      for (const item of orderItems) {
+          if (!item.productId || !item.quantity || item.quantity <= 0) {
+              throw new Error('Invalid order item: productId and quantity are required');
+          }
+
+          // Get product details
+          const product = await prisma.product.findUnique({
+              where: { id: item.productId },
+              select: {
+                  id: true,
+                  name: true,
+                  normalPrice: true,
+                  offerPrice: true,
+                  wholesalePrice: true,
+                  status: true,
+                  subcategoryId: true
+              }
+          });
+
+          if (!product) {
+              throw new Error(`Product not found: ${item.productId}`);
+          }
+
+          if (product.status !== 'ACTIVE') {
+              throw new Error(`Product ${product.id} is not available for purchase`);
+          }
+
+          // Check variant stock if provided
+          let variant = null;
+          if (item.productVariantId) {
+              variant = await prisma.productVariant.findUnique({
+                  where: { id: item.productVariantId },
+                  select: { 
+                      id: true,
+                      stock: true,
+                      color: true,
+                      size: true
+                      // Note: Variant doesn't have price fields
+                  }
+              });
+
+              if (!variant) {
+                  throw new Error(`Product variant not found: ${item.productVariantId}`);
+              }
+
+              if (variant.stock < item.quantity) {
+                  throw new Error(`Insufficient stock for variant ${item.productVariantId}. Available: ${variant.stock}, Requested: ${item.quantity}`);
+              }
+          }
+
+          // DETERMINE BASE PRICE BASED ON USER TYPE
+          // ALL PRICES COME FROM PRODUCT, NOT VARIANT
+          let basePrice;
+          if (isWholesaleUser) {
+              // FOR WHOLESALE USERS: Use wholesale price ONLY
+              if (product.wholesalePrice !== null && product.wholesalePrice !== undefined) {
+                  basePrice = Number(product.wholesalePrice);
+              } else {
+                  // For wholesale users without wholesale price, use normal price
+                  basePrice = Number(product.normalPrice);
+              }
+          } else {
+              // FOR REGULAR USERS: Use offer price if available, otherwise normal price
+              basePrice = Number(product.offerPrice || product.normalPrice);
+          }
+
+          // Calculate price with quantity discounts
+          const quantityPriceCalculation = await this.calculateItemQuantityPrice(
+              product.id,
+              product.subcategoryId,
+              basePrice,
+              item.quantity,
+              isWholesaleUser
+          );
+
+          const itemTotal = quantityPriceCalculation.finalPrice;
+          const itemSavings = quantityPriceCalculation.totalSavings;
+
+          subtotal += itemTotal;
+          quantitySavings += itemSavings;
+
+          itemsWithPricing.push({
+              ...item,
+              product,
+              variant,
+              basePrice, // The actual price charged (wholesale or regular)
+              normalPrice: Number(product.normalPrice),
+              offerPrice: Number(product.offerPrice || product.normalPrice),
+              wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : null,
+              quantityPricing: quantityPriceCalculation,
+              itemTotal,
+              itemSavings,
+              isWholesalePrice: isWholesaleUser // Flag to identify wholesale pricing
+          });
+      }
+
+      // Calculate coupon discount
+      let couponDiscount = 0;
+      let coupon = null;
+      
+      if (couponCode) {
+          coupon = await prisma.coupon.findFirst({
+              where: {
+                  code: couponCode,
+                  isActive: true,
+                  validFrom: { lte: new Date() },
+                  validUntil: { gte: new Date() },
+                  OR: [
+                      { usageLimit: null },
+                      { usageLimit: { gt: prisma.coupon.fields.usedCount } }
+                  ]
+              }
+          });
+
+          if (coupon) {
+              if (subtotal >= (coupon.minOrderAmount || 0)) {
+                  if (coupon.discountType === 'PERCENTAGE') {
+                      couponDiscount = (subtotal * coupon.discountValue) / 100;
+                      if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
+                          couponDiscount = coupon.maxDiscount;
+                      }
+                  } else {
+                      couponDiscount = coupon.discountValue;
+                  }
+              }
+          }
+      }
+
+      // Free shipping for all orders
+      const shippingCost = 0;
+      const totalAmount = subtotal - couponDiscount + shippingCost;
+
+      return {
+          subtotal: parseFloat(subtotal.toFixed(2)),
+          quantitySavings: parseFloat(quantitySavings.toFixed(2)),
+          couponDiscount: parseFloat(couponDiscount.toFixed(2)),
+          shippingCost: parseFloat(shippingCost.toFixed(2)),
+          totalAmount: parseFloat(totalAmount.toFixed(2)),
+          coupon,
+          items: itemsWithPricing,
+          hasQuantityDiscounts: quantitySavings > 0,
+          isWholesalePricing: isWholesaleUser
+      };
+  }
+
+async initiateRazorpayPayment(orderData) {
+    try {
+        const {
+            userId,
+            name,
+            email,
+            phone,
+            address,
+            city,
+            state,
+            pincode,
+            orderItems,
+            couponCode,
+            customImages = [],
+            preferredCourier = '',
+            courierInstructions = '',
+            isWholesaleUser = false,
+            userType = 'CUSTOMER'  // Also check userType from frontend
+        } = orderData;
+
+        // Validate required fields
+        const requiredFields = { name, email, phone, address, city, state, pincode };
+        const missingFields = Object.entries(requiredFields)
+            .filter(([key, value]) => !value)
+            .map(([key]) => key);
+
+        if (missingFields.length > 0) {
+            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+
+        // Validate order items
+        if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+            throw new Error('Order must contain at least one item');
+        }
+
+        // Determine if user is wholesale
+        const finalIsWholesaleUser = isWholesaleUser || userType === 'WHOLESALER';
+
+        logger.info('User type for order:', { 
+            isWholesaleUser, 
+            userType, 
+            finalIsWholesaleUser,
+            orderItemCount: orderItems.length 
         });
 
-        if (!variant) {
-          throw new Error(`Product variant not found: ${item.productVariantId}`);
+        // Calculate totals with quantity pricing
+        logger.info('Calculating order totals...');
+        const totals = await this.calculateOrderTotals(orderItems, couponCode, finalIsWholesaleUser);
+        
+        // Log the calculated totals for debugging
+        logger.info('Order totals calculated:', {
+            subtotal: totals.subtotal,
+            discount: totals.couponDiscount,
+            shippingCost: totals.shippingCost,
+            totalAmount: totals.totalAmount,
+            isWholesalePricing: totals.isWholesalePricing,
+            finalIsWholesaleUser,
+            itemsCount: totals.items?.length || 0,
+            items: totals.items?.map(item => ({
+                productId: item.productId,
+                basePrice: item.basePrice,
+                quantity: item.quantity,
+                itemTotal: item.itemTotal
+            }))
+        });
+
+        // Validate total amount
+        if (!totals.totalAmount || totals.totalAmount <= 0) {
+            throw new Error(`Invalid total amount: ${totals.totalAmount}`);
         }
 
-        if (variant.stock < item.quantity) {
-          throw new Error(`Insufficient stock for variant ${item.productVariantId}. Available: ${variant.stock}, Requested: ${item.quantity}`);
+        // Create Razorpay order
+        logger.info(`Creating Razorpay order for amount: ₹${totals.totalAmount}`);
+        const razorpayOrder = await razorpayService.createOrder(
+            totals.totalAmount,
+            'INR'
+        );
+
+        if (!razorpayOrder || !razorpayOrder.id) {
+            throw new Error('Failed to create Razorpay order - no order ID returned');
         }
-      }
 
-      // Calculate price with quantity discounts
-      const basePrice = product.offerPrice || product.normalPrice;
-      const quantityPriceCalculation = await this.calculateItemQuantityPrice(
-        product.id,
-        product.subcategoryId,
-        basePrice,
-        item.quantity
-      );
+        // Store temporary order data
+        const tempOrderData = {
+            userId,
+            name,
+            email,
+            phone,
+            address,
+            city,
+            state,
+            pincode,
+            orderItems,
+            couponCode,
+            customImages,
+            preferredCourier,
+            courierInstructions,
+            totals,
+            isWholesaleUser: finalIsWholesaleUser,  // Store user type
+            razorpayOrderId: razorpayOrder.id
+        };
 
-      const itemTotal = quantityPriceCalculation.finalPrice;
-      const itemSavings = quantityPriceCalculation.totalSavings;
+        logger.info(`Razorpay order initiated successfully. Order ID: ${razorpayOrder.id}, Wholesale: ${finalIsWholesaleUser}, Amount: ₹${totals.totalAmount}`);
 
-      subtotal += itemTotal;
-      quantitySavings += itemSavings;
-
-      itemsWithPricing.push({
-        ...item,
-        product,
-        variant,
-        basePrice,
-        quantityPricing: quantityPriceCalculation,
-        itemTotal,
-        itemSavings
-      });
-    }
-
-    // Calculate coupon discount
-    let couponDiscount = 0;
-    let coupon = null;
-    
-    if (couponCode) {
-      coupon = await prisma.coupon.findFirst({
-        where: {
-          code: couponCode,
-          isActive: true,
-          validFrom: { lte: new Date() },
-          validUntil: { gte: new Date() },
-          OR: [
-            { usageLimit: null },
-            { usageLimit: { gt: prisma.coupon.fields.usedCount } }
-          ]
-        }
-      });
-
-      if (coupon) {
-        if (subtotal >= (coupon.minOrderAmount || 0)) {
-          if (coupon.discountType === 'PERCENTAGE') {
-            couponDiscount = (subtotal * coupon.discountValue) / 100;
-            if (coupon.maxDiscount && couponDiscount > coupon.maxDiscount) {
-              couponDiscount = coupon.maxDiscount;
+        return {
+            razorpayOrder,
+            tempOrderData: {
+                ...tempOrderData,
+                orderNumber: this.generateOrderNumber()
             }
-          } else {
-            couponDiscount = coupon.discountValue;
-          }
-        }
-      }
-    }
-
-    // Free shipping for all orders
-    const shippingCost = 0;
-    const totalAmount = subtotal - couponDiscount + shippingCost;
-
-    return {
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      quantitySavings: parseFloat(quantitySavings.toFixed(2)),
-      couponDiscount: parseFloat(couponDiscount.toFixed(2)),
-      shippingCost: parseFloat(shippingCost.toFixed(2)),
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      coupon,
-      items: itemsWithPricing,
-      hasQuantityDiscounts: quantitySavings > 0
-    };
-  }
-
-  async initiateRazorpayPayment(orderData) {
-    try {
-      const {
-        userId,
-        name,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        pincode,
-        orderItems,
-        couponCode,
-        customImages = [],
-        preferredCourier = '',
-        courierInstructions = ''
-      } = orderData;
-
-      // Validate required fields
-      const requiredFields = { name, email, phone, address, city, state, pincode };
-      const missingFields = Object.entries(requiredFields)
-        .filter(([key, value]) => !value)
-        .map(([key]) => key);
-
-      if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-      }
-
-      // Validate order items
-      if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
-        throw new Error('Order must contain at least one item');
-      }
-
-      // Calculate totals with quantity pricing
-      logger.info('Calculating order totals...');
-      const totals = await this.calculateOrderTotals(orderItems, couponCode);
-      
-      // Validate total amount
-      if (!totals.totalAmount || totals.totalAmount <= 0) {
-        throw new Error(`Invalid total amount: ${totals.totalAmount}`);
-      }
-
-      logger.info('Order totals calculated:', {
-        subtotal: totals.subtotal,
-        discount: totals.couponDiscount,
-        shippingCost: totals.shippingCost,
-        totalAmount: totals.totalAmount,
-        preferredCourier
-      });
-
-      // Create Razorpay order
-      logger.info(`Creating Razorpay order for amount: ₹${totals.totalAmount}`);
-      const razorpayOrder = await razorpayService.createOrder(
-        totals.totalAmount,
-        'INR'
-      );
-
-      if (!razorpayOrder || !razorpayOrder.id) {
-        throw new Error('Failed to create Razorpay order - no order ID returned');
-      }
-
-      // Store temporary order data
-      const tempOrderData = {
-        userId,
-        name,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        pincode,
-        orderItems,
-        couponCode,
-        customImages,
-        preferredCourier,
-        courierInstructions,
-        totals,
-        razorpayOrderId: razorpayOrder.id
-      };
-
-      logger.info(`Razorpay order initiated successfully. Order ID: ${razorpayOrder.id}, Courier: ${preferredCourier || 'Not specified'}`);
-
-      return {
-        razorpayOrder,
-        tempOrderData: {
-          ...tempOrderData,
-          orderNumber: this.generateOrderNumber()
-        }
-      };
+        };
     } catch (error) {
-      logger.error('Failed to initiate Razorpay payment:', {
-        error: error.message,
-        stack: error.stack,
-        orderData: {
-          userId: orderData.userId,
-          email: orderData.email,
-          itemCount: orderData.orderItems?.length || 0
-        }
-      });
-      throw error;
+        logger.error('Failed to initiate Razorpay payment:', {
+            error: error.message,
+            stack: error.stack,
+            orderData: {
+                userId: orderData.userId,
+                email: orderData.email,
+                itemCount: orderData.orderItems?.length || 0,
+                isWholesaleUser: orderData.isWholesaleUser,
+                userType: orderData.userType
+            }
+        });
+        throw error;
     }
-  }
+}
 
   async verifyAndCreateOrder(paymentData) {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderData
-    } = paymentData;
+      const {
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          orderData
+      } = paymentData;
 
-    // Verify payment signature
-    const isValid = razorpayService.verifyPayment(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    );
+      // Verify payment signature
+      const isValid = razorpayService.verifyPayment(
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature
+      );
 
-    if (!isValid) {
-      throw new Error('Payment verification failed');
-    }
-
-    // Calculate totals again to ensure consistency
-    const totals = await this.calculateOrderTotals(orderData.orderItems, orderData.couponCode);
-
-    // Prepare custom images data
-    const customImages = orderData.customImages || [];
-
-    // Prepare order data - FIXED: Use coupon relation instead of couponId
-    const orderCreateData = {
-      orderNumber: this.generateOrderNumber(),
-      user: {
-        connect: {
-          id: orderData.userId
-        }
-      },
-      name: orderData.name,
-      email: orderData.email,
-      phone: orderData.phone,
-      address: orderData.address,
-      city: orderData.city,
-      state: orderData.state,
-      pincode: orderData.pincode,
-      status: 'CONFIRMED',
-      totalAmount: totals.totalAmount,
-      subtotal: totals.subtotal,
-      discount: totals.couponDiscount,
-      shippingCost: totals.shippingCost,
-      paymentStatus: 'PAID',
-      paymentMethod: 'ONLINE',
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-      razorpaySignature: razorpay_signature,
-      
-      // Add courier preferences
-      preferredCourier: orderData.preferredCourier || null,
-      courierInstructions: orderData.courierInstructions || null,
-      
-      // FIXED: Use coupon relation instead of couponId
-      ...(totals.coupon && {
-        coupon: {
-          connect: {
-            id: totals.coupon.id
-          }
-        }
-      }),
-      // Create custom image records if any
-      ...(customImages.length > 0 && {
-        customImages: {
-          create: customImages.map(img => ({
-            imageUrl: img.url,
-            imageKey: img.key,
-            filename: img.filename || `custom-image-${Date.now()}.jpg`
-          }))
-        }
-      }),
-      orderItems: {
-        create: await Promise.all(
-          totals.items.map(async (item) => {
-            return {
-              productId: item.productId,
-              productVariantId: item.productVariantId || null,
-              quantity: item.quantity,
-              price: item.basePrice,
-            };
-          })
-        )
+      if (!isValid) {
+          throw new Error('Payment verification failed');
       }
-    };
 
-    // Create the actual order in database
-    const order = await prisma.order.create({
-      data: orderCreateData,
-      include: {
-        orderItems: {
+      // Calculate totals again to ensure consistency
+      const isWholesaleUser = orderData.isWholesaleUser || false;
+      const totals = await this.calculateOrderTotals(orderData.orderItems, orderData.couponCode, isWholesaleUser);
+
+      // Prepare custom images data
+      const customImages = orderData.customImages || [];
+
+      // Prepare order data
+      const orderCreateData = {
+          orderNumber: this.generateOrderNumber(),
+          user: {
+              connect: {
+                  id: orderData.userId
+              }
+          },
+          name: orderData.name,
+          email: orderData.email,
+          phone: orderData.phone,
+          address: orderData.address,
+          city: orderData.city,
+          state: orderData.state,
+          pincode: orderData.pincode,
+          status: 'CONFIRMED',
+          totalAmount: totals.totalAmount,
+          subtotal: totals.subtotal,
+          discount: totals.couponDiscount,
+          shippingCost: totals.shippingCost,
+          paymentStatus: 'PAID',
+          paymentMethod: 'ONLINE',
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          
+          // Add courier preferences
+          preferredCourier: orderData.preferredCourier || null,
+          courierInstructions: orderData.courierInstructions || null,
+          
+          // Add coupon if available
+          ...(totals.coupon && {
+              coupon: {
+                  connect: {
+                      id: totals.coupon.id
+                  }
+              }
+          }),
+          // Create custom image records if any
+          ...(customImages.length > 0 && {
+              customImages: {
+                  create: customImages.map(img => ({
+                      imageUrl: img.url,
+                      imageKey: img.key,
+                      filename: img.filename || `custom-image-${Date.now()}.jpg`
+                  }))
+              }
+          }),
+          orderItems: {
+              create: await Promise.all(
+                  totals.items.map(async (item) => {
+                      // Use the actual price that was charged (item.basePrice contains wholesale price if applicable)
+                      return {
+                          productId: item.productId,
+                          productVariantId: item.productVariantId || null,
+                          quantity: item.quantity,
+                          price: item.basePrice // This is the actual charged price (wholesale if applicable)
+                      };
+                  })
+              )
+          }
+      };
+
+      // Create the actual order in database
+      const order = await prisma.order.create({
+          data: orderCreateData,
           include: {
-            product: {
-              include: {
-                images: {
-                  take: 1,
-                  select: {
-                    imageUrl: true
+              orderItems: {
+                  include: {
+                      product: {
+                          include: {
+                              images: {
+                                  take: 1,
+                                  select: {
+                                      imageUrl: true
+                                  }
+                              }
+                          }
+                      },
+                      productVariant: {
+                          include: {
+                              variantImages: {
+                                  select: {
+                                      imageUrl: true,
+                                      color: true
+                                  }
+                              }
+                          }
+                      }
                   }
-                }
-              }
-            },
-            productVariant: {
-              include: {
-                variantImages: {
+              },
+              customImages: true,
+              user: {
                   select: {
-                    imageUrl: true,
-                    color: true
+                      id: true,
+                      name: true,
+                      email: true
                   }
-                }
-              }
-            }
+              },
+              coupon: true
           }
-        },
-        customImages: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        coupon: true
-      }
-    });
-
-    // Update stock for variants
-    for (const item of orderData.orderItems) {
-      if (item.productVariantId) {
-        await prisma.productVariant.update({
-          where: { id: item.productVariantId },
-          data: {
-            stock: { decrement: item.quantity }
-          }
-        });
-      }
-    }
-
-    // Increment coupon usage
-    if (totals.coupon) {
-      await prisma.coupon.update({
-        where: { id: totals.coupon.id },
-        data: {
-          usedCount: { increment: 1 }
-        }
       });
-    }
 
-    // Create tracking history
-    await prisma.trackingHistory.create({
-      data: {
-        orderId: order.id,
-        status: 'CONFIRMED',
-        description: `Order confirmed and payment received. Quantity savings: ₹${totals.quantitySavings}`,
-        location: `${order.city}, ${order.state}`
+      // Update stock for variants
+      for (const item of orderData.orderItems) {
+          if (item.productVariantId) {
+              await prisma.productVariant.update({
+                  where: { id: item.productVariantId },
+                  data: {
+                      stock: { decrement: item.quantity }
+                  }
+              });
+          }
       }
-    });
 
-    // Send email notification with quantity discount details
-    try {
-      await emailNotificationService.sendOrderNotifications(order);
-    } catch (emailError) {
-      logger.error('Failed to send order confirmation email:', emailError);
-    }
+      // Increment coupon usage
+      if (totals.coupon) {
+          await prisma.coupon.update({
+              where: { id: totals.coupon.id },
+              data: {
+                  usedCount: { increment: 1 }
+              }
+          });
+      }
 
-    logger.info(`Order created successfully with quantity discounts. Total savings: ₹${totals.quantitySavings}`);
-    
-    // Return order with quantity discount info
-    return {
-      ...order,
-      quantitySavings: totals.quantitySavings,
-      hasQuantityDiscounts: totals.hasQuantityDiscounts
-    };
+      // Create tracking history
+      await prisma.trackingHistory.create({
+          data: {
+              orderId: order.id,
+              status: 'CONFIRMED',
+              description: `Order confirmed and payment received.`,
+              location: `${order.city}, ${order.state}`
+          }
+      });
+
+      // Enhance order data for email
+      const enhancedOrder = {
+          ...order,
+          // Add the calculated totals information
+          quantitySavings: totals.quantitySavings,
+          hasQuantityDiscounts: totals.hasQuantityDiscounts,
+          isWholesalePricing: totals.isWholesalePricing,
+          wholesaleUser: isWholesaleUser,
+          
+          // Enhance order items with price comparison
+          orderItems: order.orderItems.map(dbItem => {
+              // Find the corresponding item from totals calculation
+              const calculatedItem = totals.items.find(item => 
+                  item.productId === dbItem.productId && 
+                  item.productVariantId === dbItem.productVariantId
+              );
+              
+              if (calculatedItem) {
+                  // Get the product to show correct prices
+                  const product = calculatedItem.product || {};
+                  
+                  return {
+                      ...dbItem,
+                      // Show the actual price paid
+                      actualPrice: calculatedItem.basePrice, // This is wholesale price if applicable
+                      itemTotal: (calculatedItem.basePrice * calculatedItem.quantity),
+                      itemSavings: calculatedItem.itemSavings || 0,
+                      isWholesaleItem: calculatedItem.isWholesalePrice,
+                      // For email display - show what the customer actually paid
+                      displayPrice: calculatedItem.basePrice,
+                      displayTotal: (calculatedItem.basePrice * calculatedItem.quantity)
+                  };
+              }
+              
+              // If no calculated item found, return the db item as-is
+              return {
+                  ...dbItem,
+                  displayPrice: dbItem.price,
+                  displayTotal: dbItem.price * dbItem.quantity,
+                  isWholesaleItem: isWholesaleUser
+              };
+          })
+      };
+
+      // Send email notification with enhanced order data
+      try {
+          await emailNotificationService.sendOrderNotifications(enhancedOrder);
+      } catch (emailError) {
+          logger.error('Failed to send order confirmation email:', emailError);
+      }
+
+      logger.info(`Order created successfully. Total: ₹${totals.totalAmount}`);
+      
+      // Return enhanced order with all price information
+      return enhancedOrder;
   }
-
 
   async createCODOrder(orderData) {
     const {
@@ -663,146 +759,148 @@ class OrderService {
   }
 
 
-  async getAllOrders({ page, limit, status, userId, paymentStatus }) {
-    const skip = (page - 1) * limit;
-    
-    const where = {};
-    
-    if (status) {
-      where.status = status;
-    }
-    
-    if (userId) {
-      where.userId = userId;
-    }
-    
-    if (paymentStatus) {
-      where.paymentStatus = paymentStatus;
-    }
-    
-    const [orders, total] = await Promise.all([
-      prisma.order.findMany({
-        where,
-        skip,
-        take: limit,
-        include: {
-          orderItems: {
-            include: {
-              product: {
-                include: {
-                  images: {
-                    take: 1,
-                    select: {
-                      imageUrl: true
-                    }
-                  }
-                }
-              },
-              productVariant: {
-                include: {
-                  variantImages: {
-                    take: 1,
-                    select: {
-                      imageUrl: true,
-                      color: true
-                    }
-                  }
-                }
-              }
-            }
-          },
-          customImages: true, // Include custom images
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          coupon: true,
-          trackingHistory: {
-            take: 5,
-            orderBy: {
-              createdAt: 'desc'
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      }),
-      prisma.order.count({ where })
-    ]);
-    
-    return {
-      orders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    };
+async getAllOrders({ page, limit, status, userId, paymentStatus }) {
+  const skip = (page - 1) * limit;
+  
+  const where = {};
+  
+  if (status) {
+    where.status = status;
   }
-
-  async getOrderById(orderId) {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+  
+  if (userId) {
+    where.userId = userId;
+  }
+  
+  if (paymentStatus) {
+    where.paymentStatus = paymentStatus;
+  }
+  
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      skip,
+      take: limit,
       include: {
         orderItems: {
           include: {
             product: {
               include: {
                 images: {
+                  take: 1,
                   select: {
                     imageUrl: true
                   }
                 }
               }
             },
-              productVariant: {
-                include: {
-                  variantImages: {
-                    take: 1,
-                    select: {
-                      imageUrl: true,
-                      color: true
-                    }
+            productVariant: {
+              include: {
+                variantImages: {
+                  take: 1,
+                  select: {
+                    imageUrl: true,
+                    color: true
                   }
                 }
               }
+            }
           }
         },
-        customImages: {
-          select: {
-            imageUrl: true,
-            imageKey: true,
-            filename: true
-          }
-        },
+        customImages: true,
         user: {
           select: {
             id: true,
             name: true,
             email: true,
-            phone: true
+            role: true // ← ADD THIS LINE
           }
         },
         coupon: true,
         trackingHistory: {
+          take: 5,
           orderBy: {
             createdAt: 'desc'
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
-    });
-    
-    if (!order) {
-      throw new Error('Order not found');
+    }),
+    prisma.order.count({ where })
+  ]);
+  
+  return {
+    orders,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
     }
-    
-    return order;
+  };
+}
+
+async getOrderById(orderId) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      orderItems: {
+        include: {
+          product: {
+            include: {
+              images: {
+                select: {
+                  imageUrl: true
+                }
+              }
+            }
+          },
+          productVariant: {
+            include: {
+              variantImages: {
+                take: 1,
+                select: {
+                  imageUrl: true,
+                  color: true
+                }
+              }
+            }
+          }
+        }
+      },
+      customImages: {
+        select: {
+          imageUrl: true,
+          imageKey: true,
+          filename: true
+        }
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true // ← ADD THIS LINE
+        }
+      },
+      coupon: true,
+      trackingHistory: {
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }
+    }
+  });
+  
+  if (!order) {
+    throw new Error('Order not found');
   }
+  
+  return order;
+}
 
 
   async getOrderByOrderNumber(orderNumber) {

@@ -685,71 +685,71 @@ export const getRelatedProducts = asyncHandler(async (req, res) => {
   });
 
 
-// Calculate price for specific quantity
-export const calculateQuantityPrice = asyncHandler(async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { quantity } = req.body;
+  // Calculate price for specific quantity
+  export const calculateQuantityPrice = asyncHandler(async (req, res) => {
+      try {
+          const { productId } = req.params;
+          const { quantity } = req.body;
 
 
-        // Validate input
-        if (!productId || !productId.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Product ID is required'
-            });
-        }
+          // Validate input
+          if (!productId || !productId.trim()) {
+              return res.status(400).json({
+                  success: false,
+                  message: 'Product ID is required'
+              });
+          }
 
-        if (!quantity || quantity < 1) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid quantity (minimum 1) is required'
-            });
-        }
+          if (!quantity || quantity < 1) {
+              return res.status(400).json({
+                  success: false,
+                  message: 'Valid quantity (minimum 1) is required'
+              });
+          }
 
-        const numericQuantity = parseInt(quantity);
-        if (isNaN(numericQuantity)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Quantity must be a valid number'
-            });
-        }
+          const numericQuantity = parseInt(quantity);
+          if (isNaN(numericQuantity)) {
+              return res.status(400).json({
+                  success: false,
+                  message: 'Quantity must be a valid number'
+              });
+          }
 
-        // Calculate the price
-        const priceCalculation = await productService.calculateQuantityPrice(
-            productId.trim(), // Trim any whitespace
-            numericQuantity
-        );
+          // Calculate the price
+          const priceCalculation = await productService.calculateQuantityPrice(
+              productId.trim(), // Trim any whitespace
+              numericQuantity
+          );
 
-        res.status(200).json({
-            success: true,
-            data: priceCalculation
-        });
+          res.status(200).json({
+              success: true,
+              data: priceCalculation
+          });
 
-    } catch (error) {
-        console.error('Error in calculateQuantityPrice controller:', error);
-        
-        if (error.message.includes('Product not found')) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
+      } catch (error) {
+          console.error('Error in calculateQuantityPrice controller:', error);
+          
+          if (error.message.includes('Product not found')) {
+              return res.status(404).json({
+                  success: false,
+                  message: 'Product not found'
+              });
+          }
 
-        if (error.message.includes('Valid product ID')) {
-            return res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+          if (error.message.includes('Valid product ID')) {
+              return res.status(400).json({
+                  success: false,
+                  message: error.message
+              });
+          }
 
-        res.status(500).json({
-            success: false,
-            message: 'Failed to calculate quantity price',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-});
+          res.status(500).json({
+              success: false,
+              message: 'Failed to calculate quantity price',
+              error: process.env.NODE_ENV === 'development' ? error.message : undefined
+          });
+      }
+  });
 
   // Get products with quantity offers in a subcategory
   export const getProductsWithQuantityOffers = asyncHandler(async (req, res) => {
@@ -768,8 +768,8 @@ export const calculateQuantityPrice = asyncHandler(async (req, res) => {
   });
 
   // Calculate prices for cart items
-  export const calculateCartPrices = asyncHandler(async (req, res) => {
-    const { items } = req.body;
+export const calculateCartPrices = asyncHandler(async (req, res) => {
+    const { items, isWholesaleUser } = req.body;
 
     if (!items || !Array.isArray(items)) {
       return res.status(400).json({
@@ -778,7 +778,7 @@ export const calculateQuantityPrice = asyncHandler(async (req, res) => {
       });
     }
 
-    const cartCalculation = await productService.calculateCartPrices(items);
+    const cartCalculation = await productService.calculateCartPrices(items, isWholesaleUser);
 
     res.status(200).json({
       success: true,

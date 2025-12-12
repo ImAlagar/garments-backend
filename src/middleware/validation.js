@@ -465,7 +465,7 @@ export const validateSubcategory = [
     .trim()
     .notEmpty()
     .withMessage('Subcategory description is required')
-    .isLength({ min: 10, max: 500 })
+    .isLength({ min: 1, max: 500 })
     .withMessage('Description must be between 10 and 500 characters'),
 
   body('categoryId')
@@ -508,7 +508,7 @@ export const validateSubcategoryUpdate = [
   body('description')
     .optional()
     .trim()
-    .isLength({ min: 10, max: 500 })
+    .isLength({ min: 1, max: 500 })
     .withMessage('Description must be between 10 and 500 characters'),
 
   body('category')

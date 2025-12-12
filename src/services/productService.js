@@ -133,8 +133,8 @@ class ProductService {
     }
 
 
-    // services/productService.js
-    async calculateQuantityPrice(productId, quantity) {
+        // services/productService.js
+    async calculateQuantityPrice(productId, quantity, variantId = null, isWholesaleUser = false) {
         try {
             
             if (!productId || quantity < 1) {
@@ -151,27 +151,76 @@ class ProductService {
                     name: true,
                     normalPrice: true,
                     offerPrice: true,
+                    wholesalePrice: true,  // Add wholesale price
                     subcategoryId: true
                 }
             });
-
 
             if (!product) {
                 throw new Error('Product not found');
             }
 
-            // Get the effective price (offer price first, then normal price)
-            const normalPrice = product.offerPrice || product.normalPrice;
+            // Find variant if variantId is provided
+            let variant = null;
+            if (variantId) {
+                variant = await prisma.variant.findUnique({
+                    where: { 
+                        id: variantId 
+                    },
+                    select: {
+                        id: true,
+                        price: true,
+                        wholesalePrice: true
+                    }
+                });
+            }
+
+            // DETERMINE BASE PRICE BASED ON USER TYPE
+            let baseUnitPrice;
+            
+            if (isWholesaleUser) {
+                // FOR WHOLESALE USERS: Use wholesale price ONLY
+                // Priority:
+                // 1. Variant wholesale price
+                // 2. Product wholesale price
+                // 3. If no wholesale price, use normal price (NOT offer price)
+                
+                if (variant?.wholesalePrice !== null && variant?.wholesalePrice !== undefined) {
+                    baseUnitPrice = Number(variant.wholesalePrice);
+                } else if (product.wholesalePrice !== null && product.wholesalePrice !== undefined) {
+                    baseUnitPrice = Number(product.wholesalePrice);
+                } else {
+                    // For wholesale users without wholesale price, use normal price (NOT offer price)
+                    baseUnitPrice = Number(product.normalPrice || 0);
+                }
+            } else {
+                // FOR REGULAR USERS: Use regular pricing
+                // Priority:
+                // 1. Variant price
+                // 2. Product offer price (if available)
+                // 3. Product normal price
+                
+                if (variant?.price !== null && variant?.price !== undefined) {
+                    baseUnitPrice = Number(variant.price);
+                } else {
+                    baseUnitPrice = Number(product.offerPrice || product.normalPrice);
+                }
+            }
+
+            // Calculate original total based on base price
+            const originalTotal = baseUnitPrice * quantity;
             
             // If no subcategory, return regular pricing
             if (!product.subcategoryId) {
                 return {
-                    originalPrice: normalPrice * quantity,
+                    originalPrice: originalTotal,
                     quantity: quantity,
                     applicableDiscount: null,
-                    finalPrice: normalPrice * quantity,
+                    finalPrice: originalTotal,
                     totalSavings: 0,
-                    message: 'No quantity pricing available for this product'
+                    pricePerItem: baseUnitPrice,
+                    isWholesalePrice: isWholesaleUser,
+                    message: isWholesaleUser ? 'Wholesale price applied' : 'No quantity pricing available for this product'
                 };
             }
 
@@ -187,8 +236,7 @@ class ProductService {
                 }
             });
 
-
-            let bestTotal = normalPrice * quantity;
+            let bestTotal = originalTotal;
             let appliedDiscount = null;
 
             // Find the best applicable discount
@@ -198,13 +246,13 @@ class ProductService {
                     let finalPriceForRule = 0;
 
                     if (priceRule.priceType === 'PERCENTAGE') {
-                        // Calculate percentage discount
-                        discountAmount = (priceRule.value / 100) * normalPrice * quantity;
-                        finalPriceForRule = (normalPrice * quantity) - discountAmount;
+                        // Calculate percentage discount on the base price
+                        discountAmount = (priceRule.value / 100) * baseUnitPrice * quantity;
+                        finalPriceForRule = originalTotal - discountAmount;
                     } else {
                         // Fixed amount - this is total price for the quantity
                         finalPriceForRule = priceRule.value;
-                        discountAmount = (normalPrice * quantity) - finalPriceForRule;
+                        discountAmount = originalTotal - finalPriceForRule;
                     }
 
                     // If this rule gives a better price, use it
@@ -222,7 +270,7 @@ class ProductService {
 
             const totalSavings = appliedDiscount ? appliedDiscount.discountAmount : 0;
             
-            let message = 'No quantity discount available';
+            let message = isWholesaleUser ? 'Wholesale price applied' : 'No quantity discount available';
             if (appliedDiscount) {
                 if (appliedDiscount.priceType === 'PERCENTAGE') {
                     message = `${appliedDiscount.value}% discount applied for buying ${appliedDiscount.quantity} or more items`;
@@ -232,12 +280,16 @@ class ProductService {
             }
 
             return {
-                originalPrice: normalPrice * quantity,
+                productId: productId,
+                variantId: variantId,
                 quantity: quantity,
+                originalPrice: originalTotal,
                 applicableDiscount: appliedDiscount,
                 finalPrice: bestTotal,
                 totalSavings: totalSavings,
                 pricePerItem: bestTotal / quantity,
+                baseUnitPrice: baseUnitPrice,
+                isWholesalePrice: isWholesaleUser,
                 message: message
             };
 
@@ -503,60 +555,72 @@ class ProductService {
         });
     }
     
-    async calculateCartPrices(cartItems) {
+    async calculateCartPrices(cartItems, isWholesaleUser = false) {
         const calculatedItems = await Promise.all(
-        cartItems.map(async (item) => {
-            try {
-            const priceCalculation = await this.calculateQuantityPrice(
-                item.productId,
-                item.quantity
-            );
-            
-            return {
-                ...item,
-                priceCalculation,
-                finalPrice: priceCalculation.totalPrice
-            };
-            } catch (error) {
-            logger.error(`Error calculating price for product ${item.productId}:`, error);
-            
-            // Fallback to normal price calculation
-            const product = await prisma.product.findUnique({
-                where: { id: item.productId },
-                select: {
-                normalPrice: true,
-                offerPrice: true,
-                name: true
+            cartItems.map(async (item) => {
+                try {
+                const priceCalculation = await this.calculateQuantityPrice(
+                    item.productId,
+                    item.quantity,
+                    item.variantId,
+                    isWholesaleUser // Pass wholesale user flag
+                );
+                
+                return {
+                    ...item,
+                    priceCalculation,
+                    finalPrice: priceCalculation.totalPrice
+                };
+                } catch (error) {
+                logger.error(`Error calculating price for product ${item.productId}:`, error);
+                
+                // Fallback to normal price calculation WITH WHOLESALE SUPPORT
+                const product = await prisma.product.findUnique({
+                    where: { id: item.productId },
+                    select: {
+                    normalPrice: true,
+                    offerPrice: true,
+                    wholesalePrice: true,
+                    name: true
+                    }
+                });
+                
+                // Determine unit price based on user type
+                let unitPrice;
+                if (isWholesaleUser && product?.wholesalePrice) {
+                    unitPrice = product.wholesalePrice;
+                } else {
+                    unitPrice = product?.offerPrice || product?.normalPrice || 0;
                 }
-            });
-            
-            const unitPrice = product?.offerPrice || product?.normalPrice || 0;
-            const totalPrice = unitPrice * item.quantity;
-            
-            return {
-                ...item,
-                priceCalculation: {
-                totalPrice,
-                effectiveUnitPrice: unitPrice,
-                savings: 0,
-                hasQuantityPricing: false,
-                error: error.message
-                },
-                finalPrice: totalPrice
-            };
-            }
-        })
+                
+                const totalPrice = unitPrice * item.quantity;
+                
+                return {
+                    ...item,
+                    priceCalculation: {
+                    totalPrice,
+                    effectiveUnitPrice: unitPrice,
+                    savings: 0,
+                    hasQuantityPricing: false,
+                    isWholesalePrice: isWholesaleUser && product?.wholesalePrice,
+                    error: error.message
+                    },
+                    finalPrice: totalPrice
+                };
+                }
+            })
         );
 
         const subtotal = calculatedItems.reduce((sum, item) => sum + item.finalPrice, 0);
         const totalSavings = calculatedItems.reduce((sum, item) => sum + (item.priceCalculation.savings || 0), 0);
 
         return {
-        items: calculatedItems,
-        subtotal,
-        totalSavings,
-        total: subtotal,
-        hasQuantityDiscounts: totalSavings > 0
+            items: calculatedItems,
+            subtotal,
+            totalSavings,
+            total: subtotal,
+            hasQuantityDiscounts: totalSavings > 0,
+            isWholesalePricing: isWholesaleUser
         };
     }
     
