@@ -28,7 +28,8 @@ class SubcategoryService {
             select: {
               id: true, 
               name: true,
-              image: true
+              image: true,
+              
             }
           },
           products: {
@@ -111,164 +112,199 @@ class SubcategoryService {
   }
   
   // Create subcategory
-  async createSubcategory(subcategoryData, file = null) {
-    const { name, description, categoryId, isActive = true } = subcategoryData;
+
+async createSubcategory(subcategoryData, file = null, sizeFile = null) {
+  const { name, description, categoryId, isActive = true } = subcategoryData;
+
+  // Check if category exists
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId }
+  });
+
+  if (!category) {
     
-    // Check if category exists
+    throw new Error('Category not found');
+  }
+  
+
+  // Check if subcategory name already exists in the same category
+  const existingSubcategory = await prisma.subcategory.findFirst({
+    where: { name, categoryId }
+  });
+
+  if (existingSubcategory) {
+    
+    throw new Error('Subcategory name already exists in this category');
+  }
+
+  let imageUrl = null;
+  let imagePublicId = null;
+  let sizeImageUrl = null;
+  let sizeImagePublicId = null;
+
+  // Upload main image
+  if (file) {
+    try {
+      
+      const uploadResult = await s3UploadService.uploadImage(
+        file.buffer,
+        'subcategories'
+      );
+      imageUrl = uploadResult.url;
+      imagePublicId = uploadResult.key;
+      
+    } catch (error) {
+      
+      logger.error('Failed to upload subcategory image:', error);
+      throw new Error('Failed to upload subcategory image');
+    }
+  } else {
+    logger.error('ℹ️ No main image to upload');
+  }
+
+  if (sizeFile) {
+    
+    try {
+    
+      const uploadResult = await s3UploadService.uploadImage(
+        sizeFile.buffer,
+        'subcategories/size-images'
+      );
+      sizeImageUrl = uploadResult.url;
+      sizeImagePublicId = uploadResult.key;
+    } catch (error) {
+      logger.error('Failed to upload subcategory size image:', error);
+      throw new Error('Failed to upload subcategory size image');
+    }
+  }
+
+  const subcategory = await prisma.subcategory.create({
+    data: {
+      name,
+      description,
+      image: imageUrl,
+      imagePublicId,
+      sizeImage: sizeImageUrl,
+      sizeImagePublicId,
+      isActive,
+      categoryId
+    },
+    include: {
+      category: {
+        select: { id: true, name: true }
+      }
+    }
+  });
+
+  logger.info(`Subcategory created: ${subcategory.id}`);
+  return subcategory;
+}
+
+  
+// Update subcategory
+async updateSubcategory(subcategoryId, updateData, file = null, sizeFile = null) {
+  const subcategory = await prisma.subcategory.findUnique({
+    where: { id: subcategoryId }
+  });
+
+  if (!subcategory) {
+    throw new Error('Subcategory not found');
+  }
+
+  const { name, description, categoryId, isActive } = updateData;
+  const isActiveBoolean = isActive === 'true' || isActive === true;
+
+  // Check category
+  if (categoryId && categoryId !== subcategory.categoryId) {
     const category = await prisma.category.findUnique({
       where: { id: categoryId }
     });
-    
+
     if (!category) {
       throw new Error('Category not found');
     }
-    
-    // Check if subcategory name already exists in the same category
+  }
+
+  // Check name uniqueness
+  if (name && name !== subcategory.name) {
     const existingSubcategory = await prisma.subcategory.findFirst({
-      where: { 
+      where: {
         name,
-        categoryId 
+        categoryId: categoryId || subcategory.categoryId,
+        id: { not: subcategoryId }
       }
     });
-    
+
     if (existingSubcategory) {
       throw new Error('Subcategory name already exists in this category');
     }
-    
-    let imageUrl = null;
-    let imagePublicId = null;
-    
-    // Upload subcategory image if provided
-    if (file) {
-      try {
-        const uploadResult = await s3UploadService.uploadImage(
-          file.buffer, 
-          'subcategories'
-        );
-        imageUrl = uploadResult.url;
-        imagePublicId = uploadResult.key;
-      } catch (uploadError) {
-        logger.error('Failed to upload subcategory image:', uploadError);
-        throw new Error('Failed to upload subcategory image');
-      }
-    }
-    
-    const subcategory = await prisma.subcategory.create({
-      data: {
-        name,
-        description,
-        image: imageUrl,
-        imagePublicId,
-        isActive,
-        categoryId
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
-    
-    logger.info(`Subcategory created: ${subcategory.id}`);
-    return subcategory;
   }
-  
-  // Update subcategory
-  async updateSubcategory(subcategoryId, updateData, file = null) {
-    const subcategory = await prisma.subcategory.findUnique({
-      where: { id: subcategoryId }
-    });
-    
-    if (!subcategory) {
-      throw new Error('Subcategory not found');
-    }
-    
-    const { name, description, categoryId, isActive } = updateData;
-    
-    // Convert isActive from string to boolean if needed
-    const isActiveBoolean = isActive === 'true' || isActive === true;
-    
-    // Check if category is being updated and if it exists
-    if (categoryId && categoryId !== subcategory.categoryId) {
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId }
-      });
-      
-      if (!category) {
-        throw new Error('Category not found');
-      }
-    }
-    
-    // Check if subcategory name is being updated and if it's already taken
-    if (name && name !== subcategory.name) {
-      const existingSubcategory = await prisma.subcategory.findFirst({
-        where: {
-          name,
-          categoryId: categoryId || subcategory.categoryId,
-          id: { not: subcategoryId }
-        }
-      });
-      
-      if (existingSubcategory) {
-        throw new Error('Subcategory name already exists in this category');
-      }
-    }
-    
-    let imageUrl = subcategory.image;
-    let imagePublicId = subcategory.imagePublicId;
-    
-    // Upload new subcategory image if provided
-    if (file) {
-      // Delete old image if exists
-      if (subcategory.imagePublicId) {
-        try {
-          await s3UploadService.deleteImage(subcategory.imagePublicId);
-        } catch (error) {
-          logger.error('Failed to delete old subcategory image:', error);
-          // Continue with new upload
-        }
-      }
-      
+
+  let imageUrl = subcategory.image;
+  let imagePublicId = subcategory.imagePublicId;
+  let sizeImageUrl = subcategory.sizeImage;
+  let sizeImagePublicId = subcategory.sizeImagePublicId;
+
+  // Update main image
+  if (file) {
+    if (subcategory.imagePublicId) {
       try {
-        const uploadResult = await s3UploadService.uploadImage(
-          file.buffer, 
-          'subcategories'
-        );
-        imageUrl = uploadResult.url;
-        imagePublicId = uploadResult.key;
-      } catch (uploadError) {
-        logger.error('Failed to upload subcategory image:', uploadError);
-        throw new Error('Failed to upload subcategory image');
+        await s3UploadService.deleteImage(subcategory.imagePublicId);
+      } catch (error) {
+        logger.error('Failed to delete old subcategory image:', error);
       }
     }
-    
-    const updatedSubcategory = await prisma.subcategory.update({
-      where: { id: subcategoryId },
-      data: {
-        name,
-        description,
-        image: imageUrl,
-        imagePublicId,
-        categoryId,
-        isActive: isActiveBoolean, // Use the converted boolean value
-        updatedAt: new Date()
-      },
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
-    
-    logger.info(`Subcategory updated: ${subcategoryId}`);
-    return updatedSubcategory;
+
+    const uploadResult = await s3UploadService.uploadImage(
+      file.buffer,
+      'subcategories'
+    );
+    imageUrl = uploadResult.url;
+    imagePublicId = uploadResult.key;
   }
+
+  // Update size image
+  if (sizeFile) {
+    if (subcategory.sizeImagePublicId) {
+      try {
+        await s3UploadService.deleteImage(subcategory.sizeImagePublicId);
+      } catch (error) {
+        logger.error('Failed to delete old size image:', error);
+      }
+    }
+
+    const uploadResult = await s3UploadService.uploadImage(
+      sizeFile.buffer,
+      'subcategories/size-images'
+    );
+    sizeImageUrl = uploadResult.url;
+    sizeImagePublicId = uploadResult.key;
+  }
+
+  const updatedSubcategory = await prisma.subcategory.update({
+    where: { id: subcategoryId },
+    data: {
+      name,
+      description,
+      image: imageUrl,
+      imagePublicId,
+      sizeImage: sizeImageUrl,
+      sizeImagePublicId,
+      categoryId,
+      isActive: isActiveBoolean,
+      updatedAt: new Date()
+    },
+    include: {
+      category: {
+        select: { id: true, name: true }
+      }
+    }
+  });
+
+  logger.info(`Subcategory updated: ${subcategoryId}`);
+  return updatedSubcategory;
+}
+
   
   // Delete subcategory
   async deleteSubcategory(subcategoryId) {

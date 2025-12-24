@@ -39,8 +39,14 @@ router.get('/:subcategoryId', getSubcategoryById);
 router.get('/category/:categoryId', getSubcategoriesByCategory);
 
 // Admin only routes
-router.post('/admin', auth, authorize('ADMIN'), upload.single('image'), validateSubcategory, createSubcategory); // Add validation
-router.put('/admin/:subcategoryId', auth, authorize('ADMIN'), upload.single('image'), validateSubcategoryUpdate, updateSubcategory); // Add validation
+router.post('/admin', auth, authorize('ADMIN'), upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'sizeImage', maxCount: 1 }
+]), validateSubcategory, createSubcategory);
+router.put('/admin/:subcategoryId', auth, authorize('ADMIN'), upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'sizeImage', maxCount: 1 }
+]), validateSubcategoryUpdate, updateSubcategory);
 router.delete('/admin/:subcategoryId', auth, authorize('ADMIN'), deleteSubcategory);
 router.patch('/admin/:subcategoryId/status', auth, authorize('ADMIN'), validateStatusToggle, toggleSubcategoryStatus); // Add validation
 

@@ -581,7 +581,7 @@ async register(userData, files = []) {
   }
 
   // Existing methods
-  async logout(userId) {
+  async logout( ) {
     return true;
   }
 

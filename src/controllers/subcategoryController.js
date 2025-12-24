@@ -34,9 +34,16 @@ export const getSubcategoryById = asyncHandler(async (req, res) => {
 // Create subcategory (Admin only)
 export const createSubcategory = asyncHandler(async (req, res) => {
   const subcategoryData = req.body;
-  const file = req.file;
+  // Get files from req.files (not req.file)
+  const imageFile = req.files?.image?.[0] || null;
+  const sizeImageFile = req.files?.sizeImage?.[0] || null;
   
-  const subcategory = await subcategoryService.createSubcategory(subcategoryData, file);
+  // Call service with BOTH files
+  const subcategory = await subcategoryService.createSubcategory(
+    subcategoryData, 
+    imageFile, 
+    sizeImageFile
+  );
   
   res.status(201).json({
     success: true,
@@ -49,12 +56,14 @@ export const createSubcategory = asyncHandler(async (req, res) => {
 export const updateSubcategory = asyncHandler(async (req, res) => {
   const { subcategoryId } = req.params;
   const updateData = req.body;
-  const file = req.file;
+  const imageFile = req.files?.image?.[0] || null;
+  const sizeImageFile = req.files?.sizeImage?.[0] || null;
   
   const updatedSubcategory = await subcategoryService.updateSubcategory(
     subcategoryId, 
     updateData, 
-    file
+    imageFile, 
+    sizeImageFile
   );
   
   res.status(200).json({
