@@ -45,7 +45,7 @@ export const emailTemplates = {
         const userType = getUserType();
 
         return {
-            subject: `Website Inquiry: ${contactData.name || 'New Message'} - Tiruppur Garments`,
+            subject: `Website Inquiry: ${contactData.name || 'New Message'} - hanger garments`,
             
             html: `
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -207,7 +207,7 @@ export const emailTemplates = {
         <div class="container">
             <div class="header">
                 <h1>Contact Form Submission</h1>
-                <p>Tiruppur Garments Website</p>
+                <p>hanger garments Website</p>
             </div>
             
             <div class="content">
@@ -269,7 +269,7 @@ export const emailTemplates = {
             </div>
             
             <div class="footer">
-                <p>This is an automated notification from Tiruppur Garments</p>
+                <p>This is an automated notification from hanger garments</p>
                 <p style="margin-top: 8px;">Please do not reply to this email.</p>
             </div>
         </div>
@@ -294,14 +294,14 @@ export const emailTemplates = {
 
     Please respond to this inquiry.
 
-    This is an automated notification from Tiruppur Garments.
+    This is an automated notification from hanger garments.
             `.trim()
         };
     },
 
 
     contactAutoReply: (contactData) => ({
-        subject: 'Thank You for Contacting Tiruppur Garments',
+        subject: 'Thank You for Contacting hanger garments',
         html: `
     <!DOCTYPE html>
     <html>
@@ -320,16 +320,16 @@ export const emailTemplates = {
             </div>
             <div class="content">
                 <p>Dear ${contactData.name || 'Valued Customer'},</p>
-                <p>Thank you for reaching out to Tiruppur Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
+                <p>Thank you for reaching out to hanger garments. We have received your message and our team will get back to you within 24-48 hours.</p>
                 <p>For urgent inquiries, please call us at [Your Phone Number].</p>
-                <p>Best regards,<br>Tiruppur Garments Team</p>
+                <p>Best regards,<br>hanger garments Team</p>
             </div>
         </div>
     </body>
     </html>
         `,
         text: `
-    Thank you for contacting Tiruppur Garments!
+    Thank you for contacting hanger garments!
 
     Dear ${contactData.name || 'Valued Customer'},
 
@@ -338,7 +338,7 @@ export const emailTemplates = {
     For urgent inquiries, please call us at [Your Phone Number].
 
     Best regards,
-    Tiruppur Garments Team
+    hanger garments Team
         `.trim()
     }),
 
@@ -349,7 +349,7 @@ export const emailTemplates = {
     
     return {
         // ✅ Fixed subject line - remove excessive emojis
-        subject: `Welcome to Tiruppur Garments - Get Started with Organic Living`,
+        subject: `Welcome to hanger garments - Get Started with Organic Living`,
         
         html: `
     <!DOCTYPE html>
@@ -357,7 +357,7 @@ export const emailTemplates = {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Tiruppur Garments</title>
+        <title>Welcome to hanger garments</title>
         <style>
             /* Reset and basic styles */
             body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f6f6f6; }
@@ -385,7 +385,7 @@ export const emailTemplates = {
         <div class="container">
             <!-- Header -->
             <div class="header">
-                <h1>Welcome to Tiruppur Garments</h1>
+                <h1>Welcome to hanger garments</h1>
                 <p>Your Journey to Healthier Living Begins</p>
             </div>
             
@@ -393,7 +393,7 @@ export const emailTemplates = {
             <div class="content">
                 <div class="welcome-text">
                     <p>Hello <strong>${userData.name}</strong>,</p>
-                    <p>Thank you for joining Tiruppur Garments! We're excited to have you as part of our community dedicated to healthy, organic living.</p>
+                    <p>Thank you for joining hanger garments! We're excited to have you as part of our community dedicated to healthy, organic living.</p>
                 </div>
                 
                 <div class="features">
@@ -429,7 +429,7 @@ export const emailTemplates = {
             
             <!-- Footer -->
             <div class="footer">
-                <p><strong>Tiruppur Garments</strong></p>
+                <p><strong>hanger garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
                 <p>Email: contact@${domain} | Phone: +91  96774 11007
 </p>
@@ -438,7 +438,7 @@ export const emailTemplates = {
                     <a href="${frontendUrl}/unsubscribe" style="color: #666666; text-decoration: none;">Unsubscribe</a>
                 </p>
                 <p style="margin-top: 15px; font-size: 11px; color: #999999;">
-                    &copy; ${currentYear} Tiruppur Garments. All rights reserved.<br>
+                    &copy; ${currentYear} hanger garments. All rights reserved.<br>
                     This email was sent to ${userData.email} because you registered on our website.
                 </p>
             </div>
@@ -449,11 +449,11 @@ export const emailTemplates = {
         
         // ✅ Proper text version is crucial for spam filters
         text: `
-    Welcome to Tiruppur Garments
+    Welcome to hanger garments
 
     Hello ${userData.name},
 
-    Thank you for joining Tiruppur Garments! We're excited to have you as part of our community dedicated to healthy, organic living.
+    Thank you for joining hanger garments! We're excited to have you as part of our community dedicated to healthy, organic living.
 
     WHAT YOU CAN EXPECT:
     • Fresh Organic Produce: 100% certified organic fruits and vegetables
@@ -478,10 +478,10 @@ export const emailTemplates = {
     Update your preferences: ${frontendUrl}/preferences
     Unsubscribe: ${frontendUrl}/unsubscribe
 
-    Tiruppur Garments
+    hanger garments
     Nourishing Lives Naturally
 
-    © ${currentYear} Tiruppur Garments. All rights reserved.
+    © ${currentYear} hanger garments. All rights reserved.
     This email was sent to ${userData.email} because you registered on our website.
         `.trim()
     };
@@ -493,14 +493,14 @@ export const emailTemplates = {
     const expiryTime = '1 hour';
     
     return {
-      subject: 'Reset Your Password - Tiruppur Garments',
+      subject: 'Reset Your Password - hanger garments',
       html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset - Tiruppur Garments</title>
+    <title>Password Reset - hanger garments</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -524,7 +524,7 @@ export const emailTemplates = {
     <div class="container">
         <div class="header">
             <h1>🔒 Password Reset Request</h1>
-            <p>Tiruppur Garments Account Security</p>
+            <p>hanger garments Account Security</p>
         </div>
         
         <div class="content">
@@ -534,7 +534,7 @@ export const emailTemplates = {
             
             <p>Hello <strong>${userData.name}</strong>,</p>
             
-            <p>We received a request to reset your password for your Tiruppur Garments account. If you didn't make this request, please ignore this email.</p>
+            <p>We received a request to reset your password for your hanger garments account. If you didn't make this request, please ignore this email.</p>
             
             <div class="reset-section">
                 <p>To reset your password, click the button below:</p>
@@ -566,9 +566,9 @@ export const emailTemplates = {
         </div>
         
         <div class="footer">
-            <p>This is an automated security email from Tiruppur Garments</p>
+            <p>This is an automated security email from hanger garments</p>
             <p style="margin-top: 8px;">
-                <strong>Tiruppur Garments</strong><br>
+                <strong>hanger garments</strong><br>
                 Nourishing Lives Naturally
             </p>
         </div>
@@ -577,11 +577,11 @@ export const emailTemplates = {
 </html>
       `,
       text: `
-PASSWORD RESET REQUEST - Tiruppur Garments
+PASSWORD RESET REQUEST - hanger garments
 
 Hello ${userData.name},
 
-We received a request to reset your password for your Tiruppur Garments account.
+We received a request to reset your password for your hanger garments account.
 
 To reset your password, visit this link:
 ${resetUrl}
@@ -595,9 +595,9 @@ If you didn't request this reset, please ignore this email. Your account remains
 
 Need help? Contact our support team: ${supportEmail}
 
-This is an automated security email from Tiruppur Garments.
+This is an automated security email from hanger garments.
 
-Tiruppur Garments
+hanger garments
 Nourishing Lives Naturally
       `.trim()
     };
@@ -616,14 +616,14 @@ Nourishing Lives Naturally
         });
         
         return {
-        subject: 'Password Changed Successfully - Tiruppur Garments',
+        subject: 'Password Changed Successfully - hanger garments',
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Changed - Tiruppur Garments</title>
+        <title>Password Changed - hanger garments</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -644,7 +644,7 @@ Nourishing Lives Naturally
         <div class="container">
             <div class="header">
                 <h1>✅ Password Changed Successfully</h1>
-                <p>Tiruppur Garments Account Security</p>
+                <p>hanger garments Account Security</p>
             </div>
             
             <div class="content">
@@ -654,7 +654,7 @@ Nourishing Lives Naturally
                 
                 <p>Hello <strong>${userData.name}</strong>,</p>
                 
-                <p>This email confirms that your Tiruppur Garments account password was changed on <strong>${timestamp}</strong>.</p>
+                <p>This email confirms that your hanger garments account password was changed on <strong>${timestamp}</strong>.</p>
                 
                 <div class="security-info">
                     <h3 style="color: #495057; margin-bottom: 15px;">🔒 Security Information</h3>
@@ -677,9 +677,9 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p>This is an automated security notification from Tiruppur Garments</p>
+                <p>This is an automated security notification from hanger garments</p>
                 <p style="margin-top: 8px;">
-                    <strong>Tiruppur Garments</strong><br>
+                    <strong>hanger garments</strong><br>
                     Nourishing Lives Naturally
                 </p>
             </div>
@@ -688,11 +688,11 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    PASSWORD CHANGED SUCCESSFULLY - Tiruppur Garments
+    PASSWORD CHANGED SUCCESSFULLY - hanger garments
 
     Hello ${userData.name},
 
-    This email confirms that your Tiruppur Garments account password was changed on ${timestamp}.
+    This email confirms that your hanger garments account password was changed on ${timestamp}.
 
     SECURITY INFORMATION:
     - Your new password is now active
@@ -704,9 +704,9 @@ Nourishing Lives Naturally
 
     Thank you for helping us keep your account secure.
 
-    This is an automated security notification from Tiruppur Garments.
+    This is an automated security notification from hanger garments.
 
-    Tiruppur Garments
+    hanger garments
     Nourishing Lives Naturally
         `.trim()
         };
@@ -721,14 +721,14 @@ Nourishing Lives Naturally
     const expiryTime = '1 hour';
     
     return {
-        subject: '🔐 Admin Password Reset Request - Tiruppur Garments',
+        subject: '🔐 Admin Password Reset Request - hanger garments',
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Password Reset - Tiruppur Garments</title>
+        <title>Admin Password Reset - hanger garments</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -753,7 +753,7 @@ Nourishing Lives Naturally
         <div class="container">
             <div class="header">
                 <h1>🔐 Admin Password Reset</h1>
-                <p>Tiruppur Garments Administrator Portal</p>
+                <p>hanger garments Administrator Portal</p>
             </div>
             
             <div class="content">
@@ -763,7 +763,7 @@ Nourishing Lives Naturally
                 
                 <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
                 
-                <p>We received a request to reset your password for the Tiruppur Garments <strong>Administrator Portal</strong>. If you didn't make this request, please contact the super administrator immediately.</p>
+                <p>We received a request to reset your password for the hanger garments <strong>Administrator Portal</strong>. If you didn't make this request, please contact the super administrator immediately.</p>
                 
                 <div class="reset-section">
                     <p>To reset your admin password, click the button below:</p>
@@ -800,9 +800,9 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p>This is an automated security email for Tiruppur Garments Administrators</p>
+                <p>This is an automated security email for hanger garments Administrators</p>
                 <p style="margin-top: 8px;">
-                    <strong>Tiruppur Garments</strong><br>
+                    <strong>hanger garments</strong><br>
                     Administrator Portal - Secure Access
                 </p>
             </div>
@@ -811,11 +811,11 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    ADMIN PASSWORD RESET REQUEST - Tiruppur Garments
+    ADMIN PASSWORD RESET REQUEST - hanger garments
 
     Hello ${adminData.name} (ADMIN),
 
-    We received a request to reset your password for the Tiruppur Garments Administrator Portal.
+    We received a request to reset your password for the hanger garments Administrator Portal.
 
     To reset your admin password, visit this link:
     ${resetUrl}
@@ -833,9 +833,9 @@ Nourishing Lives Naturally
 
     Note: This reset is for admin access only and provides elevated privileges to the system.
 
-    This is an automated security email for Tiruppur Garments Administrators.
+    This is an automated security email for hanger garments Administrators.
 
-    Tiruppur Garments
+    hanger garments
     Administrator Portal - Secure Access
         `.trim()
     };
@@ -854,14 +854,14 @@ Nourishing Lives Naturally
     });
     
     return {
-        subject: '✅ Admin Password Changed Successfully - Tiruppur Garments',
+        subject: '✅ Admin Password Changed Successfully - hanger garments',
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Password Changed - Tiruppur Garments</title>
+        <title>Admin Password Changed - hanger garments</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -884,7 +884,7 @@ Nourishing Lives Naturally
         <div class="container">
             <div class="header">
                 <h1>✅ Admin Password Changed</h1>
-                <p>Tiruppur Garments Administrator Portal</p>
+                <p>hanger garments Administrator Portal</p>
             </div>
             
             <div class="content">
@@ -894,7 +894,7 @@ Nourishing Lives Naturally
                 
                 <p>Hello <strong>${adminData.name}</strong> <span class="admin-badge">ADMIN</span>,</p>
                 
-                <p>This email confirms that your Tiruppur Garments <strong>Administrator Portal</strong> password was changed on <strong>${timestamp}</strong>.</p>
+                <p>This email confirms that your hanger garments <strong>Administrator Portal</strong> password was changed on <strong>${timestamp}</strong>.</p>
                 
                 <div class="security-info">
                     <h3 style="color: #495057; margin-bottom: 15px;">🔒 Admin Security Update</h3>
@@ -928,9 +928,9 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p>This is an automated security notification for Tiruppur Garments Administrators</p>
+                <p>This is an automated security notification for hanger garments Administrators</p>
                 <p style="margin-top: 8px;">
-                    <strong>Tiruppur Garments</strong><br>
+                    <strong>hanger garments</strong><br>
                     Administrator Portal - Security First
                 </p>
             </div>
@@ -939,11 +939,11 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    ADMIN PASSWORD CHANGED SUCCESSFULLY - Tiruppur Garments
+    ADMIN PASSWORD CHANGED SUCCESSFULLY - hanger garments
 
     Hello ${adminData.name} (ADMIN),
 
-    This email confirms that your Tiruppur Garments Administrator Portal password was changed on ${timestamp}.
+    This email confirms that your hanger garments Administrator Portal password was changed on ${timestamp}.
 
     ADMIN SECURITY UPDATE:
     - Your new admin password is now active
@@ -962,9 +962,9 @@ Nourishing Lives Naturally
 
     Thank you for helping us maintain the security of our administrator systems.
 
-    This is an automated security notification for Tiruppur Garments Administrators.
+    This is an automated security notification for hanger garments Administrators.
 
-    Tiruppur Garments
+    hanger garments
     Administrator Portal - Security First
         `.trim()
     };
@@ -1030,7 +1030,7 @@ Nourishing Lives Naturally
         <div class="container">
             <div class="header">
                 <h1>🏢 New Wholesaler Application</h1>
-                <p>Tiruppur Garments Wholesaler Program</p>
+                <p>hanger garments Wholesaler Program</p>
             </div>
             
             <div class="content">
@@ -1118,7 +1118,7 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p>This is an automated notification from Tiruppur Garments Wholesaler Management System</p>
+                <p>This is an automated notification from hanger garments Wholesaler Management System</p>
                 <p style="margin-top: 8px;">Please review this application within 48 hours.</p>
             </div>
         </div>
@@ -1126,7 +1126,7 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    NEW WHOLESALER APPLICATION - Tiruppur Garments
+    NEW WHOLESALER APPLICATION - hanger garments
 
     A new wholesaler application has been submitted and requires review.
 
@@ -1158,13 +1158,13 @@ Nourishing Lives Naturally
 
     Please review this application within 48 hours.
 
-    This is an automated notification from Tiruppur Garments.
+    This is an automated notification from hanger garments.
         `.trim()
         };
     },
 
     wholesalerAutoReply: (wholesalerData) => ({
-        subject: 'Wholesaler Application Received - Tiruppur Garments',
+        subject: 'Wholesaler Application Received - hanger garments',
         html: `
     <!DOCTYPE html>
     <html>
@@ -1186,7 +1186,7 @@ Nourishing Lives Naturally
             <div class="content">
                 <p>Dear ${wholesalerData.name || 'Valued Business Partner'},</p>
                 
-                <p>Thank you for your interest in becoming a wholesale partner with Tiruppur Garments!</p>
+                <p>Thank you for your interest in becoming a wholesale partner with hanger garments!</p>
                 
                 <p>We have received your application and our team is currently reviewing it. Here's what you can expect next:</p>
                 
@@ -1216,18 +1216,18 @@ Nourishing Lives Naturally
                 
                 <p>Best regards,<br>
                 <strong>Wholesale Partnership Team</strong><br>
-                Tiruppur Garments</p>
+                hanger garments</p>
             </div>
         </div>
     </body>
     </html>
         `,
         text: `
-    Wholesaler Application Received - Tiruppur Garments
+    Wholesaler Application Received - hanger garments
 
     Dear ${wholesalerData.name || 'Valued Business Partner'},
 
-    Thank you for your interest in becoming a wholesale partner with Tiruppur Garments!
+    Thank you for your interest in becoming a wholesale partner with hanger garments!
 
     We have received your application and our team is currently reviewing it. Here's what you can expect next:
 
@@ -1247,12 +1247,12 @@ Nourishing Lives Naturally
 
     Best regards,
     Wholesale Partnership Team
-    Tiruppur Garments
+    hanger garments
         `.trim()
     }),
 
     wholesalerApprovalConfirmation: (wholesalerData) => ({
-        subject: 'Wholesaler Application Approved - Welcome to Tiruppur Garments!',
+        subject: 'Wholesaler Application Approved - Welcome to hanger garments!',
         html: `
     <!DOCTYPE html>
     <html>
@@ -1292,18 +1292,18 @@ Nourishing Lives Naturally
                 
                 <p>Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.</p>
                 
-                <p>Welcome to the Tiruppur Garments family!</p>
+                <p>Welcome to the hanger garments family!</p>
                 
                 <p>Best regards,<br>
                 <strong>Wholesale Partnership Team</strong><br>
-                Tiruppur Garments</p>
+                hanger garments</p>
             </div>
         </div>
     </body>
     </html>
         `,
         text: `
-    Wholesaler Application Approved - Welcome to Tiruppur Garments!
+    Wholesaler Application Approved - Welcome to hanger garments!
 
     Dear ${wholesalerData.name},
 
@@ -1324,17 +1324,17 @@ Nourishing Lives Naturally
 
     Our wholesale team will contact you shortly to discuss your specific requirements and introduce you to your account manager.
 
-    Welcome to the Tiruppur Garments family!
+    Welcome to the hanger garments family!
 
     Best regards,
     Wholesale Partnership Team
-    Tiruppur Garments
+    hanger garments
         `.trim()
     }),
 
 
     contactAutoReply: (contactData) => ({
-    subject: 'Thank You for Contacting Tiruppur Garments',
+    subject: 'Thank You for Contacting hanger garments',
     html: `
     <!DOCTYPE html>
     <html>
@@ -1356,7 +1356,7 @@ Nourishing Lives Naturally
             <div class="content">
                 <p>Dear ${contactData.name || 'Valued Customer'},</p>
                 
-                <p>Thank you for reaching out to Tiruppur Garments. We have received your message and our team will get back to you within 24-48 hours.</p>
+                <p>Thank you for reaching out to hanger garments. We have received your message and our team will get back to you within 24-48 hours.</p>
                 
                 <div class="timeline">
                     <div class="timeline-item">
@@ -1382,18 +1382,18 @@ Nourishing Lives Naturally
                 
                 <p>Best regards,<br>
                 <strong>Customer Support Team</strong><br>
-                Tiruppur Garments</p>
+                hanger garments</p>
             </div>
         </div>
     </body>
     </html>
     `,
     text: `
-    Thank You for Contacting Tiruppur Garments
+    Thank You for Contacting hanger garments
 
     Dear ${contactData.name || 'Valued Customer'},
 
-    Thank you for reaching out to Tiruppur Garments. We have received your message and our team will get back to you within 24-48 hours.
+    Thank you for reaching out to hanger garments. We have received your message and our team will get back to you within 24-48 hours.
 
     WHAT TO EXPECT:
     --------------
@@ -1411,7 +1411,7 @@ Nourishing Lives Naturally
 
     Best regards,
     Customer Support Team
-    Tiruppur Garments
+    hanger garments
     `.trim()
     }),
 
@@ -1559,14 +1559,14 @@ Nourishing Lives Naturally
         const hasCustomImages = orderData.customImages && orderData.customImages.length > 0;
 
         return {
-            subject: `Order Confirmed - #${orderData.orderNumber} - Tiruppur Garments`,
+            subject: `Order Confirmed - #${orderData.orderNumber} - hanger garments`,
             html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Confirmation - Tiruppur Garments</title>
+        <title>Order Confirmation - hanger garments</title>
         <style>
             * { 
                 margin: 0; 
@@ -1816,7 +1816,7 @@ Nourishing Lives Naturally
         <div class="container">
             <div class="header">
                 <h1>🎉 Order Confirmed!</h1>
-                <p>Thank you for shopping with Tiruppur Garments</p>
+                <p>Thank you for shopping with hanger garments</p>
                 ${isWholesalePricing ? '<div class="wholesale-badge">WHOLESALE ORDER</div>' : ''}
             </div>
             
@@ -1829,7 +1829,7 @@ Nourishing Lives Naturally
                 
                 <p style="margin-bottom: 25px; font-size: 16px; color: #4a5568;">
                     Hello <strong style="color: #667eea;">${orderData.name}</strong>,<br>
-                    Thank you for choosing Tiruppur Garments! We're preparing your order and will notify you once it's shipped.
+                    Thank you for choosing hanger garments! We're preparing your order and will notify you once it's shipped.
                     ${userRole === 'WHOLESALER' ? '<br><span style="color: #f97316; font-weight: 600;">Thank you for being a valued wholesale customer!</span>' : ''}
                 </p>
                 
@@ -2041,13 +2041,13 @@ Nourishing Lives Naturally
                     Thank you for shopping with us! We're committed to making your experience wonderful!<br>
                     With love,<br>
                     <strong style="color: #667eea; font-size: 18px;">
-                        Tiruppur Garments Team 🤍
+                        hanger garments Team 🤍
                     </strong>
                 </p>
             </div>
             
             <div class="footer">
-                <p>© ${new Date().getFullYear()} Tiruppur Garments. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} hanger garments. All rights reserved.</p>
                 <p>Nourishing Lives Naturally • <a href="https://${domain}" style="color: #6c757d;">${domain}</a></p>
                 <p style="margin-top: 10px; font-size: 11px; color: #8c959f;">
                     This is an automated email. Please do not reply to this message.
@@ -2058,7 +2058,7 @@ Nourishing Lives Naturally
     </html>
             `,
             text: `
-    ORDER CONFIRMED - Tiruppur Garments
+    ORDER CONFIRMED - hanger garments
     ${isWholesalePricing ? '==== WHOLESALE ORDER ====' : ''}
 
     Hello ${orderData.name},
@@ -2122,13 +2122,13 @@ Nourishing Lives Naturally
     Email: ${supportEmail}
     Phone: +91 96774 11007
 
-    Thank you for choosing Tiruppur Garments! We're committed to making your experience wonderful.
+    Thank you for choosing hanger garments! We're committed to making your experience wonderful.
 
     With love,
-    Tiruppur Garments Team
+    hanger garments Team
 
     --
-    Tiruppur Garments
+    hanger garments
     Nourishing Lives Naturally
     https://${domain}
             `.trim()
@@ -2209,14 +2209,14 @@ Nourishing Lives Naturally
 
         return {
             // Fixed subject line - removed emoji to prevent spam
-            subject: `Order Notification: #${orderData.orderNumber} - Tiruppur Garments`,
+            subject: `Order Notification: #${orderData.orderNumber} - hanger garments`,
             html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>New Order Notification - Tiruppur Garments</title>
+        <title>New Order Notification - hanger garments</title>
         <style>
             * { 
                 margin: 0; 
@@ -2652,15 +2652,15 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p>© ${new Date().getFullYear()} Tiruppur Garments. All rights reserved.</p>
-                <p>This is an automated order notification from Tiruppur Garments Order Management System.</p>
+                <p>© ${new Date().getFullYear()} hanger garments. All rights reserved.</p>
+                <p>This is an automated order notification from hanger garments Order Management System.</p>
             </div>
         </div>
     </body>
     </html>
             `,
             text: `
-    NEW ORDER NOTIFICATION - Tiruppur Garments
+    NEW ORDER NOTIFICATION - hanger garments
 
     A new order has been placed and requires processing.
 
@@ -2716,10 +2716,10 @@ Nourishing Lives Naturally
 
     View order in admin panel: ${adminUrl}/orders/${orderData.id}
 
-    This is an automated order notification from Tiruppur Garments.
+    This is an automated order notification from hanger garments.
 
     --
-    Tiruppur Garments
+    hanger garments
     Order Management System
             `.trim()
         };
@@ -2733,14 +2733,14 @@ Nourishing Lives Naturally
     });
 
     return {
-        subject: `Order ${newStatus} - #${orderData.orderNumber} - Tiruppur Garments`,
+        subject: `Order ${newStatus} - #${orderData.orderNumber} - hanger garments`,
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Status Update - Tiruppur Garments</title>
+        <title>Order Status Update - hanger garments</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -2803,12 +2803,12 @@ Nourishing Lives Naturally
                 ` : ''}
 
                 <div style="margin-top: 20px;">
-                    <p>Thank you for shopping with Tiruppur Garments!</p>
+                    <p>Thank you for shopping with hanger garments!</p>
                 </div>
             </div>
             
             <div class="footer">
-                <p><strong>Tiruppur Garments</strong></p>
+                <p><strong>hanger garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
                 <p style="margin-top: 15px; font-size: 11px; color: #999;">
                     This is an automated status update email. Please do not reply to this message.
@@ -2819,7 +2819,7 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    ORDER STATUS UPDATE - Tiruppur Garments
+    ORDER STATUS UPDATE - hanger garments
 
     Hello ${orderData.name},
 
@@ -2850,10 +2850,10 @@ Nourishing Lives Naturally
     Your order has been delivered. We hope you love your purchase!
     ` : ''}
 
-    Thank you for shopping with Tiruppur Garments!
+    Thank you for shopping with hanger garments!
 
     --
-    Tiruppur Garments
+    hanger garments
     Nourishing Lives Naturally
         `.trim()
     };
@@ -2867,14 +2867,14 @@ Nourishing Lives Naturally
     });
 
     return {
-        subject: `Order Refund Processed - #${orderData.orderNumber} - Tiruppur Garments`,
+        subject: `Order Refund Processed - #${orderData.orderNumber} - hanger garments`,
         html: `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Refund - Tiruppur Garments</title>
+        <title>Order Refund - hanger garments</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f6f6f6; padding: 20px; }
@@ -2927,7 +2927,7 @@ Nourishing Lives Naturally
             </div>
             
             <div class="footer">
-                <p><strong>Tiruppur Garments</strong></p>
+                <p><strong>hanger garments</strong></p>
                 <p>Nourishing Lives Naturally</p>
                 <p style="margin-top: 15px; font-size: 11px; color: #999;">
                     This is an automated refund notification email. Please do not reply to this message.
@@ -2938,7 +2938,7 @@ Nourishing Lives Naturally
     </html>
         `,
         text: `
-    ORDER REFUND PROCESSED - Tiruppur Garments
+    ORDER REFUND PROCESSED - hanger garments
 
     Hello ${orderData.name},
 
@@ -2963,7 +2963,7 @@ Nourishing Lives Naturally
     We hope to serve you better in the future.
 
     --
-    Tiruppur Garments
+    hanger garments
     Nourishing Lives Naturally
         `.trim()
     };

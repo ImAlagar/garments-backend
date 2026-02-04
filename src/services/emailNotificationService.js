@@ -31,7 +31,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Contact" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Contact" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -72,7 +72,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -106,7 +106,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -131,7 +131,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Wholesaler" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -156,7 +156,7 @@ class EmailNotificationService {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -246,7 +246,7 @@ class EmailNotificationService {
       subject: template.subject,
       html: template.html,
       text: template.text,
-      from: `"Tiruppur Garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      from: `"hanger garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
     });
     
     return result;
@@ -266,7 +266,7 @@ async sendAdminPasswordChangedConfirmation(adminData) {
       subject: template.subject,
       html: template.html,
       text: template.text,
-      from: `"Tiruppur Garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      from: `"hanger garments Admin Security" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
     });
     
     return result;
@@ -287,7 +287,7 @@ async sendAdminPasswordChangedConfirmation(adminData) {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -314,7 +314,7 @@ async sendAdminPasswordChangedConfirmation(adminData) {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -334,7 +334,7 @@ async sendAdminPasswordChangedConfirmation(adminData) {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
@@ -354,7 +354,7 @@ async sendAdminPasswordChangedConfirmation(adminData) {
         subject: template.subject,
         html: template.html,
         text: template.text,
-        from: `"Tiruppur Garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+        from: `"hanger garments Orders" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
       });
       
       return result;
